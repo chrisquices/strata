@@ -1,10 +1,8 @@
 ## Project Overview
 
-A Vue UI kit that combines reusable components, composable interface patterns, and headless engines.
+A Vue UI kit — 80+ components and headless engines for color, dates, media, drag-and-drop, virtualization, and more.
 
-The kit is being migrated piece by piece from the restricted `tmp/` directory into `src/`. This overview describes the complete kit; `src/` contains only what has been migrated so far, so gaps between this overview and `src/` are expected and are not documentation errors.
-
-- **Primitives (`/src/components/ui`):** 70+ foundational, reusable UI components designed for use across projects.
+- **Primitives (`/src/components/ui`):** 80+ foundational, reusable UI components designed for use across projects.
 - **Blocks (`/src/components/blocks`):** Generic, reusable components composed from primitives to provide complete interface patterns.
 - **App (`/src/components/app`):** Project-specific compositions similar to blocks, but designed exclusively for this application and not intended for reuse elsewhere.
 - **Headless Engines:** Presentation-independent APIs that provide complex behavior for building specialized components and workflows.
@@ -47,16 +45,9 @@ Development mode performs full-page live reloads rather than state-preserving Vu
 ## General Rules
 
 1. Never modify, add to, delete, rename, move, or replace this GUIDE.md file unless the user explicitly instructs you to do so.
-2. Treat the project-root `tmp/` directory as strictly off-limits: never interact with it in any way unless the user explicitly instructs you to perform the specific action. There are no implicit exceptions.
 3. Follow the user's requested names, packages, files, tools, and actions exactly. If a requested item is unavailable, ambiguous, appears incorrect, or differs from a preferred alternative, stop immediately without making changes or substitutions, report the discrepancy, and wait for the user to provide the next step. Never substitute an alternative item without explicit permission.
-4. Migrations — when, and only when, the user instructs you to migrate a named item from `tmp/` into the project — are a scoped exception to rule 2, limited to that task:
-   - Locate the item using directory listings and pattern searches (grep and the like); these are permitted anywhere in `tmp/`.
-   - Read the full contents of only the files the user named or that make up the named item. Read nothing else during a migration — not in `tmp/`, not elsewhere — even if a file looks relevant. Do not deviate into exploratory reading.
-   - Copy the item as-is to its proper place in the project.
-   - Once the migration is confirmed successful, delete from `tmp/` exactly the files that were successfully migrated, and nothing else. If a migration fails or is incomplete, delete nothing.
 5. Project infrastructure is frozen without explicit user permission. Never add, install, vendor, update, edit, delete, rename, or replace dependencies, libraries, packages, configuration files, or any top-level or otherwise important file or folder (e.g., `deps/`, `tsconfig.json`, the build scripts in `deps/build/`) unless the user explicitly permits or instructs that specific change. If a task requires something that is missing — for example, a component being ported imports a library that is not vendored in `deps/` — stop immediately, report exactly what is missing, and wait for the user. Do not attempt to obtain, vendor, shim, stub, or otherwise work around the missing item. (Running the documented build and dev commands, including their output to `dist/`, is normal operation, not an infrastructure change.)
 6. Testing happens only on the user's explicit instruction — their instruction is the sole trigger. Unprompted, never write tests or verification code: no test files, no one-off test or verification scripts, no debug harnesses or temporary scaffolds, not even to check your own work with the intent to delete afterward. If a check seems needed and none was requested, note it in your report and stop. When the user explicitly instructs testing (e.g., "test it"), run any tests that already exist, and create temporary tests where none exist — run them, report the results, then delete the temporary ones so they leave no trace in the project. (Running the documented build remains normal operation at any time and needs no test instruction.)
-
 
 ## When working with components in general
 
