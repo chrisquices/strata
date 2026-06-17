@@ -25,8 +25,9 @@ const isLink = computed(() => !!props.href && !hasSubmenu.value);
 const isButton = computed(() => !isLink.value && !hasSubmenu.value);
 
 const base =
-  'strata-sidebar-menu-item group/sidebar-menu-item relative flex h-control w-full cursor-pointer items-center gap-2 px-4 pr-4 text-left text-sm transition-colors duration-fast ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground/30';
+  'strata-sidebar-menu-item group/sidebar-menu-item relative flex h-control w-full cursor-pointer items-center gap-2 px-4 text-left text-sm ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground/30 ' +
+  'group-data-[collapsed]/sidebar:pl-5 group-data-[collapsed]/sidebar:pr-0 group-data-[collapsed]/sidebar:gap-0';
 const stateClass = computed(() =>
   props.selected
     ? 'bg-surface text-foreground'
@@ -50,10 +51,12 @@ const disabledClass = computed(() => (props.disabled ? 'pointer-events-none curs
           :class="[base, stateClass, disabledClass, 'group/collapsible']"
         >
           <slot name="icon" />
-          <span class="flex-1 truncate"><slot /></span>
-          <slot name="badge" />
-          <ChevronRight class="size-icon-small shrink-0 text-faint transition-transform duration-base group-data-[state=open]/collapsible:rotate-90" aria-hidden="true" />
-          <span v-if="selected" class="absolute inset-y-1 right-0 w-0.5 rounded-small bg-foreground" aria-hidden="true"></span>
+          <span class="flex-1 truncate overflow-hidden max-w-[500px] transition-[max-width,opacity] duration-300 group-data-[collapsed]/sidebar:max-w-0 group-data-[collapsed]/sidebar:opacity-0"><slot /></span>
+          <span v-if="slots.badge" class="overflow-hidden max-w-[200px] transition-[max-width,opacity] duration-300 group-data-[collapsed]/sidebar:max-w-0 group-data-[collapsed]/sidebar:opacity-0"><slot name="badge" /></span>
+          <span class="overflow-hidden max-w-[20px] flex items-center transition-[max-width,opacity] duration-300 group-data-[collapsed]/sidebar:max-w-0 group-data-[collapsed]/sidebar:opacity-0">
+            <ChevronRight class="size-icon-small shrink-0 text-faint transition-transform duration-base group-data-[state=open]/collapsible:rotate-90" aria-hidden="true" />
+          </span>
+          <span v-if="selected" class="absolute inset-y-1 right-0 w-0.5 rounded-small bg-foreground group-data-[collapsed]/sidebar:hidden" aria-hidden="true"></span>
         </Primitive>
       </CollapsibleTrigger>
       <CollapsibleContent>
@@ -75,14 +78,19 @@ const disabledClass = computed(() => (props.disabled ? 'pointer-events-none curs
       :class="[base, stateClass, disabledClass]"
     >
       <slot name="icon" />
-      <span class="flex-1 truncate"><slot /></span>
-      <slot name="badge" />
-      <span v-if="selected" class="absolute inset-y-1 right-0 w-0.5 rounded-small bg-foreground" aria-hidden="true"></span>
+      <span class="flex-1 truncate overflow-hidden max-w-[500px] transition-[max-width,opacity] duration-300 group-data-[collapsed]/sidebar:max-w-0 group-data-[collapsed]/sidebar:opacity-0"><slot /></span>
+      <span v-if="slots.badge" class="overflow-hidden max-w-[200px] transition-[max-width,opacity] duration-300 group-data-[collapsed]/sidebar:max-w-0 group-data-[collapsed]/sidebar:opacity-0"><slot name="badge" /></span>
+      <span v-if="selected" class="absolute inset-y-1 right-0 w-0.5 rounded-small bg-foreground group-data-[collapsed]/sidebar:hidden" aria-hidden="true"></span>
     </Primitive>
   </li>
 </template>
 
 <style>
+.strata-sidebar-menu-item {
+  transition-property: color, background-color, gap, padding-inline-start, padding-inline-end;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: var(--duration-fast, 150ms), var(--duration-fast, 150ms), 300ms, 300ms, 300ms;
+}
 .strata-sidebar-menu[data-align-icons] > li > .strata-sidebar-menu-item:not(:has(> svg:first-child))::before,
 .strata-sidebar-menu-sub[data-align-icons] > li > .strata-sidebar-menu-item:not(:has(> svg:first-child))::before {
   content: '';

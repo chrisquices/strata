@@ -103,9 +103,8 @@ function navigate(id: string, e: MouseEvent) {
       class="strata-chrome z-sidebar md:w-72 transition-[width] duration-base"
   >
     <SidebarSection>
-      <SidebarSectionCaption>
-        Components
-      </SidebarSectionCaption>
+      <SidebarSectionCaption>Components</SidebarSectionCaption>
+
       <SidebarMenu>
         <SidebarMenuItem
             v-for="item in menuItems"

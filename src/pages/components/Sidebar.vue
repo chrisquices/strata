@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ComponentLayout from "@app/component/ComponentLayout.vue";
-import { ref } from 'vue';
+import {ref} from 'vue';
 import {
   LayoutDashboard, Inbox, Users, Settings, FileText, Star, Folder, Archive,
-  Bell, Plus, Filter, MoreHorizontal, Pencil, Trash2,
+  Bell, Plus, Filter, MoreHorizontal, Pencil, Trash2, PanelLeftClose, PanelLeftOpen,
 } from '@lucide/vue';
 
 import Sidebar from '@ui/Sidebar/Sidebar.vue';
@@ -34,6 +34,7 @@ const sel3 = ref('report');
 const sel4 = ref('dashboard');
 const projectsOpen = ref(true);
 const archiveOpen = ref(false);
+const collapsed = ref(false);
 </script>
 
 <template>
@@ -58,25 +59,35 @@ const archiveOpen = ref(false);
         <ComponentItemSectionExample>
           <div class="flex h-[420px] overflow-hidden rounded-large border border-border">
             <Sidebar>
-              <SidebarBrand />
+              <SidebarBrand/>
               <SidebarSection>
                 <SidebarSectionCaption>Workspace</SidebarSectionCaption>
                 <SidebarMenu>
                   <SidebarMenuItem :selected="sel1 === 'dashboard'" @click="sel1 = 'dashboard'">
-                    <template #icon><LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Dashboard
                   </SidebarMenuItem>
                   <SidebarMenuItem :selected="sel1 === 'inbox'" @click="sel1 = 'inbox'">
-                    <template #icon><Inbox class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Inbox class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Inbox
-                    <template #badge><SidebarMenuBadge>12</SidebarMenuBadge></template>
+                    <template #badge>
+                      <SidebarMenuBadge>12</SidebarMenuBadge>
+                    </template>
                   </SidebarMenuItem>
                   <SidebarMenuItem :selected="sel1 === 'team'" @click="sel1 = 'team'">
-                    <template #icon><Users class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Users class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Team
                   </SidebarMenuItem>
                   <SidebarMenuItem :selected="sel1 === 'settings'" @click="sel1 = 'settings'">
-                    <template #icon><Settings class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Settings class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Settings
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -85,7 +96,7 @@ const archiveOpen = ref(false);
                 <div class="h-control px-4 flex items-center text-xs text-faint">v1.0.0</div>
               </SidebarFooter>
             </Sidebar>
-            <div class="flex-1 bg-background" />
+            <div class="flex-1 bg-background"/>
           </div>
         </ComponentItemSectionExample>
       </ComponentItemSection>
@@ -100,47 +111,61 @@ const archiveOpen = ref(false);
           <div class="flex gap-4">
             <div class="flex h-[240px] flex-1 overflow-hidden rounded-large border border-border">
               <Sidebar>
-                <SidebarActions />
+                <SidebarActions/>
                 <SidebarSection>
                   <SidebarSectionCaption>Default slot</SidebarSectionCaption>
                   <SidebarMenu>
                     <SidebarMenuItem :selected="sel2 === 'all-files'" @click="sel2 = 'all-files'">
-                      <template #icon><FileText class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                      <template #icon>
+                        <FileText class="size-icon-medium shrink-0" aria-hidden="true"/>
+                      </template>
                       All files
                     </SidebarMenuItem>
                     <SidebarMenuItem :selected="sel2 === 'starred'" @click="sel2 = 'starred'">
-                      <template #icon><Star class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                      <template #icon>
+                        <Star class="size-icon-medium shrink-0" aria-hidden="true"/>
+                      </template>
                       Starred
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarSection>
               </Sidebar>
-              <div class="flex-1 bg-background" />
+              <div class="flex-1 bg-background"/>
             </div>
             <div class="flex h-[240px] flex-1 overflow-hidden rounded-large border border-border">
               <Sidebar>
                 <SidebarActions>
                   <div class="flex items-center gap-1">
-                    <Button variant="secondary" size="sm" icon aria-label="New"><Plus class="size-icon-medium" /></Button>
-                    <Button variant="ghost" size="sm" icon aria-label="Filter"><Filter class="size-icon-medium" /></Button>
-                    <Button variant="ghost" size="sm" icon aria-label="Notifications"><Bell class="size-icon-medium" /></Button>
+                    <Button variant="secondary" size="sm" icon aria-label="New">
+                      <Plus class="size-icon-medium"/>
+                    </Button>
+                    <Button variant="ghost" size="sm" icon aria-label="Filter">
+                      <Filter class="size-icon-medium"/>
+                    </Button>
+                    <Button variant="ghost" size="sm" icon aria-label="Notifications">
+                      <Bell class="size-icon-medium"/>
+                    </Button>
                   </div>
                 </SidebarActions>
                 <SidebarSection>
                   <SidebarSectionCaption>Custom slot</SidebarSectionCaption>
                   <SidebarMenu>
                     <SidebarMenuItem :selected="sel2 === 'all-files'" @click="sel2 = 'all-files'">
-                      <template #icon><FileText class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                      <template #icon>
+                        <FileText class="size-icon-medium shrink-0" aria-hidden="true"/>
+                      </template>
                       All files
                     </SidebarMenuItem>
                     <SidebarMenuItem :selected="sel2 === 'starred'" @click="sel2 = 'starred'">
-                      <template #icon><Star class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                      <template #icon>
+                        <Star class="size-icon-medium shrink-0" aria-hidden="true"/>
+                      </template>
                       Starred
                     </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarSection>
               </Sidebar>
-              <div class="flex-1 bg-background" />
+              <div class="flex-1 bg-background"/>
             </div>
           </div>
         </ComponentItemSectionExample>
@@ -158,27 +183,31 @@ const archiveOpen = ref(false);
             <Sidebar>
               <SidebarHeader>
                 <div class="flex items-center gap-2 min-w-0">
-                  <div class="size-6 rounded-small bg-foreground/20 shrink-0" />
+                  <div class="size-6 rounded-small bg-foreground/20 shrink-0"/>
                   <span class="text-sm font-medium truncate">Acme Corp</span>
                 </div>
                 <Button variant="ghost" size="sm" icon aria-label="More options">
-                  <MoreHorizontal class="size-icon-medium" />
+                  <MoreHorizontal class="size-icon-medium"/>
                 </Button>
               </SidebarHeader>
               <SidebarSection>
                 <SidebarMenu>
                   <SidebarMenuItem :selected="true">
-                    <template #icon><LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Dashboard
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <template #icon><Users class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Users class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Team
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarSection>
             </Sidebar>
-            <div class="flex-1 bg-background" />
+            <div class="flex-1 bg-background"/>
           </div>
         </ComponentItemSectionExample>
       </ComponentItemSection>
@@ -194,35 +223,51 @@ const archiveOpen = ref(false);
         <ComponentItemSectionExample>
           <div class="flex h-[500px] overflow-hidden rounded-large border border-border">
             <Sidebar>
-              <SidebarActions />
+              <SidebarActions/>
               <SidebarSection>
                 <SidebarSectionCaption>Files</SidebarSectionCaption>
                 <SidebarMenu>
                   <SidebarMenuItem href="#all-files" :selected="sel2 === 'all-files'" @click="sel2 = 'all-files'">
-                    <template #icon><FileText class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <FileText class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     All files
                   </SidebarMenuItem>
                   <SidebarMenuItem v-model:open="projectsOpen" default-open>
-                    <template #icon><Folder class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Folder class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Projects
-                    <template #badge><SidebarMenuBadge>3</SidebarMenuBadge></template>
+                    <template #badge>
+                      <SidebarMenuBadge>3</SidebarMenuBadge>
+                    </template>
                     <template #submenu>
                       <SidebarMenuSub align-icons>
                         <SidebarMenuItem href="#starred" :selected="sel2 === 'starred'" @click="sel2 = 'starred'">
-                          <template #icon><Star class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                          <template #icon>
+                            <Star class="size-icon-medium shrink-0" aria-hidden="true"/>
+                          </template>
                           Starred
                         </SidebarMenuItem>
                         <SidebarMenuItem href="#drafts" :selected="sel2 === 'drafts'" @click="sel2 = 'drafts'">
                           Drafts
-                          <template #badge><SidebarMenuBadge>3</SidebarMenuBadge></template>
+                          <template #badge>
+                            <SidebarMenuBadge>3</SidebarMenuBadge>
+                          </template>
                         </SidebarMenuItem>
                         <SidebarMenuItem v-model:open="archiveOpen">
-                          <template #icon><Archive class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                          <template #icon>
+                            <Archive class="size-icon-medium shrink-0" aria-hidden="true"/>
+                          </template>
                           Archive
                           <template #submenu>
                             <SidebarMenuSub>
-                              <SidebarMenuItem href="#arch-2026" :selected="sel2 === 'arch-2026'" @click="sel2 = 'arch-2026'">2026</SidebarMenuItem>
-                              <SidebarMenuItem href="#arch-2025" :selected="sel2 === 'arch-2025'" @click="sel2 = 'arch-2025'">2025</SidebarMenuItem>
+                              <SidebarMenuItem href="#arch-2026" :selected="sel2 === 'arch-2026'"
+                                               @click="sel2 = 'arch-2026'">2026
+                              </SidebarMenuItem>
+                              <SidebarMenuItem href="#arch-2025" :selected="sel2 === 'arch-2025'"
+                                               @click="sel2 = 'arch-2025'">2025
+                              </SidebarMenuItem>
                             </SidebarMenuSub>
                           </template>
                         </SidebarMenuItem>
@@ -232,7 +277,7 @@ const archiveOpen = ref(false);
                 </SidebarMenu>
               </SidebarSection>
             </Sidebar>
-            <div class="flex-1 bg-background" />
+            <div class="flex-1 bg-background"/>
           </div>
         </ComponentItemSectionExample>
       </ComponentItemSection>
@@ -249,41 +294,49 @@ const archiveOpen = ref(false);
         <ComponentItemSectionExample>
           <div class="flex h-[240px] overflow-hidden rounded-large border border-border">
             <Sidebar>
-              <SidebarActions />
+              <SidebarActions/>
               <SidebarSection>
                 <SidebarSectionCaption>Documents</SidebarSectionCaption>
                 <SidebarMenu>
                   <SidebarMenuItem :selected="sel3 === 'report'" @click="sel3 = 'report'">
-                    <template #icon><FileText class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <FileText class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Q4 Report
                     <template #badge>
-                      <SidebarMenuAction class="opacity-0 group-hover/sidebar-menu-item:opacity-100" aria-label="More options" @click.stop>
-                        <MoreHorizontal class="size-icon-small" />
+                      <SidebarMenuAction class="opacity-0 group-hover/sidebar-menu-item:opacity-100"
+                                         aria-label="More options" @click.stop>
+                        <MoreHorizontal class="size-icon-small"/>
                       </SidebarMenuAction>
                     </template>
                   </SidebarMenuItem>
                   <SidebarMenuItem :selected="sel3 === 'notes'" @click="sel3 = 'notes'">
-                    <template #icon><FileText class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <FileText class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Meeting notes
                     <template #badge>
-                      <SidebarMenuAction class="opacity-0 group-hover/sidebar-menu-item:opacity-100" aria-label="Rename" @click.stop>
-                        <Pencil class="size-icon-small" />
+                      <SidebarMenuAction class="opacity-0 group-hover/sidebar-menu-item:opacity-100" aria-label="Rename"
+                                         @click.stop>
+                        <Pencil class="size-icon-small"/>
                       </SidebarMenuAction>
                     </template>
                   </SidebarMenuItem>
                   <SidebarMenuItem :selected="sel3 === 'draft'" @click="sel3 = 'draft'">
-                    <template #icon><FileText class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <FileText class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Draft
                     <template #badge>
                       <SidebarMenuAction disabled aria-label="Delete (disabled)" @click.stop>
-                        <Trash2 class="size-icon-small" />
+                        <Trash2 class="size-icon-small"/>
                       </SidebarMenuAction>
                     </template>
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarSection>
             </Sidebar>
-            <div class="flex-1 bg-background" />
+            <div class="flex-1 bg-background"/>
           </div>
         </ComponentItemSectionExample>
       </ComponentItemSection>
@@ -299,12 +352,14 @@ const archiveOpen = ref(false);
           <div class="flex gap-4">
             <div class="flex h-[240px] flex-1 overflow-hidden rounded-large border border-border">
               <Sidebar>
-                <SidebarActions />
+                <SidebarActions/>
                 <SidebarSection>
                   <SidebarSectionCaption>Without alignIcons</SidebarSectionCaption>
                   <SidebarMenu>
                     <SidebarMenuItem :selected="true">
-                      <template #icon><Star class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                      <template #icon>
+                        <Star class="size-icon-medium shrink-0" aria-hidden="true"/>
+                      </template>
                       Starred
                     </SidebarMenuItem>
                     <SidebarMenuItem>Drafts</SidebarMenuItem>
@@ -312,16 +367,18 @@ const archiveOpen = ref(false);
                   </SidebarMenu>
                 </SidebarSection>
               </Sidebar>
-              <div class="flex-1 bg-background" />
+              <div class="flex-1 bg-background"/>
             </div>
             <div class="flex h-[240px] flex-1 overflow-hidden rounded-large border border-border">
               <Sidebar>
-                <SidebarActions />
+                <SidebarActions/>
                 <SidebarSection>
                   <SidebarSectionCaption>With alignIcons</SidebarSectionCaption>
                   <SidebarMenu align-icons>
                     <SidebarMenuItem :selected="true">
-                      <template #icon><Star class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                      <template #icon>
+                        <Star class="size-icon-medium shrink-0" aria-hidden="true"/>
+                      </template>
                       Starred
                     </SidebarMenuItem>
                     <SidebarMenuItem>Drafts</SidebarMenuItem>
@@ -329,7 +386,7 @@ const archiveOpen = ref(false);
                   </SidebarMenu>
                 </SidebarSection>
               </Sidebar>
-              <div class="flex-1 bg-background" />
+              <div class="flex-1 bg-background"/>
             </div>
           </div>
         </ComponentItemSectionExample>
@@ -345,25 +402,31 @@ const archiveOpen = ref(false);
         <ComponentItemSectionExample>
           <div class="flex h-[240px] overflow-hidden rounded-large border border-border">
             <Sidebar>
-              <SidebarActions />
+              <SidebarActions/>
               <SidebarSection>
                 <SidebarMenu>
                   <SidebarMenuItem :selected="true">
-                    <template #icon><LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Active button
                   </SidebarMenuItem>
                   <SidebarMenuItem disabled>
-                    <template #icon><Users class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Users class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Disabled button
                   </SidebarMenuItem>
                   <SidebarMenuItem href="#settings" disabled>
-                    <template #icon><Settings class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Settings class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Disabled link
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarSection>
             </Sidebar>
-            <div class="flex-1 bg-background" />
+            <div class="flex-1 bg-background"/>
           </div>
         </ComponentItemSectionExample>
       </ComponentItemSection>
@@ -376,22 +439,28 @@ const archiveOpen = ref(false);
         </ComponentItemSectionDescription>
         <ComponentItemSectionExample>
           <div class="flex h-[280px] overflow-hidden rounded-large border border-border">
-            <div class="flex-1 bg-background" />
+            <div class="flex-1 bg-background"/>
             <Sidebar side="right">
-              <SidebarActions />
+              <SidebarActions/>
               <SidebarSection>
                 <SidebarSectionCaption>Context</SidebarSectionCaption>
                 <SidebarMenu>
                   <SidebarMenuItem :selected="sel4 === 'details'" @click="sel4 = 'details'">
-                    <template #icon><FileText class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <FileText class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Details
                   </SidebarMenuItem>
                   <SidebarMenuItem :selected="sel4 === 'members'" @click="sel4 = 'members'">
-                    <template #icon><Users class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Users class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Members
                   </SidebarMenuItem>
                   <SidebarMenuItem :selected="sel4 === 'settings'" @click="sel4 = 'settings'">
-                    <template #icon><Settings class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Settings class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Settings
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -410,18 +479,24 @@ const archiveOpen = ref(false);
         <ComponentItemSectionExample>
           <div class="flex h-[480px] overflow-hidden rounded-large border border-border">
             <Sidebar>
-              <SidebarBrand />
+              <SidebarBrand/>
               <SidebarSection>
                 <SidebarSectionCaption>Main</SidebarSectionCaption>
                 <SidebarMenu>
                   <SidebarMenuItem :selected="sel1 === 'dashboard'" @click="sel1 = 'dashboard'">
-                    <template #icon><LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Dashboard
                   </SidebarMenuItem>
                   <SidebarMenuItem :selected="sel1 === 'inbox'" @click="sel1 = 'inbox'">
-                    <template #icon><Inbox class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Inbox class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Inbox
-                    <template #badge><SidebarMenuBadge>5</SidebarMenuBadge></template>
+                    <template #badge>
+                      <SidebarMenuBadge>5</SidebarMenuBadge>
+                    </template>
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarSection>
@@ -429,7 +504,9 @@ const archiveOpen = ref(false);
                 <SidebarSectionCaption>Team</SidebarSectionCaption>
                 <SidebarMenu>
                   <SidebarMenuItem :selected="sel1 === 'members'" @click="sel1 = 'members'">
-                    <template #icon><Users class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Users class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Members
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -438,7 +515,9 @@ const archiveOpen = ref(false);
                 <SidebarSectionCaption>Account</SidebarSectionCaption>
                 <SidebarMenu>
                   <SidebarMenuItem :selected="sel1 === 'settings'" @click="sel1 = 'settings'">
-                    <template #icon><Settings class="size-icon-medium shrink-0" aria-hidden="true" /></template>
+                    <template #icon>
+                      <Settings class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
                     Settings
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -447,7 +526,83 @@ const archiveOpen = ref(false);
                 <div class="h-control px-4 flex items-center text-xs text-faint">v1.0.0</div>
               </SidebarFooter>
             </Sidebar>
-            <div class="flex-1 bg-background" />
+            <div class="flex-1 bg-background"/>
+          </div>
+        </ComponentItemSectionExample>
+      </ComponentItemSection>
+
+      <!-- Collapsed -->
+      <ComponentItemSection>
+        <ComponentItemSectionTitle>Collapsed</ComponentItemSectionTitle>
+        <ComponentItemSectionDescription>
+          collapsed narrows the sidebar to icon-only width. Labels, captions, badges, submenus, actions,
+          and the footer are hidden; icons remain centered. Toggle with the button in the header.
+        </ComponentItemSectionDescription>
+        <ComponentItemSectionExample>
+          <div class="flex h-[420px] overflow-hidden rounded-large border border-border">
+            <Sidebar :collapsed="collapsed">
+              <SidebarHeader>
+                <span class="text-sm font-medium text-foreground group-data-[collapsed]/sidebar:hidden">Workspace</span>
+                <Button variant="ghost" size="sm" icon :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+                        @click="collapsed = !collapsed">
+                  <PanelLeftClose v-if="!collapsed" class="size-icon-medium"/>
+                  <PanelLeftOpen v-else class="size-icon-medium"/>
+                </Button>
+              </SidebarHeader>
+              <SidebarSection>
+                <SidebarSectionCaption>Main</SidebarSectionCaption>
+                <SidebarMenu>
+                  <SidebarMenuItem :selected="sel1 === 'dashboard'" @click="sel1 = 'dashboard'">
+                    <template #icon>
+                      <LayoutDashboard class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
+                    Dashboard
+                  </SidebarMenuItem>
+                  <SidebarMenuItem :selected="sel1 === 'inbox'" @click="sel1 = 'inbox'">
+                    <template #icon>
+                      <Inbox class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
+                    Inbox
+                    <template #badge>
+                      <SidebarMenuBadge>12</SidebarMenuBadge>
+                    </template>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem :selected="sel1 === 'team'" @click="sel1 = 'team'">
+                    <template #icon>
+                      <Users class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
+                    Team
+                  </SidebarMenuItem>
+                  <SidebarMenuItem v-model:open="projectsOpen">
+                    <template #icon>
+                      <Folder class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
+                    Projects
+                    <template #submenu>
+                      <SidebarMenuSub>
+                        <SidebarMenuItem :selected="sel1 === 'starred'" @click="sel1 = 'starred'">
+                          <template #icon>
+                            <Star class="size-icon-medium shrink-0" aria-hidden="true"/>
+                          </template>
+                          Starred
+                        </SidebarMenuItem>
+                        <SidebarMenuItem :selected="sel1 === 'drafts'" @click="sel1 = 'drafts'">Drafts</SidebarMenuItem>
+                      </SidebarMenuSub>
+                    </template>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem :selected="sel1 === 'settings'" @click="sel1 = 'settings'">
+                    <template #icon>
+                      <Settings class="size-icon-medium shrink-0" aria-hidden="true"/>
+                    </template>
+                    Settings
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarSection>
+              <SidebarFooter>
+                <div class="h-control px-4 flex items-center text-xs text-faint">v1.0.0</div>
+              </SidebarFooter>
+            </Sidebar>
+            <div class="flex-1 bg-background"/>
           </div>
         </ComponentItemSectionExample>
       </ComponentItemSection>

@@ -9,8 +9,9 @@ import Caption from '../../ui/Caption/Caption.vue';
   <header class="strata-chrome shrink-0 border-b border-border bg-topbar/90 backdrop-blur">
     <div class="flex h-chrome-bar items-center justify-center px-6">
       <RouterLink to="/" class="flex items-center gap-3 rounded-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30">
-        <BrandMark src="/assets/img/logo.svg" alt="Strata logo" />
+        <BrandMark src="/assets/img/logo.png" alt="Strata logo" />
         <Caption tone="foreground">Strata</Caption>
+        <BrandMark src="/assets/img/logo.png" alt="Strata logo" />
       </RouterLink>
     </div>
   </header>

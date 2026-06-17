@@ -11,7 +11,7 @@ import SidebarHeader from './SidebarHeader.vue';
         <Button variant="secondary" icon aria-label="New">
           <Plus class="size-icon-medium" />
         </Button>
-        <Button variant="ghost" icon aria-label="Filter">
+        <Button variant="ghost" icon aria-label="Filter" class="group-data-[collapsed]/sidebar:hidden">
           <Filter class="size-icon-medium" />
         </Button>
       </div>

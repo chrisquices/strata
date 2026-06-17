@@ -1,4 +1,8 @@
 <br />
+<div align="center">
+    <img src="./src/assets/img/logo.png" alt="Logo" height="100">
+</div>
+
 
 <h1 align="center">Strata</h1>
 
