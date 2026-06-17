@@ -1,0 +1,2 @@
+deps/build/cli-bun filter=lfs diff=lfs merge=lfs -text
+deps/build/cli-tailwindcss filter=lfs diff=lfs merge=lfs -text

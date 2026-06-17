@@ -1,0 +1,11 @@
+<script setup lang="ts">
+import {ContextMenuTrigger} from 'reka-ui';
+
+defineProps({asChild: {type: Boolean, default: false}});
+</script>
+
+<template>
+  <ContextMenuTrigger :as-child="asChild">
+    <slot/>
+  </ContextMenuTrigger>
+</template>

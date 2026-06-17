@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+
+      // Dependencies
+      "@deps/*": ["./deps/*"],
+
+      // Source
+      "@/*": ["./src/*"],
+      "@ui/*": ["./src/components/ui/*"],
+      "@app/*": ["./src/components/app/*"],
+
+      // Backend Packages
+      //
+
+      // Frontend Packages
+      "@internationalized/date": ["./deps/frontend/internationalized-date.js"],
+      "@lucide/vue": ["./deps/frontend/lucide-vue.js"],
+      "reka-ui": ["./deps/frontend/reka-ui.js"],
+      "vue": ["./deps/frontend/vue.esm-browser.js"],
+      "vue-router": ["./deps/frontend/vue-router.js"]
+    }
+  }
+}
