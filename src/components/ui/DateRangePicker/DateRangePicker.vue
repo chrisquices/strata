@@ -5,10 +5,10 @@ import { computed, ref, watch } from 'vue';
 import type { PropType } from 'vue';
 import { CalendarRange } from '@lucide/vue';
 import { DateRangeFieldRoot, DateRangeFieldInput, PopoverRoot, PopoverTrigger, PopoverPortal, PopoverContent } from 'reka-ui';
-import type { CalendarDate } from '@internationalized/date';
+import type { CalendarDate } from '../Shared/utils';
 import RangeCalendar from '../RangeCalendar/RangeCalendar.vue';
-import { dateFromIso, todayDate, rangeFromIso, isoFromRange } from '../Shared/date';
-import type { DateRange, IsoRange } from '../Shared/date';
+import { dateFromIso, todayDate, rangeFromIso, isoFromRange } from '../Shared/utils';
+import type { DateRange, IsoRange } from '../Shared/utils';
 
 const props = defineProps({
   editable: { type: Boolean, default: true },

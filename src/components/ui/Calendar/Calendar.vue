@@ -10,8 +10,8 @@ import {
   CalendarGrid, CalendarGridHead, CalendarGridBody, CalendarGridRow, CalendarHeadCell,
   CalendarCell, CalendarCellTrigger,
 } from 'reka-ui';
-import type { CalendarDate } from '@internationalized/date';
-import { dateFromIso, todayDate } from '../Shared/date';
+import type { CalendarDate } from '../Shared/utils';
+import { dateFromIso, todayDate } from '../Shared/utils';
 
 const props = defineProps({
   minValue: { type: String, default: undefined },

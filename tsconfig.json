@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "lib": ["ES2020", "DOM"],
     "baseUrl": ".",
     "paths": {
 
@@ -15,7 +16,6 @@
       //
 
       // Frontend Packages
-      "@internationalized/date": ["./deps/frontend/internationalized-date.js"],
       "@lucide/vue": ["./deps/frontend/lucide-vue.js"],
       "reka-ui": ["./deps/frontend/reka-ui.js"],
       "vue": ["./deps/frontend/vue.esm-browser.js"],

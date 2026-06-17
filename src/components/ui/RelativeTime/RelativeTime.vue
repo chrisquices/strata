@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import { computed, onBeforeUnmount, ref, watchEffect } from 'vue';
-import { formatTime, toIsoString } from '../Shared/utils.js';
+import { formatTime, toIsoString } from '../Shared/utils';
 
 const props = defineProps({
   value: { default: null },

@@ -4,9 +4,8 @@
 import { computed, ref, watch } from 'vue';
 import type { PropType } from 'vue';
 import { TimeFieldRoot, TimeFieldInput } from 'reka-ui';
-import { Time } from '@internationalized/date';
-import type { Time as TimeValue } from '@internationalized/date';
-import { timeFromIso, isoFromTime } from '../Shared/date';
+import { Time } from '../Shared/utils';
+import { timeFromIso, isoFromTime } from '../Shared/utils';
 
 const props = defineProps({
   hourCycle: { type: Number as PropType<12 | 24>, default: undefined, validator: (v: number) => v === 12 || v === 24 },
@@ -25,11 +24,11 @@ const props = defineProps({
 });
 const model = defineModel<string>({ default: '' });
 
-const value = computed<TimeValue | undefined>({
+const value = computed<Time | undefined>({
   get: () => timeFromIso(model.value),
   set: (v) => { model.value = isoFromTime(v); },
 });
-const placeholder = ref<TimeValue>(timeFromIso(model.value) ?? new Time(0, 0));
+const placeholder = ref<Time>(timeFromIso(model.value) ?? new Time(0, 0));
 watch(model, (v) => { const t = timeFromIso(v); if (t) placeholder.value = t; }); // jump to externally-set value
 const min = computed(() => timeFromIso(props.minValue));
 const max = computed(() => timeFromIso(props.maxValue));
