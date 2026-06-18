@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color Engine demo (barebones)</title>
+<style>
+  /* ============================================================
+     Intentionally UGLY. The color engine ships no DOM and no CSS;
+     this is a throwaway test surface to eyeball that the math is
+     right — plain white background, native inputs, no design.
+     Everything you see is rendered by the consumer (color-engine.js)
+     from values the pure functions return.
+     ============================================================ */
+  body { background: #fff; color: #000; font-family: monospace; margin: 16px; line-height: 1.5; }
+  h1 { font-size: 18px; } h2 { font-size: 15px; margin: 18px 0 6px; }
+  fieldset { margin: 0 0 18px; border: 1px solid #000; }
+  legend { font-weight: bold; }
+  label { margin-right: 10px; }
+  input[type="text"] { width: 320px; }
+  .sw { display: inline-block; width: 34px; height: 34px; border: 1px solid #000; vertical-align: middle; }
+  .bigsw { width: 80px; height: 80px; }
+  .bar { display: flex; width: 100%; max-width: 720px; height: 30px; border: 1px solid #000; }
+  .bar > span { flex: 1 1 0; }
+  .row { margin: 6px 0; }
+  .out { white-space: pre; }
+  .preview { display: inline-block; padding: 10px 14px; border: 1px solid #000; min-width: 220px; }
+  .pass { font-weight: bold; } /* color set inline by the consumer (green/red) */
+  table { border-collapse: collapse; } td, th { border: 1px solid #888; padding: 2px 8px; text-align: left; }
+  .err { color: #b00; min-height: 1em; }
+  .checker { background-image: linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ccc 75%),linear-gradient(-45deg,transparent 75%,#ccc 75%); background-size: 16px 16px; background-position: 0 0,0 8px,8px -8px,-8px 0; }
+</style>
+</head>
+<body>
+  <p><a href="./">&larr; Back to demos</a></p>
+  <h1>Color Engine — barebones test surface</h1>
+  <p>Pure color math (<code>../color-engine.js</code>): conversion, parsing/serialization, WCAG contrast,
+     accessible adjustment, palette/harmony, perceptual gradients. No DOM or CSS in the engine — every
+     swatch and number below is rendered by the demo consumer from the values the functions return.
+     Deliberately unstyled.</p>
+
+  <!-- ============ Block A: current color & all formats ============ -->
+  <fieldset>
+    <legend>Current color → all formats (live)</legend>
+    <div class="row">
+      <label>picker <input type="color" id="picker"></label>
+      <label>type any format <input type="text" id="text" placeholder="#ff8800 · rgb(255 136 0) · hsl(32 100% 50%) · oklch(0.75 0.18 60) · #ff880080"></label>
+      <button id="apply">apply</button>
+      <span class="err" id="err"></span>
+    </div>
+    <div class="row">
+      <span class="sw bigsw checker" id="swatch"></span>
+    </div>
+    <div class="row">OKLCH sliders (push chroma high to watch gamut mapping clamp it back):</div>
+    <div class="row">
+      <label>L <input type="range" id="ok-l" min="0" max="1" step="0.001"></label>
+      <label>C <input type="range" id="ok-c" min="0" max="0.4" step="0.001"></label>
+      <label>H <input type="range" id="ok-h" min="0" max="360" step="1"></label>
+      <label>alpha <input type="range" id="ok-a" min="0" max="1" step="0.01"></label>
+    </div>
+    <table id="formats">
+      <tr><th>format</th><th>string</th></tr>
+      <tr><td>hex</td><td class="out" id="f-hex"></td></tr>
+      <tr><td>rgb</td><td class="out" id="f-rgb"></td></tr>
+      <tr><td>hsl</td><td class="out" id="f-hsl"></td></tr>
+      <tr><td>hsv</td><td class="out" id="f-hsv"></td></tr>
+      <tr><td>oklch</td><td class="out" id="f-oklch"></td></tr>
+      <tr><td>oklab</td><td class="out" id="f-oklab"></td></tr>
+    </table>
+  </fieldset>
+
+  <!-- ============ Block B: contrast checker ============ -->
+  <fieldset>
+    <legend>WCAG contrast — current color (foreground) on a background</legend>
+    <div class="row">
+      <label>background <input type="color" id="c-bg" value="#ffffff"></label>
+      <button id="c-fix-aa">auto-fix current for AA</button>
+      <button id="c-fix-aaa">auto-fix current for AAA</button>
+      <span class="err" id="c-note"></span>
+    </div>
+    <div class="row">ratio: <span id="c-ratio" class="pass"></span></div>
+    <table>
+      <tr><th></th><th>normal text</th><th>large text</th></tr>
+      <tr><td>AA</td><td id="c-aa"></td><td id="c-aa-l"></td></tr>
+      <tr><td>AAA</td><td id="c-aaa"></td><td id="c-aaa-l"></td></tr>
+    </table>
+    <div class="row">
+      <span class="preview" id="c-prev1">current on background</span>
+      <span class="preview" id="c-prev2">background on current</span>
+    </div>
+  </fieldset>
+
+  <!-- ============ Block C: palette / harmony ============ -->
+  <fieldset>
+    <legend>Palette &amp; harmony (from the current color, in OKLCH)</legend>
+    <h2>shades (darker) &middot; base &middot; tints (lighter)</h2>
+    <div class="row" id="ramp"></div>
+    <h2>harmony
+      <select id="harmony-type">
+        <option value="complementary">complementary</option>
+        <option value="analogous" selected>analogous</option>
+        <option value="triadic">triadic</option>
+        <option value="split-complementary">split-complementary</option>
+        <option value="tetradic">tetradic</option>
+        <option value="square">square</option>
+      </select>
+    </h2>
+    <div class="row" id="harmony"></div>
+  </fieldset>
+
+  <!-- ============ Block D: gradient ============ -->
+  <fieldset>
+    <legend>Gradient interpolation — current color → end color, one bar per space</legend>
+    <div class="row">
+      <label>end <input type="color" id="g-b"></label>
+      <label>steps <input type="range" id="g-steps" min="2" max="24" step="1" value="11"> <span id="g-steps-n"></span></label>
+      <label>hue <select id="g-hue"><option value="shorter">shorter</option><option value="longer">longer</option></select></label>
+    </div>
+    <p>Compare the perceptual spaces (top) with naive sRGB (bottom): sRGB midpoints go muddy/dark; OKLCH/OKLab stay even and vivid.</p>
+    <div id="grad-bars"></div>
+  </fieldset>
+
+  <script type="module" src="./color-engine.demo.js"></script>
+</body>
+</html>

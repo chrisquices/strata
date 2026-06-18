@@ -2,8 +2,6 @@
 import ComponentLayout from "@app/component/ComponentLayout.vue";
 import { ref } from 'vue';
 import Slider from '@ui/Slider/Slider.vue';
-import SliderRange from '@ui/Slider/SliderRange.vue';
-import SliderThumb from '@ui/Slider/SliderThumb.vue';
 
 import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
 import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
@@ -23,7 +21,7 @@ const small = ref(60);
   <ComponentItemHeader>
     <ComponentItemHeaderTitle>Slider</ComponentItemHeaderTitle>
     <ComponentItemHeaderDescription>
-      A range input built on reka — single value or a two-thumb range, with sizes. Compose the track fill and thumbs.
+      A range input built on reka — single value or a two-thumb range, with sizes.
     </ComponentItemHeaderDescription>
   </ComponentItemHeader>
 
@@ -33,10 +31,7 @@ const small = ref(60);
       <ComponentItemSectionDescription>Value: {{ volume }}</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
         <div class="max-w-sm" data-demo="single">
-          <Slider v-model="volume" :min="0" :max="100">
-            <SliderRange />
-            <SliderThumb />
-          </Slider>
+          <Slider v-model="volume" :min="0" :max="100" />
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
@@ -46,11 +41,7 @@ const small = ref(60);
       <ComponentItemSectionDescription>Value: {{ range.join('–') }}</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
         <div class="max-w-sm" data-demo="range">
-          <Slider v-model="range" :min="0" :max="100">
-            <SliderRange />
-            <SliderThumb />
-            <SliderThumb />
-          </Slider>
+          <Slider v-model="range" :min="0" :max="100" />
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
@@ -59,14 +50,8 @@ const small = ref(60);
       <ComponentItemSectionTitle>Small &amp; disabled</ComponentItemSectionTitle>
       <ComponentItemSectionExample>
         <div class="flex max-w-sm flex-col gap-6" data-demo="variants">
-          <Slider v-model="small" size="sm" :min="0" :max="100">
-            <SliderRange />
-            <SliderThumb />
-          </Slider>
-          <Slider :model-value="50" disabled :min="0" :max="100">
-            <SliderRange />
-            <SliderThumb />
-          </Slider>
+          <Slider v-model="small" size="sm" :min="0" :max="100" />
+          <Slider :model-value="50" disabled :min="0" :max="100" />
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>

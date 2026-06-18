@@ -1,0 +1,3714 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Media Engine demo</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: #111; color: #eee; font: 14px/1.45 system-ui, sans-serif; }
+  body { padding: 24px; }
+  a { color: #ddd; }
+  h1 { margin: 0 0 8px; font-size: 24px; }
+  p { margin: 0 0 20px; color: #bbb; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; max-width: 960px; }
+  .tile { border: 1px solid #333; background: #1b1b1b; color: #eee; padding: 0; text-align: left; cursor: pointer; }
+  .tile img, .tile .placeholder { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: #222; }
+  .tile strong { display: block; padding: 10px 10px 2px; }
+  .tile span { display: block; padding: 0 10px 10px; color: #999; font-size: 12px; }
+
+  #viewer { display: none; position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.94); color: #eee; }
+  #viewer.open { display: block; }
+  #stage { position: absolute; inset: 62px 16px 118px; overflow: hidden; border: 1px solid #333; background: #080808; }
+  #stage img { position: absolute; top: 0; left: 0; touch-action: none; user-select: none; }
+  #stage video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+  #stage audio { width: min(640px, calc(100% - 32px)); margin: 40px 16px; }
+  .bar { position: absolute; left: 16px; right: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .top { top: 14px; }
+  .bottom { bottom: 14px; }
+  button, input, select { font: inherit; }
+  button { border: 1px solid #444; background: #222; color: #eee; padding: 6px 9px; cursor: pointer; }
+  button:hover { background: #2e2e2e; }
+  button:disabled { opacity: .35; cursor: default; }
+  input[type="range"] { accent-color: #eee; }
+  .spacer { flex: 1; }
+  .muted { color: #aaa; }
+  .hidden { display: none !important; }
+  #status { position: absolute; inset: 62px 16px 118px; display: grid; place-items: center; pointer-events: none; color: #ddd; text-align: center; padding: 20px; }
+  #captions { position: absolute; left: 10%; right: 10%; bottom: 132px; text-align: center; white-space: pre-line; }
+  #waveform { width: 220px; height: 44px; border: 1px solid #333; background: #151515; }
+</style>
+</head>
+<body>
+  <p><a href="./">Back to demos</a></p>
+  <h1>Media Engine</h1>
+  <p>Royalty-free sample assets from <code>./assets</code> — images, video, and audio spanning different resolutions, aspect ratios, and portrait/landscape framings, all driven by the same engine.</p>
+  <div id="launcher" class="grid"></div>
+
+  <div id="viewer" aria-label="Media viewer" role="dialog" aria-modal="true">
+    <div class="bar top">
+      <button id="prev" type="button">Prev</button>
+      <button id="next" type="button">Next</button>
+      <strong id="title"></strong>
+      <span id="counter" class="muted"></span>
+      <span id="caption" class="muted"></span>
+      <span class="spacer"></span>
+      <button id="fullscreen" type="button">Fullscreen</button>
+      <button id="close" type="button">Close</button>
+    </div>
+
+    <div id="stage"></div>
+    <div id="status"></div>
+    <div id="captions"></div>
+
+    <div class="bar bottom">
+      <span id="image-tools" class="hidden">
+        <button data-img="zoomOut" type="button">Zoom -</button>
+        <button data-img="zoomIn" type="button">Zoom +</button>
+        <button data-img="resetZoom" type="button">Fit</button>
+        <button data-img="rotateLeft" type="button">Rotate L</button>
+        <button data-img="rotateRight" type="button">Rotate R</button>
+        <button data-img="reset" type="button">Reset</button>
+      </span>
+
+      <span id="playback-tools" class="hidden">
+        <button id="play" type="button">Play</button>
+        <span id="time" class="muted">0:00 / 0:00</span>
+        <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek">
+        <button id="mute" type="button">Mute</button>
+        <input id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume">
+        <label class="muted">Speed <input id="speed" type="range" min="0.25" max="4" step="0.01" value="1" aria-label="Speed"></label>
+        <span id="speedVal" class="muted">1.00x</span>
+        <button id="repeat" type="button">Repeat</button>
+        <button id="pip" class="hidden" type="button">PiP</button>
+        <button id="cast" class="hidden" type="button">Cast</button>
+        <button id="captions-toggle" class="hidden" type="button">Captions</button>
+        <canvas id="waveform" class="hidden" width="220" height="44"></canvas>
+        <span id="audio-tools" class="hidden">
+          <label class="muted">Pitch <input id="pitch" type="range" min="-12" max="12" step="0.01" value="0" aria-label="Pitch in semitones"></label>
+          <span id="pitchVal" class="muted">0</span>
+          <button id="ab" type="button">A-B</button>
+        </span>
+      </span>
+    </div>
+  </div>
+
+  <script>
+(() => {
+  // ../core/emitter.js
+  var Emitter = class {
+    constructor() {
+      this._map = /* @__PURE__ */ new Map();
+    }
+    /**
+     * Subscribe to a named event.
+     * @param {string} type
+     * @param {(payload: any) => void} fn
+     * @returns {() => void} unsubscribe
+     */
+    on(type, fn) {
+      let set = this._map.get(type);
+      if (!set) this._map.set(type, set = /* @__PURE__ */ new Set());
+      set.add(fn);
+      return () => this.off(type, fn);
+    }
+    /**
+     * Subscribe for a single dispatch, then auto-unsubscribe.
+     * @param {string} type
+     * @param {(payload: any) => void} fn
+     * @returns {() => void} unsubscribe (in case you want to cancel before it fires)
+     */
+    once(type, fn) {
+      const off = this.on(type, (payload) => {
+        off();
+        fn(payload);
+      });
+      return off;
+    }
+    /** Remove a previously-added handler. Safe if it was never added. */
+    off(type, fn) {
+      const set = this._map.get(type);
+      if (set) {
+        set.delete(fn);
+        if (set.size === 0) this._map.delete(type);
+      }
+    }
+    /**
+     * Dispatch `payload` to every handler of `type`.
+     * @param {string} type
+     * @param {any} [payload]
+     */
+    emit(type, payload) {
+      const set = this._map.get(type);
+      if (!set || set.size === 0) return;
+      for (const fn of [...set]) fn(payload);
+    }
+    /** True if anyone is listening for `type` (lets callers skip building a payload). */
+    has(type) {
+      const set = this._map.get(type);
+      return !!set && set.size > 0;
+    }
+    /** Drop all handlers (call from destroy()). */
+    clear() {
+      this._map.clear();
+    }
+  };
+
+  // ../core/clamp.js
+  function clamp(v, lo, hi) {
+    return v < lo ? lo : v > hi ? hi : v;
+  }
+
+  // ../core/enums.js
+  var Axis = Object.freeze({
+    NONE: "none",
+    HORIZONTAL: "horizontal",
+    VERTICAL: "vertical"
+  });
+  var FitMode = Object.freeze({
+    FIT: "fit",
+    FIT_NO_UPSCALE: "fit-no-upscale",
+    FILL: "fill"
+  });
+
+  // ../core/transform2d.js
+  var EPS = 1e-6;
+  var TRIG = {
+    0: { cos: 1, sin: 0 },
+    90: { cos: 0, sin: 1 },
+    180: { cos: -1, sin: 0 },
+    270: { cos: 0, sin: -1 }
+  };
+  function createTransform(opts = {}) {
+    return build(opts);
+  }
+  function build(opts) {
+    const initialFitMode = opts.fitMode || FitMode.FIT;
+    const maxZoomFactor = opts.maxZoomFactor > 0 ? opts.maxZoomFactor : 4;
+    const explicitMax = opts.maxScale;
+    const doubleTapScale = opts.doubleTapScale != null ? opts.doubleTapScale : 1;
+    let natW = 0;
+    let natH = 0;
+    let vpW = 0;
+    let vpH = 0;
+    let scale = 1;
+    let panX = 0;
+    let panY = 0;
+    let rotation = 0;
+    let flipH = false;
+    let flipV = false;
+    let fitMode = initialFitMode;
+    const hasDims = () => natW > 0 && natH > 0 && vpW > 0 && vpH > 0;
+    function effNat() {
+      return rotation === 90 || rotation === 270 ? { w: natH, h: natW } : { w: natW, h: natH };
+    }
+    function fitScaleFor(mode) {
+      if (!hasDims()) return 1;
+      const { w, h } = effNat();
+      const contain = Math.min(vpW / w, vpH / h);
+      const cover = Math.max(vpW / w, vpH / h);
+      if (mode === FitMode.FILL) return cover;
+      if (mode === FitMode.FIT_NO_UPSCALE) return Math.min(contain, 1);
+      return contain;
+    }
+    const fitScale = () => fitScaleFor(fitMode);
+    const minScale = () => fitScale();
+    function maxScale() {
+      const floor = minScale();
+      const m = explicitMax != null ? explicitMax : Math.max(1, fitScale()) * maxZoomFactor;
+      return Math.max(m, floor);
+    }
+    function panBounds() {
+      const { w, h } = effNat();
+      const ew = w * scale;
+      const eh = h * scale;
+      return {
+        x: Math.max(0, (ew - vpW) / 2),
+        y: Math.max(0, (eh - vpH) / 2)
+      };
+    }
+    function clampPan() {
+      const b = panBounds();
+      panX = clamp(panX, -b.x, b.x);
+      panY = clamp(panY, -b.y, b.y);
+    }
+    function clampScale() {
+      scale = clamp(scale, minScale(), maxScale());
+    }
+    function isFitted() {
+      return Math.abs(scale - fitScale()) <= fitScale() * 1e-4 + EPS;
+    }
+    function reflow(mutate) {
+      const refit = isFitted();
+      mutate();
+      if (refit) {
+        scale = fitScale();
+        panX = 0;
+        panY = 0;
+      } else {
+        clampScale();
+        clampPan();
+      }
+    }
+    function applyFit() {
+      scale = fitScale();
+      panX = 0;
+      panY = 0;
+    }
+    function matrix() {
+      const { cos, sin } = TRIG[rotation];
+      const sx = scale * (flipH ? -1 : 1);
+      const sy = scale * (flipV ? -1 : 1);
+      const a = sx * cos;
+      const b = sx * sin;
+      const c = -sy * sin;
+      const d = sy * cos;
+      const cx = natW / 2;
+      const cy = natH / 2;
+      const e = vpW / 2 + panX - (a * cx + c * cy);
+      const f = vpH / 2 + panY - (b * cx + d * cy);
+      return [a, b, c, d, e, f].map((v) => v === 0 ? 0 : v);
+    }
+    return {
+      // ---- inputs --------------------------------------------------------------
+      /** Set intrinsic image dimensions (e.g. from img.naturalWidth on load). */
+      setNatural(w, h) {
+        reflow(() => {
+          natW = w > 0 ? w : 0;
+          natH = h > 0 ? h : 0;
+        });
+        return this;
+      },
+      /** Set the viewport (container) dimensions. */
+      setViewport(w, h) {
+        reflow(() => {
+          vpW = w > 0 ? w : 0;
+          vpH = h > 0 ? h : 0;
+        });
+        return this;
+      },
+      /** Change fit mode and snap to that mode's fit (the point of changing it). */
+      setFitMode(mode) {
+        fitMode = mode;
+        applyFit();
+        return this;
+      },
+      // ---- zoom ----------------------------------------------------------------
+      /**
+       * Zoom to an absolute scale, keeping the viewport point (ox, oy) fixed under
+       * the cursor / pinch midpoint. Omitting the point zooms about the center.
+       * Scale is clamped to [min, max]; pan is re-clamped to bounds afterward.
+       *
+       * Math: with u = point relative to viewport center and k = newScale/oldScale,
+       *   newPan = k·oldPan − (k−1)·u
+       * keeps the content under the point stationary (see header for the model).
+       */
+      zoomTo(targetScale, ox, oy) {
+        const s0 = scale;
+        const s1 = clamp(targetScale, minScale(), maxScale());
+        const k = s0 > 0 ? s1 / s0 : 1;
+        const px = ox == null ? vpW / 2 : ox;
+        const py = oy == null ? vpH / 2 : oy;
+        const ux = px - vpW / 2;
+        const uy = py - vpH / 2;
+        panX = k * panX - (k - 1) * ux;
+        panY = k * panY - (k - 1) * uy;
+        scale = s1;
+        clampPan();
+        return this;
+      },
+      /** Multiply current scale by `factor`, anchored at (ox, oy). */
+      zoomBy(factor, ox, oy) {
+        return this.zoomTo(scale * factor, ox, oy);
+      },
+      /**
+       * The scale a double-tap / double-click at a point should jump to: from fit,
+       * zoom in to the configured level (default 100% native); otherwise zoom back
+       * to fit. Guards the degenerate case where the configured level is not
+       * actually more zoomed than fit (a small image whose fit already upscales
+       * past 100%) by falling back to a meaningful zoom-in.
+       */
+      doubleTapTarget() {
+        const fit = fitScale();
+        if (!isFitted()) return fit;
+        let target = doubleTapScale;
+        if (!(target > fit + EPS)) target = Math.min(maxScale(), Math.max(fit * 2, fit + 1));
+        return clamp(target, minScale(), maxScale());
+      },
+      // ---- pan -----------------------------------------------------------------
+      /** Translate by (dx, dy) px, clamped to bounds. */
+      panBy(dx, dy) {
+        panX += dx;
+        panY += dy;
+        clampPan();
+        return this;
+      },
+      /** Set the pan offset, clamped to bounds. */
+      panTo(x, y) {
+        panX = x;
+        panY = y;
+        clampPan();
+        return this;
+      },
+      // ---- rotate / flip -------------------------------------------------------
+      /** Rotate by a multiple of 90° (±90 typical). Re-fits or re-clamps. */
+      rotateBy(deg) {
+        reflow(() => {
+          const step = Math.round(deg / 90) * 90;
+          rotation = ((rotation + step) % 360 + 360) % 360;
+        });
+        return this;
+      },
+      rotateLeft() {
+        return this.rotateBy(-90);
+      },
+      rotateRight() {
+        return this.rotateBy(90);
+      },
+      flipHorizontal() {
+        flipH = !flipH;
+        clampPan();
+        return this;
+      },
+      flipVertical() {
+        flipV = !flipV;
+        clampPan();
+        return this;
+      },
+      // ---- resets --------------------------------------------------------------
+      /** Reset everything: rotation 0, no flips, initial fit mode, fitted, centered. */
+      reset() {
+        rotation = 0;
+        flipH = false;
+        flipV = false;
+        fitMode = initialFitMode;
+        applyFit();
+        return this;
+      },
+      resetZoom() {
+        applyFit();
+        return this;
+      },
+      resetPan() {
+        panX = 0;
+        panY = 0;
+        clampPan();
+        return this;
+      },
+      resetRotation() {
+        reflow(() => {
+          rotation = 0;
+        });
+        return this;
+      },
+      resetFlip() {
+        flipH = false;
+        flipV = false;
+        clampPan();
+        return this;
+      },
+      // ---- queries -------------------------------------------------------------
+      /** True when zoomed beyond the fit level — the gesture module's pan/swipe switch. */
+      isZoomed() {
+        return scale > fitScale() * (1 + 1e-4);
+      },
+      /** Current pan bounds {x, y} (the max |pan| on each axis). */
+      getBounds() {
+        return panBounds();
+      },
+      getFitScale() {
+        return fitScale();
+      },
+      getMinScale() {
+        return minScale();
+      },
+      getMaxScale() {
+        return maxScale();
+      },
+      /** Full emitted state, including the ready-to-apply matrix. */
+      getState() {
+        return {
+          scale,
+          x: panX,
+          y: panY,
+          rotation,
+          flipH,
+          flipV,
+          fitMode,
+          matrix: matrix(),
+          fitScale: fitScale(),
+          minScale: minScale(),
+          maxScale: maxScale(),
+          ready: hasDims(),
+          bounds: panBounds()
+        };
+      },
+      /** The `zoom` facet of the renderer's capability descriptor. */
+      getZoomCapability() {
+        return {
+          supported: true,
+          min: minScale(),
+          max: maxScale(),
+          current: scale,
+          fitAvailable: Math.abs(scale - fitScale()) > EPS,
+          ready: hasDims()
+        };
+      }
+    };
+  }
+
+  // ../core/gestures.js
+  var DEG = 180 / Math.PI;
+  function classifyDrag(dx, dy, deadzoneDeg = 30) {
+    const angle = Math.atan2(Math.abs(dy), Math.abs(dx)) * DEG;
+    if (angle <= deadzoneDeg) return Axis.HORIZONTAL;
+    if (angle >= 90 - deadzoneDeg && dy > 0) return Axis.VERTICAL;
+    if (Math.abs(dx) >= Math.abs(dy)) return Axis.HORIZONTAL;
+    return dy > 0 ? Axis.VERTICAL : Axis.HORIZONTAL;
+  }
+  var DEFAULTS = {
+    moveThreshold: 10,
+    // px before a press is reclassified as a drag (rules 2/3)
+    doubleTapMs: 300,
+    // double-tap time window (rule 4)
+    doubleTapDist: 30,
+    // double-tap distance window, px (rule 4)
+    axisDeadzoneDeg: 30,
+    // rule 2
+    navDistance: 80,
+    // px of horizontal travel that commits a navigate
+    dismissDistance: 140,
+    // px of downward travel that commits a dismiss
+    flickVelocity: 0.5,
+    // px/ms; a fast flick commits regardless of distance
+    wheelZoomBase: 1.0015,
+    // factor = base^(−deltaY); tuned for typical wheel deltas
+    wheelZoomClamp: [0.8, 1.25]
+    // per-event factor clamp so one notch can't leap
+  };
+  function createGestureRecognizer(opts = {}) {
+    const cfg = { ...DEFAULTS, ...opts };
+    const isZoomed = typeof opts.isZoomed === "function" ? opts.isZoomed : () => false;
+    const emitter = new Emitter();
+    const pointers = /* @__PURE__ */ new Map();
+    let mode = "idle";
+    let escalated = false;
+    let axis = Axis.NONE;
+    let primaryId = null;
+    let lastX = 0;
+    let lastY = 0;
+    let lastT = 0;
+    let vx = 0;
+    let vy = 0;
+    let prevDist = 0;
+    let prevMidX = 0;
+    let prevMidY = 0;
+    let lastTapT = -Infinity;
+    let lastTapX = 0;
+    let lastTapY = 0;
+    const emit = (type, payload) => emitter.emit(type, payload);
+    function twoIds() {
+      const it = pointers.keys();
+      return [it.next().value, it.next().value];
+    }
+    function midAndDist() {
+      const [a, b] = twoIds();
+      const p = pointers.get(a);
+      const q = pointers.get(b);
+      return {
+        cx: (p.x + q.x) / 2,
+        cy: (p.y + q.y) / 2,
+        dist: Math.hypot(p.x - q.x, p.y - q.y) || 1
+      };
+    }
+    function endSingleDrag({ cancelled }) {
+      if (mode === "pan") emit("panend", { cancelled });
+      else if (mode === "nav") emit("navend", { total: lastX - startXOf(primaryId), vx, direction: dirOf(lastX - startXOf(primaryId)), willNavigate: false, cancelled });
+      else if (mode === "dismiss") emit("dismissend", { total: lastY - startYOf(primaryId), vy, willDismiss: false, cancelled });
+    }
+    const startXOf = (id) => pointers.get(id) ? pointers.get(id).sx : lastX;
+    const startYOf = (id) => pointers.get(id) ? pointers.get(id).sy : lastY;
+    const dirOf = (total) => total < 0 ? "next" : "prev";
+    function beginPinch() {
+      mode = "pinch";
+      escalated = true;
+      axis = Axis.NONE;
+      const m = midAndDist();
+      prevDist = m.dist;
+      prevMidX = m.cx;
+      prevMidY = m.cy;
+      emit("pinchstart", { cx: m.cx, cy: m.cy });
+    }
+    return {
+      /** Subscribe to resolved gestures. Returns an unsubscribe fn. */
+      on: (type, fn) => emitter.on(type, fn),
+      /** @param {{id:number,x:number,y:number,t:number}} s */
+      pointerDown(s) {
+        pointers.set(s.id, { x: s.x, y: s.y, sx: s.x, sy: s.y, st: s.t });
+        if (pointers.size === 1) {
+          primaryId = s.id;
+          mode = "pending";
+          escalated = false;
+          axis = Axis.NONE;
+          lastX = s.x;
+          lastY = s.y;
+          lastT = s.t;
+          vx = vy = 0;
+        } else if (pointers.size === 2) {
+          if (escalated) endSingleDrag({ cancelled: true });
+          beginPinch();
+        }
+      },
+      /** @param {{id:number,x:number,y:number,t:number}} s */
+      pointerMove(s) {
+        const p = pointers.get(s.id);
+        if (!p) return;
+        p.x = s.x;
+        p.y = s.y;
+        if (mode === "pinch") {
+          const m = midAndDist();
+          const scaleDelta = m.dist / (prevDist || 1);
+          const dx = m.cx - prevMidX;
+          const dy = m.cy - prevMidY;
+          prevDist = m.dist;
+          prevMidX = m.cx;
+          prevMidY = m.cy;
+          emit("pinch", { scaleDelta, dx, dy, cx: m.cx, cy: m.cy });
+          return;
+        }
+        if (s.id !== primaryId) return;
+        const dt = s.t - lastT;
+        if (dt > 0) {
+          vx = (s.x - lastX) / dt;
+          vy = (s.y - lastY) / dt;
+        }
+        const dxStep = s.x - lastX;
+        const dyStep = s.y - lastY;
+        lastX = s.x;
+        lastY = s.y;
+        lastT = s.t;
+        const totalX = s.x - p.sx;
+        const totalY = s.y - p.sy;
+        if (mode === "pending") {
+          if (Math.hypot(totalX, totalY) < cfg.moveThreshold) return;
+          if (isZoomed()) {
+            mode = "pan";
+            escalated = true;
+            emit("panstart", { x: s.x, y: s.y });
+            emit("pan", { dx: totalX, dy: totalY, x: s.x, y: s.y });
+          } else {
+            axis = classifyDrag(totalX, totalY, cfg.axisDeadzoneDeg);
+            escalated = true;
+            if (axis === Axis.HORIZONTAL) {
+              mode = "nav";
+              emit("navstart", { x: s.x, y: s.y });
+              emit("navmove", { dx: dxStep, total: totalX, x: s.x, y: s.y });
+            } else {
+              mode = "dismiss";
+              emit("dismissstart", { x: s.x, y: s.y });
+              emit("dismissmove", {
+                dy: dyStep,
+                total: totalY,
+                progress: Math.max(0, Math.min(1, totalY / cfg.dismissDistance)),
+                x: s.x,
+                y: s.y
+              });
+            }
+          }
+          return;
+        }
+        if (mode === "pan") {
+          emit("pan", { dx: dxStep, dy: dyStep, x: s.x, y: s.y });
+        } else if (mode === "nav") {
+          emit("navmove", { dx: dxStep, total: totalX, x: s.x, y: s.y });
+        } else if (mode === "dismiss") {
+          emit("dismissmove", {
+            dy: dyStep,
+            total: totalY,
+            progress: Math.max(0, Math.min(1, totalY / cfg.dismissDistance)),
+            x: s.x,
+            y: s.y
+          });
+        }
+      },
+      /** @param {{id:number,x:number,y:number,t:number}} s */
+      pointerUp(s) {
+        const p = pointers.get(s.id);
+        if (!p) return;
+        if (mode === "pinch") {
+          pointers.delete(s.id);
+          if (pointers.size >= 1) {
+            emit("pinchend", {});
+            const [remId] = pointers.keys();
+            primaryId = remId;
+            const r = pointers.get(remId);
+            lastX = r.x;
+            lastY = r.y;
+            lastT = s.t;
+            vx = vy = 0;
+            mode = "pan";
+            escalated = true;
+            emit("panstart", { x: r.x, y: r.y });
+          } else {
+            emit("pinchend", {});
+            mode = "idle";
+          }
+          return;
+        }
+        pointers.delete(s.id);
+        if (s.id !== primaryId) return;
+        if (!escalated && mode === "pending") {
+          const isDouble = s.t - lastTapT <= cfg.doubleTapMs && Math.hypot(s.x - lastTapX, s.y - lastTapY) <= cfg.doubleTapDist;
+          if (isDouble) {
+            lastTapT = -Infinity;
+            emit("doubletap", { x: s.x, y: s.y });
+          } else {
+            lastTapT = s.t;
+            lastTapX = s.x;
+            lastTapY = s.y;
+            emit("tap", { x: s.x, y: s.y });
+          }
+        } else if (mode === "pan") {
+          emit("panend", { cancelled: false });
+        } else if (mode === "nav") {
+          const total = s.x - p.sx;
+          const willNavigate = Math.abs(total) > cfg.navDistance || Math.abs(vx) > cfg.flickVelocity;
+          emit("navend", { total, vx, direction: dirOf(total), willNavigate, cancelled: false });
+        } else if (mode === "dismiss") {
+          const total = s.y - p.sy;
+          const willDismiss = total > cfg.dismissDistance || vy > cfg.flickVelocity && total > 0;
+          emit("dismissend", { total, vy, willDismiss, cancelled: false });
+        }
+        mode = pointers.size ? mode : "idle";
+        if (pointers.size === 0) {
+          escalated = false;
+          axis = Axis.NONE;
+          primaryId = null;
+        }
+      },
+      /** @param {{id:number,x:number,y:number,t:number}} s */
+      pointerCancel(s) {
+        if (!pointers.has(s.id)) return;
+        if (escalated) {
+          if (mode === "pinch") emit("pinchend", { cancelled: true });
+          else endSingleDrag({ cancelled: true });
+        }
+        pointers.delete(s.id);
+        if (pointers.size === 0) {
+          mode = "idle";
+          escalated = false;
+          axis = Axis.NONE;
+          primaryId = null;
+        }
+      },
+      /**
+       * Wheel → zoom, anchored at the pointer (rule 6). deltaY < 0 zooms in.
+       * @param {{x:number,y:number,deltaY:number}} w
+       */
+      wheel(w) {
+        let factor = Math.pow(cfg.wheelZoomBase, -w.deltaY);
+        factor = Math.max(cfg.wheelZoomClamp[0], Math.min(cfg.wheelZoomClamp[1], factor));
+        emit("wheelzoom", { factor, x: w.x, y: w.y });
+      },
+      /** Clear all in-flight state (call on unmount / surface change). */
+      reset() {
+        pointers.clear();
+        mode = "idle";
+        escalated = false;
+        axis = Axis.NONE;
+        primaryId = null;
+        lastTapT = -Infinity;
+      },
+      /** Current internal mode — exposed for tests/diagnostics. */
+      getMode() {
+        return mode;
+      },
+      /**
+       * DOM binding (browser-only): wire real PointerEvents/WheelEvents on `el`
+       * onto the core. The consumer should set `touch-action: none` on `el` so the
+       * browser doesn't claim the gesture for scrolling. Returns a detach fn.
+       *
+       * Not exercised by the Node tests — the core above is. This is intentionally
+       * the only DOM-touching function in the module, and it touches nothing at
+       * module scope.
+       */
+      attach(el) {
+        const norm = (e) => ({ id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp });
+        const onDown = (e) => {
+          el.setPointerCapture?.(e.pointerId);
+          this.pointerDown(norm(e));
+        };
+        const onMove = (e) => this.pointerMove(norm(e));
+        const onUp = (e) => {
+          this.pointerUp(norm(e));
+          el.releasePointerCapture?.(e.pointerId);
+        };
+        const onCancel = (e) => this.pointerCancel(norm(e));
+        const onWheel = (e) => {
+          e.preventDefault();
+          this.wheel({ x: e.clientX, y: e.clientY, deltaY: e.deltaY });
+        };
+        el.addEventListener("pointerdown", onDown);
+        el.addEventListener("pointermove", onMove);
+        el.addEventListener("pointerup", onUp);
+        el.addEventListener("pointercancel", onCancel);
+        el.addEventListener("wheel", onWheel, { passive: false });
+        return () => {
+          el.removeEventListener("pointerdown", onDown);
+          el.removeEventListener("pointermove", onMove);
+          el.removeEventListener("pointerup", onUp);
+          el.removeEventListener("pointercancel", onCancel);
+          el.removeEventListener("wheel", onWheel);
+        };
+      }
+    };
+  }
+
+  // ../media-engine.js
+  var { MediaType, Lifecycle, LoadState, PlayState, CastState, RepeatMode, GestureKind } = (() => {
+    const MediaType2 = Object.freeze({
+      IMAGE: "image",
+      VIDEO: "video",
+      AUDIO: "audio"
+    });
+    const Lifecycle2 = Object.freeze({
+      CLOSED: "closed",
+      OPENING: "opening",
+      OPEN: "open",
+      CLOSING: "closing"
+    });
+    const LoadState2 = Object.freeze({
+      IDLE: "idle",
+      LOADING: "loading",
+      LOADED: "loaded",
+      ERROR: "error"
+    });
+    const PlayState2 = Object.freeze({
+      PLAYING: "playing",
+      PAUSED: "paused",
+      STOPPED: "stopped",
+      ENDED: "ended"
+    });
+    const CastState2 = Object.freeze({
+      UNSUPPORTED: "unsupported",
+      // API absent (Firefox/Safari) or source unreachable by a device
+      UNAVAILABLE: "unavailable",
+      // API present, but no device currently reachable
+      CONNECTING: "connecting",
+      CONNECTED: "connected",
+      DISCONNECTED: "disconnected"
+    });
+    const RepeatMode2 = Object.freeze({
+      NONE: "none",
+      // stop at end of queue
+      ONE: "one",
+      // repeat the current track
+      ALL: "all"
+      // loop the whole queue
+    });
+    const GestureKind2 = Object.freeze({
+      NONE: "none",
+      TAP: "tap",
+      DOUBLE_TAP: "double-tap",
+      PAN: "pan",
+      // one-finger drag while zoomed
+      SWIPE: "swipe",
+      // horizontal navigate (not zoomed)
+      DISMISS: "dismiss",
+      // vertical-down drag to close (not zoomed)
+      PINCH: "pinch",
+      // two-finger zoom (+ simultaneous two-finger pan)
+      WHEEL_ZOOM: "wheel-zoom"
+    });
+    return { MediaType: MediaType2, Lifecycle: Lifecycle2, LoadState: LoadState2, PlayState: PlayState2, CastState: CastState2, RepeatMode: RepeatMode2, GestureKind: GestureKind2 };
+  })();
+  var { lerp, approxEqual, noop, raf, caf, frameThrottle } = /* @__PURE__ */ (() => {
+    function lerp2(a, b, t) {
+      return a + (b - a) * t;
+    }
+    function approxEqual2(a, b, eps = 1e-9) {
+      return Math.abs(a - b) <= eps;
+    }
+    function noop2() {
+    }
+    function raf3(fn) {
+      return typeof requestAnimationFrame === "function" ? requestAnimationFrame(fn) : setTimeout(() => fn(performanceNow()), 0);
+    }
+    function caf2(id) {
+      if (typeof cancelAnimationFrame === "function") cancelAnimationFrame(id);
+      else clearTimeout(id);
+    }
+    function performanceNow() {
+      return typeof performance !== "undefined" && performance.now ? performance.now() : 0;
+    }
+    function frameThrottle2(fn) {
+      let scheduled = false;
+      let lastArgs = null;
+      let id = 0;
+      const wrapped = (...args) => {
+        lastArgs = args;
+        if (scheduled) return;
+        scheduled = true;
+        id = raf3(() => {
+          scheduled = false;
+          fn(...lastArgs);
+        });
+      };
+      wrapped.cancel = () => {
+        if (scheduled) {
+          caf2(id);
+          scheduled = false;
+        }
+      };
+      return wrapped;
+    }
+    return { lerp: lerp2, approxEqual: approxEqual2, noop: noop2, raf: raf3, caf: caf2, frameThrottle: frameThrottle2 };
+  })();
+  var { RendererEvent, Intent, createRendererRegistry, defineRenderer } = (() => {
+    const RendererEvent2 = Object.freeze({
+      LOAD: "load",
+      // { state: LoadState, progress?: number, error?: any }
+      CAPABILITY: "capability",
+      // capabilities changed → shell re-reads getCapabilities()
+      PLAYBACK: "playback",
+      // PlaybackStatus snapshot (video/audio)
+      TRANSFORM: "transform",
+      // TransformState (image)
+      CUES: "cues",
+      // { cues: Cue[], trackId } — active captions changed
+      TRACKS: "tracks",
+      // available caption/audio tracks changed (streaming)
+      CAST: "cast",
+      // { state: CastState, available: boolean }
+      WAVEFORM: "waveform",
+      // { peaks: number[] } (audio)
+      CONTROLS: "controls",
+      // { visible: boolean } controls-overlay visibility (video)
+      INTENT: "intent"
+      // renderer asks the shell to act: { type:'navigate'|'close'|'dismiss', index? }
+    });
+    const Intent2 = Object.freeze({
+      NAVIGATE: "navigate",
+      // { index } — e.g. audio queue auto-advance at track end
+      CLOSE: "close",
+      DISMISS: "dismiss"
+    });
+    function createRendererRegistry2() {
+      const factories = /* @__PURE__ */ new Map();
+      return {
+        /**
+         * @param {string} type            MediaType value
+         * @param {(item:any, deps:any) => any} factory  returns a renderer (see contract)
+         */
+        register(type, factory) {
+          if (typeof factory !== "function") {
+            throw new Error(`media-engine: renderer factory for "${type}" must be a function`);
+          }
+          factories.set(type, factory);
+          return this;
+        },
+        has(type) {
+          return factories.has(type);
+        },
+        resolve(type) {
+          return factories.get(type) || null;
+        },
+        /** Instantiate the renderer for an item. Throws if its type is unregistered. */
+        create(item, deps) {
+          const factory = factories.get(item && item.type);
+          if (!factory) {
+            throw new Error(`media-engine: no renderer registered for type "${item && item.type}"`);
+          }
+          return factory(item, deps);
+        },
+        types() {
+          return [...factories.keys()];
+        }
+      };
+    }
+    function defineRenderer2(impl) {
+      if (!impl || !impl.type) throw new Error("media-engine: a renderer needs a `type`");
+      return {
+        isZoomed() {
+          return false;
+        },
+        handleKey() {
+          return false;
+        },
+        activate() {
+        },
+        deactivate() {
+        },
+        unmount() {
+        },
+        getState() {
+          return {};
+        },
+        getCapabilities() {
+          return {
+            type: impl.type,
+            zoom: null,
+            playback: null,
+            tracks: null,
+            castable: false,
+            fullscreen: false,
+            download: false
+          };
+        },
+        on() {
+          return () => {
+          };
+        },
+        ...impl
+      };
+    }
+    return { RendererEvent: RendererEvent2, Intent: Intent2, createRendererRegistry: createRendererRegistry2, defineRenderer: defineRenderer2 };
+  })();
+  var { parseTimestamp, parseVTT, createCueTrack } = /* @__PURE__ */ (() => {
+    function parseTimestamp2(s) {
+      const m = /^(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{1,3})$/.exec(String(s).trim());
+      if (!m) return NaN;
+      const hh = m[1] ? parseInt(m[1], 10) : 0;
+      const mm = parseInt(m[2], 10);
+      const ss = parseInt(m[3], 10);
+      const frac = parseInt(m[4].padEnd(3, "0"), 10);
+      return hh * 3600 + mm * 60 + ss + frac / 1e3;
+    }
+    function stripTags(s) {
+      return s.replace(/<[^>]*>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
+    }
+    function parseSettings(str) {
+      const out = {};
+      if (!str) return out;
+      for (const tok of str.split(/\s+/)) {
+        const c = tok.indexOf(":");
+        if (c > 0) out[tok.slice(0, c)] = tok.slice(c + 1);
+      }
+      return out;
+    }
+    function parseVTT2(text) {
+      const cues = [];
+      if (!text) return { cues };
+      const normalized = String(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      const blocks = normalized.split(/\n[ \t]*\n+/);
+      let autoId = 0;
+      for (let bi = 0; bi < blocks.length; bi++) {
+        const block = blocks[bi].trim();
+        if (!block) continue;
+        if (bi === 0 && /^WEBVTT/.test(block)) continue;
+        if (/^(NOTE|STYLE|REGION)\b/.test(block)) continue;
+        const lines = block.split("\n");
+        let i = 0;
+        let id = "";
+        if (lines[0].indexOf("-->") === -1) {
+          id = lines[0].trim();
+          i = 1;
+        }
+        const timing = lines[i];
+        if (!timing || timing.indexOf("-->") === -1) continue;
+        i++;
+        const arrow = timing.indexOf("-->");
+        const startStr = timing.slice(0, arrow).trim();
+        const rest = timing.slice(arrow + 3).trim().split(/\s+/);
+        const endStr = rest.shift();
+        const start = parseTimestamp2(startStr);
+        const end = parseTimestamp2(endStr);
+        if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+        const raw = lines.slice(i).join("\n");
+        cues.push({
+          id: id || String(++autoId),
+          start,
+          end,
+          text: raw,
+          plain: stripTags(raw),
+          settings: parseSettings(rest.join(" "))
+        });
+      }
+      cues.sort((a, b) => a.start - b.start || a.end - b.end);
+      return { cues };
+    }
+    function createCueTrack2(cues = []) {
+      const list = [...cues].sort((a, b) => a.start - b.start || a.end - b.end);
+      let lastKey = null;
+      function activeAt(time) {
+        const out = [];
+        for (const c of list) {
+          if (c.start <= time && time < c.end) out.push(c);
+          else if (c.start > time) break;
+        }
+        return out;
+      }
+      return {
+        get count() {
+          return list.length;
+        },
+        getCues() {
+          return list;
+        },
+        activeAt,
+        /**
+         * @param {number} time seconds
+         * @returns {{ cues: Cue[], changed: boolean }}
+         */
+        update(time) {
+          const active = activeAt(time);
+          const key = active.map((c) => c.id).join("|");
+          const changed = key !== lastKey;
+          lastKey = key;
+          return { cues: active, changed };
+        },
+        /** Forget the last-active set (e.g. after a seek or track switch). */
+        reset() {
+          lastKey = null;
+        }
+      };
+    }
+    return { parseTimestamp: parseTimestamp2, parseVTT: parseVTT2, createCueTrack: createCueTrack2 };
+  })();
+  var { createQueue } = /* @__PURE__ */ (() => {
+    function createQueue2(opts = {}) {
+      let items2 = Array.isArray(opts.items) ? [...opts.items] : [];
+      let index = items2.length ? clamp(opts.index || 0, 0, items2.length - 1) : -1;
+      let repeat = opts.repeat || RepeatMode.NONE;
+      let playOnce = !!opts.playOnce;
+      let ab = null;
+      const size = () => items2.length;
+      const inRange = (i) => i >= 0 && i < items2.length;
+      return {
+        // ---- queue shape ---------------------------------------------------------
+        get size() {
+          return items2.length;
+        },
+        get index() {
+          return index;
+        },
+        getItems() {
+          return items2;
+        },
+        current() {
+          return inRange(index) ? items2[index] : null;
+        },
+        hasNext() {
+          return repeat === RepeatMode.ALL ? items2.length > 0 : index < items2.length - 1;
+        },
+        hasPrev() {
+          return repeat === RepeatMode.ALL ? items2.length > 0 : index > 0;
+        },
+        /** Replace the queue; resets A-B and clamps/sets the index. */
+        setItems(arr, { index: idx = 0 } = {}) {
+          items2 = Array.isArray(arr) ? [...arr] : [];
+          index = items2.length ? clamp(idx, 0, items2.length - 1) : -1;
+          ab = null;
+          return index;
+        },
+        /** Jump to an explicit index (clamped). Returns the resulting index. */
+        jump(i) {
+          if (!items2.length) return -1;
+          index = clamp(i, 0, items2.length - 1);
+          return index;
+        },
+        /**
+         * Advance to the next track per repeat mode. Returns {index, wrapped} or
+         * null when at the end with no wrap (repeat none). Does NOT consider
+         * play-once — that only governs natural end-of-track (see onEnded).
+         */
+        next() {
+          if (!items2.length) return null;
+          if (index < items2.length - 1) {
+            index += 1;
+            return { index, wrapped: false };
+          }
+          if (repeat === RepeatMode.ALL) {
+            index = 0;
+            return { index, wrapped: true };
+          }
+          return null;
+        },
+        /** Step to the previous track (wraps under repeat all). */
+        prev() {
+          if (!items2.length) return null;
+          if (index > 0) {
+            index -= 1;
+            return { index, wrapped: false };
+          }
+          if (repeat === RepeatMode.ALL) {
+            index = items2.length - 1;
+            return { index, wrapped: true };
+          }
+          return null;
+        },
+        // ---- repeat / play-once --------------------------------------------------
+        setRepeat(mode) {
+          repeat = mode;
+          return repeat;
+        },
+        getRepeat() {
+          return repeat;
+        },
+        setPlayOnce(on) {
+          playOnce = !!on;
+          return playOnce;
+        },
+        getPlayOnce() {
+          return playOnce;
+        },
+        /**
+         * Decide what to do when the current track ENDS naturally. Mutates the index
+         * for an advance. Returns:
+         *   { action: 'stop',    index }  — halt here (play-once, or end with no wrap)
+         *   { action: 'repeat',  index }  — restart the current track (repeat one)
+         *   { action: 'advance', index, wrapped }  — move to another track & play it
+         */
+        onEnded() {
+          if (!items2.length) return { action: "stop", index: -1 };
+          if (playOnce) return { action: "stop", index };
+          if (repeat === RepeatMode.ONE) return { action: "repeat", index };
+          if (index < items2.length - 1) {
+            index += 1;
+            return { action: "advance", index, wrapped: false };
+          }
+          if (repeat === RepeatMode.ALL) {
+            index = 0;
+            return { action: "advance", index, wrapped: true };
+          }
+          return { action: "stop", index };
+        },
+        // ---- A-B repeat ----------------------------------------------------------
+        /** Define a loop segment [a, b] (seconds). Orders the endpoints; ignores a degenerate span. */
+        setAB(a, b) {
+          const lo = Math.min(a, b);
+          const hi = Math.max(a, b);
+          ab = hi > lo ? { a: lo, b: hi } : null;
+          return ab;
+        },
+        clearAB() {
+          ab = null;
+        },
+        getAB() {
+          return ab ? { ...ab } : null;
+        },
+        /**
+         * Given the current playback time, return the seek target if the A-B loop
+         * should wrap (time has reached/passed b), else null. Only loops at the END
+         * of the segment — a user seeking before `a` is left alone.
+         * @param {number} time seconds
+         * @returns {number|null}
+         */
+        abSeek(time) {
+          if (!ab) return null;
+          return time >= ab.b ? ab.a : null;
+        }
+      };
+    }
+    return { createQueue: createQueue2 };
+  })();
+  var { extractPeaks, extractMinMax, mixToMono, peaksFromBuffer, decodePeaks } = /* @__PURE__ */ (() => {
+    function extractPeaks2(samples, buckets, { normalize = false } = {}) {
+      const n = samples.length;
+      if (!n || buckets <= 0) return [];
+      const b = Math.min(Math.floor(buckets), n);
+      const peaks2 = new Array(b);
+      const size = n / b;
+      let loudest = 0;
+      for (let i = 0; i < b; i++) {
+        const start = Math.floor(i * size);
+        const end = Math.min(n, Math.floor((i + 1) * size));
+        let max = 0;
+        for (let j = start; j < end; j++) {
+          const a = samples[j] < 0 ? -samples[j] : samples[j];
+          if (a > max) max = a;
+        }
+        peaks2[i] = max;
+        if (max > loudest) loudest = max;
+      }
+      if (normalize && loudest > 0) {
+        for (let i = 0; i < b; i++) peaks2[i] /= loudest;
+      }
+      return peaks2;
+    }
+    function extractMinMax2(samples, buckets) {
+      const n = samples.length;
+      if (!n || buckets <= 0) return { min: [], max: [] };
+      const b = Math.min(Math.floor(buckets), n);
+      const min = new Array(b);
+      const max = new Array(b);
+      const size = n / b;
+      for (let i = 0; i < b; i++) {
+        const start = Math.floor(i * size);
+        const end = Math.min(n, Math.floor((i + 1) * size));
+        let lo = Infinity;
+        let hi = -Infinity;
+        for (let j = start; j < end; j++) {
+          const v = samples[j];
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+        min[i] = lo === Infinity ? 0 : lo;
+        max[i] = hi === -Infinity ? 0 : hi;
+      }
+      return { min, max };
+    }
+    function mixToMono2(channels) {
+      const ch = channels.length;
+      if (ch === 0) return new Float32Array(0);
+      if (ch === 1) return channels[0];
+      const n = channels[0].length;
+      const out = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        let s = 0;
+        for (let c = 0; c < ch; c++) s += channels[c][i];
+        out[i] = s / ch;
+      }
+      return out;
+    }
+    function peaksFromBuffer2(audioBuffer, buckets, opts) {
+      const channels = [];
+      for (let c = 0; c < audioBuffer.numberOfChannels; c++) channels.push(audioBuffer.getChannelData(c));
+      return extractPeaks2(mixToMono2(channels), buckets, opts);
+    }
+    async function decodePeaks2({ arrayBuffer, url, buckets = 1e3, audioContext, normalize = false }) {
+      const Ctx = audioContext ? null : typeof AudioContext !== "undefined" ? AudioContext : typeof webkitAudioContext !== "undefined" ? webkitAudioContext : null;
+      if (!audioContext && !Ctx) throw new Error("Web Audio API unavailable");
+      const ctx = audioContext || new Ctx();
+      let bytes = arrayBuffer;
+      if (!bytes && url) bytes = await (await fetch(url)).arrayBuffer();
+      if (!bytes) throw new Error("decodePeaks: need arrayBuffer or url");
+      const audioBuffer = await ctx.decodeAudioData(bytes.slice(0));
+      const peaks2 = peaksFromBuffer2(audioBuffer, buckets, { normalize });
+      const result = { peaks: peaks2, duration: audioBuffer.duration, sampleRate: audioBuffer.sampleRate };
+      if (!audioContext && ctx.close) ctx.close();
+      return result;
+    }
+    return { extractPeaks: extractPeaks2, extractMinMax: extractMinMax2, mixToMono: mixToMono2, peaksFromBuffer: peaksFromBuffer2, decodePeaks: decodePeaks2 };
+  })();
+  var { semitonesToRatio, hann, wsolaStretch, resampleLinear, pitchShift, createStretchEngine, createPitchSpeed } = (() => {
+    function semitonesToRatio2(s) {
+      return Math.pow(2, s / 12);
+    }
+    function hann2(N) {
+      const w = new Float32Array(N);
+      for (let i = 0; i < N; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / N);
+      return w;
+    }
+    function wsolaStretch2(input, ratio, opts = {}) {
+      const N = opts.frameSize || 1024;
+      const Hs = N >> 1;
+      const L = N - Hs;
+      const search = opts.searchWindow != null ? opts.searchWindow : N >> 2;
+      if (ratio <= 0 || input.length < N) return Float32Array.from(input);
+      const Ha = ratio;
+      const analysisHop = Hs / ratio;
+      void Ha;
+      const win = hann2(N);
+      const outLen = Math.ceil(input.length * ratio) + N;
+      const out = new Float32Array(outLen);
+      let analysisPos = 0;
+      let templatePos = 0;
+      let outPos = 0;
+      let first = true;
+      while (analysisPos + N + search < input.length) {
+        const nominal = Math.round(analysisPos);
+        let start = nominal;
+        if (!first) {
+          let best = -Infinity;
+          for (let d = -search; d <= search; d++) {
+            const s = nominal + d;
+            if (s < 0 || s + L >= input.length) continue;
+            let acc = 0;
+            for (let i = 0; i < L; i++) acc += input[s + i] * input[templatePos + i];
+            if (acc > best) {
+              best = acc;
+              start = s;
+            }
+          }
+        }
+        first = false;
+        for (let i = 0; i < N; i++) out[outPos + i] += input[start + i] * win[i];
+        templatePos = start + Hs;
+        outPos += Hs;
+        analysisPos += analysisHop;
+      }
+      return out.subarray(0, Math.max(0, outPos + (N - Hs)));
+    }
+    function resampleLinear2(input, ratio) {
+      const outLen = Math.max(0, Math.round(input.length * ratio));
+      const out = new Float32Array(outLen);
+      const step = 1 / ratio;
+      let pos = 0;
+      for (let i = 0; i < outLen; i++) {
+        const idx = Math.floor(pos);
+        const frac = pos - idx;
+        const a = idx < input.length ? input[idx] : 0;
+        const b = idx + 1 < input.length ? input[idx + 1] : a;
+        out[i] = a + (b - a) * frac;
+        pos += step;
+      }
+      return out;
+    }
+    function pitchShift2(input, ratio, opts) {
+      if (ratio === 1) return Float32Array.from(input);
+      return resampleLinear2(wsolaStretch2(input, ratio, opts), 1 / ratio);
+    }
+    class Ring {
+      constructor(cap) {
+        this.buf = new Float32Array(cap);
+        this.cap = cap;
+        this.r = 0;
+        this.count = 0;
+      }
+      get available() {
+        return this.count;
+      }
+      /** Append `len` samples; overruns drop the oldest (shouldn't happen if pulled). */
+      write(arr, len = arr.length) {
+        for (let i = 0; i < len; i++) {
+          const w = (this.r + this.count) % this.cap;
+          this.buf[w] = arr[i];
+          if (this.count < this.cap) this.count++;
+          else this.r = (this.r + 1) % this.cap;
+        }
+      }
+      /** Peek the i-th unread sample (0 = oldest), without consuming. */
+      at(i) {
+        return this.buf[(this.r + i) % this.cap];
+      }
+      /** Drop the oldest `n` samples. */
+      discard(n) {
+        const m = Math.min(n, this.count);
+        this.r = (this.r + m) % this.cap;
+        this.count -= m;
+      }
+      reset() {
+        this.r = 0;
+        this.count = 0;
+      }
+    }
+    function createStretchEngine2(opts = {}) {
+      const N = opts.frameSize || 1024;
+      const Hs = N >> 1;
+      const L = N - Hs;
+      const search = opts.searchWindow != null ? opts.searchWindow : N >> 2;
+      const cap = opts.capacity || 16384;
+      const win = hann2(N);
+      const inRing = new Ring(cap);
+      const midRing = new Ring(cap);
+      let ratio = 1;
+      const accum = new Float32Array(N);
+      let analysisRel = 0;
+      let templateRel = 0;
+      let firstFrame = true;
+      let resamplePos = 0;
+      const KEEP_BEHIND = N + 2 * search;
+      function stretchStep() {
+        const nominal = Math.round(analysisRel);
+        let start = nominal;
+        if (!firstFrame) {
+          let best = -Infinity;
+          for (let d = -search; d <= search; d++) {
+            const s = nominal + d;
+            if (s < 0 || s + L >= inRing.available) continue;
+            let acc = 0;
+            for (let i = 0; i < L; i++) acc += inRing.at(s + i) * inRing.at(templateRel + i);
+            if (acc > best) {
+              best = acc;
+              start = s;
+            }
+          }
+        }
+        firstFrame = false;
+        for (let i = 0; i < N; i++) accum[i] += inRing.at(start + i) * win[i];
+        midRing.write(accum, Hs);
+        accum.copyWithin(0, Hs);
+        accum.fill(0, N - Hs);
+        templateRel = start + Hs;
+        analysisRel += Hs / ratio;
+        if (analysisRel > KEEP_BEHIND) {
+          const drop = Math.floor(analysisRel - KEEP_BEHIND);
+          inRing.discard(drop);
+          analysisRel -= drop;
+          templateRel -= drop;
+        }
+      }
+      function resampleInto(out, n) {
+        let produced = 0;
+        while (produced < n) {
+          const idx = Math.floor(resamplePos);
+          if (idx + 1 >= midRing.available) break;
+          const frac = resamplePos - idx;
+          const a = midRing.at(idx);
+          const b = midRing.at(idx + 1);
+          out[produced++] = a + (b - a) * frac;
+          resamplePos += ratio;
+          const drop = Math.floor(resamplePos);
+          if (drop > 0) {
+            midRing.discard(drop);
+            resamplePos -= drop;
+          }
+        }
+        return produced;
+      }
+      return {
+        /** Set the pitch ratio (1 = passthrough). */
+        setPitchRatio(r) {
+          ratio = clamp(r, 0.25, 4);
+        },
+        getPitchRatio() {
+          return ratio;
+        },
+        /** Push input samples (a render quantum from the source). */
+        push(arr, len) {
+          inRing.write(arr, len);
+        },
+        /**
+         * Fill `out[0..n)` with pitch-shifted output, zero-padding if starved.
+         * @returns {number} samples actually produced (< n means starved)
+         */
+        pull(out, n) {
+          if (ratio === 1) {
+            let i = 0;
+            while (i < n && inRing.available > 0) {
+              out[i++] = inRing.at(0);
+              inRing.discard(1);
+            }
+            const real = i;
+            while (i < n) out[i++] = 0;
+            return real;
+          }
+          let guard = 0;
+          while (midRing.available < Math.ceil(n * ratio) + 2 && inRing.available > analysisRel + N + search && guard++ < 1024) {
+            stretchStep();
+          }
+          const got = resampleInto(out, n);
+          for (let i = got; i < n; i++) out[i] = 0;
+          return got;
+        },
+        /** Approximate added latency in samples (the WSOLA frame). */
+        latencySamples() {
+          return N;
+        },
+        available() {
+          return midRing.available;
+        },
+        reset() {
+          inRing.reset();
+          midRing.reset();
+          accum.fill(0);
+          analysisRel = 0;
+          templateRel = 0;
+          resamplePos = 0;
+          firstFrame = true;
+        }
+      };
+    }
+    const PITCH_WORKLET_SOURCE = [clamp.toString(), "// pitch-speed.js\n// Independent speed and pitch control for the audio renderer.\n//\n// HOW SPEED AND PITCH ARE SPLIT (important):\n//   - SPEED (tempo) is NATIVE: the renderer sets mediaElement.playbackRate with\n//     preservesPitch = true. No DSP, best quality. createPitchSpeed.setSpeed()\n//     just drives that.\n//   - PITCH SHIFT is DSP: routed through an AudioWorklet running a WSOLA\n//     time-stretch at NET TEMPO 1 (stretch by r, then resample by 1/r \u2192 same\n//     length, pitch \xD7r). Because the worklet's net tempo is 1, it is rate-matched\n//     to the element's output and streams cleanly. Speed (native) and pitch\n//     (worklet) are orthogonal, so they're genuinely independent.\n//\n// THE SWAPPABLE CORE (the seam the spec insists on):\n//   `wsolaStretch` is Tier 1. A Tier 2 phase vocoder can replace ONLY this\n//   function \u2014 same signature (samples, ratio, opts) \u2192 samples \u2014 without\n//   touching `createStretchEngine` (the streaming plumbing), `the embedded worklet shell`,\n//   the audio renderer, or the public API. The boundary is marked >>> CORE <<<.\n//\n// Pure parts (no DOM): wsolaStretch, resampleLinear, pitchShift, hann,\n// semitonesToRatio, createStretchEngine \u2014 all unit-testable in Node. The graph\n// builder createPitchSpeed touches AudioContext only inside its body.\n//\n// Exports: { semitonesToRatio, hann, wsolaStretch, resampleLinear, pitchShift,\n//            createStretchEngine, createPitchSpeed }\n\n/** Equal-tempered ratio for a pitch shift of `s` semitones. */\nfunction semitonesToRatio(s) {\n  return Math.pow(2, s / 12);\n}\n\n/** Periodic Hann window of length N. At 50% hop it satisfies COLA (sums to 1). */\nfunction hann(N) {\n  const w = new Float32Array(N);\n  for (let i = 0; i < N; i++) w[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N);\n  return w;\n}\n\n// >>> CORE (Tier 1: WSOLA) \u2014 replace this whole function for Tier 2 ============\n\n/**\n * Time-stretch `input` by `ratio` (output length \u2248 ratio \xD7 input length) while\n * preserving pitch, using WSOLA: overlap-add of Hann-windowed frames, where each\n * analysis frame's exact position is nudged within \xB1searchWindow to best match\n * the previous frame's natural continuation (waveform similarity) \u2014 which is what\n * keeps the phase coherent and avoids buzzy artifacts.\n *\n * Offline / whole-buffer form. The streaming engine below uses the same idea\n * incrementally; this one is the reference the tests pin.\n *\n * @param {ArrayLike<number>} input\n * @param {number} ratio                   >1 slows/lengthens, <1 speeds/shortens\n * @param {Object} [opts]\n * @param {number} [opts.frameSize=1024]\n * @param {number} [opts.searchWindow]     default frameSize/4\n * @returns {Float32Array}\n */\nfunction wsolaStretch(input, ratio, opts = {}) {\n  const N = opts.frameSize || 1024;\n  const Hs = N >> 1; // 50% synthesis hop (COLA with Hann)\n  const L = N - Hs; // overlap length used for the similarity search\n  const search = opts.searchWindow != null ? opts.searchWindow : N >> 2;\n  if (ratio <= 0 || input.length < N) return Float32Array.from(input);\n\n  const Ha = ratio; // fractional analysis hop; output/input = Hs/Ha = Hs/ratio... see note\n  // Note: output/input length = Hs / analysisHop. We want = ratio, so\n  // analysisHop = Hs / ratio. (Ha above is a placeholder; real hop below.)\n  const analysisHop = Hs / ratio;\n  void Ha;\n\n  const win = hann(N);\n  const outLen = Math.ceil(input.length * ratio) + N;\n  const out = new Float32Array(outLen);\n\n  let analysisPos = 0; // float; nominal start of the next analysis frame\n  let templatePos = 0; // start of the \"natural continuation\" template\n  let outPos = 0;\n  let first = true;\n\n  while (analysisPos + N + search < input.length) {\n    const nominal = Math.round(analysisPos);\n    let start = nominal;\n    if (!first) {\n      // Search \xB1`search` for the frame whose overlap region best correlates with\n      // the template (previous frame continued by Hs). Maximize raw cross-corr.\n      let best = -Infinity;\n      for (let d = -search; d <= search; d++) {\n        const s = nominal + d;\n        if (s < 0 || s + L >= input.length) continue;\n        let acc = 0;\n        for (let i = 0; i < L; i++) acc += input[s + i] * input[templatePos + i];\n        if (acc > best) {\n          best = acc;\n          start = s;\n        }\n      }\n    }\n    first = false;\n\n    for (let i = 0; i < N; i++) out[outPos + i] += input[start + i] * win[i];\n\n    templatePos = start + Hs; // where this frame \"naturally continues\"\n    outPos += Hs;\n    analysisPos += analysisHop;\n  }\n\n  return out.subarray(0, Math.max(0, outPos + (N - Hs)));\n}\n\n// >>> END CORE =================================================================\n\n/**\n * Linear-interpolating resampler. Output length \u2248 ratio \xD7 input length; ratio<1\n * shortens (and, played at the same rate, raises pitch). Pure.\n * @param {ArrayLike<number>} input\n * @param {number} ratio\n * @returns {Float32Array}\n */\nfunction resampleLinear(input, ratio) {\n  const outLen = Math.max(0, Math.round(input.length * ratio));\n  const out = new Float32Array(outLen);\n  const step = 1 / ratio;\n  let pos = 0;\n  for (let i = 0; i < outLen; i++) {\n    const idx = Math.floor(pos);\n    const frac = pos - idx;\n    const a = idx < input.length ? input[idx] : 0;\n    const b = idx + 1 < input.length ? input[idx + 1] : a;\n    out[i] = a + (b - a) * frac;\n    pos += step;\n  }\n  return out;\n}\n\n/**\n * Constant-tempo pitch shift by `ratio` (2 = up an octave): stretch by ratio,\n * then resample by 1/ratio \u2192 same length, pitch \xD7ratio. Composes the swappable\n * core with the resampler. Pure / offline.\n * @param {ArrayLike<number>} input\n * @param {number} ratio\n * @param {Object} [opts]  forwarded to wsolaStretch\n * @returns {Float32Array}\n */\nfunction pitchShift(input, ratio, opts) {\n  if (ratio === 1) return Float32Array.from(input);\n  return resampleLinear(wsolaStretch(input, ratio, opts), 1 / ratio);\n}\n\n// ---- streaming engine (plumbing around the core) ----------------------------\n\n/** Minimal fixed-capacity ring buffer of Float32 \u2014 no per-step allocation. */\nclass Ring {\n  constructor(cap) {\n    this.buf = new Float32Array(cap);\n    this.cap = cap;\n    this.r = 0;\n    this.count = 0;\n  }\n  get available() {\n    return this.count;\n  }\n  /** Append `len` samples; overruns drop the oldest (shouldn't happen if pulled). */\n  write(arr, len = arr.length) {\n    for (let i = 0; i < len; i++) {\n      const w = (this.r + this.count) % this.cap;\n      this.buf[w] = arr[i];\n      if (this.count < this.cap) this.count++;\n      else this.r = (this.r + 1) % this.cap;\n    }\n  }\n  /** Peek the i-th unread sample (0 = oldest), without consuming. */\n  at(i) {\n    return this.buf[(this.r + i) % this.cap];\n  }\n  /** Drop the oldest `n` samples. */\n  discard(n) {\n    const m = Math.min(n, this.count);\n    this.r = (this.r + m) % this.cap;\n    this.count -= m;\n  }\n  reset() {\n    this.r = 0;\n    this.count = 0;\n  }\n}\n\n/**\n * Real-time pitch shifter: push input samples, pull pitch-shifted output at a\n * 1:1 average rate. Continuous WSOLA (no block boundaries) feeding a continuous\n * resampler \u2014 both incremental forms of the pure functions above. At ratio 1 it\n * is a transparent passthrough (no DSP, no added artifacts).\n *\n * @param {Object} [opts]\n * @param {number} [opts.frameSize=1024]\n * @param {number} [opts.searchWindow]\n * @param {number} [opts.capacity=16384]\n */\nfunction createStretchEngine(opts = {}) {\n  const N = opts.frameSize || 1024;\n  const Hs = N >> 1;\n  const L = N - Hs;\n  const search = opts.searchWindow != null ? opts.searchWindow : N >> 2;\n  const cap = opts.capacity || 16384;\n  const win = hann(N);\n\n  const inRing = new Ring(cap); // raw input\n  const midRing = new Ring(cap); // time-stretched (pitch preserved, tempo \xD7ratio)\n  let ratio = 1; // pitch ratio\n  const accum = new Float32Array(N); // synthesis OLA accumulator\n  let analysisRel = 0; // float, index from inRing read pointer of next frame\n  let templateRel = 0;\n  let firstFrame = true;\n  let resamplePos = 0; // fractional read position into midRing (relative)\n\n  const KEEP_BEHIND = N + 2 * search; // input lookback the template/search needs\n\n  // One WSOLA synthesis step \u2192 appends Hs stretched samples to midRing.\n  function stretchStep() {\n    const nominal = Math.round(analysisRel);\n    let start = nominal;\n    if (!firstFrame) {\n      let best = -Infinity;\n      for (let d = -search; d <= search; d++) {\n        const s = nominal + d;\n        if (s < 0 || s + L >= inRing.available) continue;\n        let acc = 0;\n        for (let i = 0; i < L; i++) acc += inRing.at(s + i) * inRing.at(templateRel + i);\n        if (acc > best) {\n          best = acc;\n          start = s;\n        }\n      }\n    }\n    firstFrame = false;\n\n    // OLA into accum, then flush the first Hs (now complete) to midRing.\n    for (let i = 0; i < N; i++) accum[i] += inRing.at(start + i) * win[i];\n    midRing.write(accum, Hs);\n    accum.copyWithin(0, Hs); // shift remaining N-Hs to front\n    accum.fill(0, N - Hs); // zero the freed tail\n\n    templateRel = start + Hs;\n    analysisRel += Hs / ratio;\n\n    // Reclaim consumed input, keeping enough lookback for search/template.\n    if (analysisRel > KEEP_BEHIND) {\n      const drop = Math.floor(analysisRel - KEEP_BEHIND);\n      inRing.discard(drop);\n      analysisRel -= drop;\n      templateRel -= drop;\n    }\n  }\n\n  // Resample midRing by 1/ratio into `out` until `n` produced or starved.\n  function resampleInto(out, n) {\n    let produced = 0;\n    while (produced < n) {\n      const idx = Math.floor(resamplePos);\n      if (idx + 1 >= midRing.available) break; // need one sample of lookahead\n      const frac = resamplePos - idx;\n      const a = midRing.at(idx);\n      const b = midRing.at(idx + 1);\n      out[produced++] = a + (b - a) * frac;\n      resamplePos += ratio;\n      const drop = Math.floor(resamplePos);\n      if (drop > 0) {\n        midRing.discard(drop);\n        resamplePos -= drop;\n      }\n    }\n    return produced;\n  }\n\n  return {\n    /** Set the pitch ratio (1 = passthrough). */\n    setPitchRatio(r) {\n      ratio = clamp(r, 0.25, 4);\n    },\n    getPitchRatio() {\n      return ratio;\n    },\n\n    /** Push input samples (a render quantum from the source). */\n    push(arr, len) {\n      inRing.write(arr, len);\n    },\n\n    /**\n     * Fill `out[0..n)` with pitch-shifted output, zero-padding if starved.\n     * @returns {number} samples actually produced (< n means starved)\n     */\n    pull(out, n) {\n      if (ratio === 1) {\n        // Transparent passthrough.\n        let i = 0;\n        while (i < n && inRing.available > 0) {\n          out[i++] = inRing.at(0);\n          inRing.discard(1);\n        }\n        const real = i; // real samples produced (before zero-pad) \u2014 report this\n        while (i < n) out[i++] = 0;\n        return real;\n      }\n      // Run stretch steps until enough stretched samples exist to resample n out.\n      // Need ~ n*ratio mid samples; keep stepping while input allows.\n      let guard = 0;\n      while (\n        midRing.available < Math.ceil(n * ratio) + 2 &&\n        inRing.available > analysisRel + N + search &&\n        guard++ < 1024\n      ) {\n        stretchStep();\n      }\n      const got = resampleInto(out, n);\n      for (let i = got; i < n; i++) out[i] = 0; // zero-pad the starved tail\n      return got;\n    },\n\n    /** Approximate added latency in samples (the WSOLA frame). */\n    latencySamples() {\n      return N;\n    },\n\n    available() {\n      return midRing.available;\n    },\n\n    reset() {\n      inRing.reset();\n      midRing.reset();\n      accum.fill(0);\n      analysisRel = 0;\n      templateRel = 0;\n      resamplePos = 0;\n      firstFrame = true;\n    },\n  };\n}\n\n// embedded pitch worklet\n// The AudioWorkletProcessor that runs the WSOLA pitch shifter on the audio\n// thread. Worklets load from source passed to audioWorklet.addModule(), so this block is\n// serialized into a Blob URL by createPitchSpeed().\n//\n// All the DSP lives in createStretchEngine (pitch-speed.js), which is pure and\n// unit-tested in Node. This file is just the audio-thread shell: per-channel\n// engines, push input quanta, pull pitch-shifted output, take the ratio over the\n// message port.\n//\n// The processor is registered only when AudioWorkletProcessor exists, so this\n// module still imports cleanly in Node (where it harmlessly does nothing) \u2014\n// preserving the \"every file imports in Node\" invariant. It's the one module\n// whose real behavior is verified in the browser, not by the Node suite.\n\nif (typeof AudioWorkletProcessor !== 'undefined') {\n  class PitchProcessor extends AudioWorkletProcessor {\n    constructor(options) {\n      super();\n      /** @type {ReturnType<typeof createStretchEngine>[]} per-channel engines */\n      this._engines = [];\n      this._ratio = 1;\n      this.port.onmessage = (e) => {\n        const d = e.data;\n        if (d && d.type === 'ratio') {\n          this._ratio = d.value;\n          for (const eng of this._engines) eng.setPitchRatio(d.value);\n        }\n      };\n    }\n\n    _engine(c) {\n      if (!this._engines[c]) {\n        const eng = createStretchEngine({ frameSize: 1024 });\n        eng.setPitchRatio(this._ratio);\n        this._engines[c] = eng;\n      }\n      return this._engines[c];\n    }\n\n    process(inputs, outputs) {\n      const input = inputs[0]; // array of channel Float32Arrays (or [])\n      const output = outputs[0];\n      if (!output || output.length === 0) return true;\n\n      for (let c = 0; c < output.length; c++) {\n        const outCh = output[c];\n        const eng = this._engine(c);\n        // Feed this channel (fall back to channel 0, then silence) and pull.\n        const inCh = input && (input[c] || input[0]);\n        if (inCh) eng.push(inCh);\n        eng.pull(outCh, outCh.length);\n      }\n      return true; // keep the node alive across the media's life\n    }\n  }\n\n  registerProcessor('pitch-processor', PitchProcessor);\n}"].join("\n\n");
+    let defaultPitchWorkletUrl = "";
+    function getDefaultPitchWorkletUrl() {
+      if (!defaultPitchWorkletUrl) {
+        defaultPitchWorkletUrl = URL.createObjectURL(new Blob([PITCH_WORKLET_SOURCE], { type: "text/javascript" }));
+      }
+      return defaultPitchWorkletUrl;
+    }
+    async function createPitchSpeed2({ mediaElement, audioContext, workletUrl, destination } = {}) {
+      const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+      const dest = destination || ctx.destination;
+      const url = workletUrl || getDefaultPitchWorkletUrl();
+      let speed = 1;
+      let semitones = 0;
+      let source = null;
+      let node = null;
+      let connectedDirect = false;
+      function applySpeed() {
+        mediaElement.playbackRate = speed;
+        mediaElement.preservesPitch = true;
+        if ("mozPreservesPitch" in mediaElement) mediaElement.mozPreservesPitch = true;
+        if ("webkitPreservesPitch" in mediaElement) mediaElement.webkitPreservesPitch = true;
+      }
+      function ensureSource() {
+        if (!source) source = ctx.createMediaElementSource(mediaElement);
+      }
+      async function ensureWorklet() {
+        if (node) return;
+        await ctx.audioWorklet.addModule(url);
+        ensureSource();
+        node = new AudioWorkletNode(ctx, "pitch-processor", { numberOfInputs: 1, numberOfOutputs: 1 });
+        if (connectedDirect) {
+          try {
+            source.disconnect(dest);
+          } catch {
+          }
+          connectedDirect = false;
+        }
+        source.connect(node);
+        node.connect(dest);
+      }
+      function postRatio() {
+        if (node) node.port.postMessage({ type: "ratio", value: semitonesToRatio2(semitones) });
+      }
+      return {
+        setSpeed(rate) {
+          speed = rate > 0 ? rate : 1;
+          applySpeed();
+          return speed;
+        },
+        getSpeed() {
+          return speed;
+        },
+        async setPitch(st) {
+          semitones = st;
+          if (st === 0) {
+            postRatio();
+            return semitones;
+          }
+          await ensureWorklet();
+          postRatio();
+          return semitones;
+        },
+        getPitch() {
+          return semitones;
+        },
+        /** Route the element straight to output with no processing (e.g. while casting). */
+        setBypass(on) {
+          ensureSource();
+          if (on) {
+            if (node) {
+              try {
+                source.disconnect(node);
+              } catch {
+              }
+            }
+            if (!connectedDirect) {
+              source.connect(dest);
+              connectedDirect = true;
+            }
+          } else if (connectedDirect && node) {
+            try {
+              source.disconnect(dest);
+            } catch {
+            }
+            connectedDirect = false;
+            source.connect(node);
+          }
+        },
+        destroy() {
+          try {
+            node && node.disconnect();
+          } catch {
+          }
+          try {
+            source && source.disconnect();
+          } catch {
+          }
+          if (!audioContext && ctx.close) ctx.close();
+        }
+      };
+    }
+    return { semitonesToRatio: semitonesToRatio2, hann: hann2, wsolaStretch: wsolaStretch2, resampleLinear: resampleLinear2, pitchShift: pitchShift2, createStretchEngine: createStretchEngine2, createPitchSpeed: createPitchSpeed2 };
+  })();
+  var { isCastableSource, createCasting } = /* @__PURE__ */ (() => {
+    function isCastableSource2(src) {
+      if (!src) return false;
+      return !/^(blob:|data:|file:|mediastream:)/i.test(String(src));
+    }
+    function createCasting2({ element, getSource, onChange } = {}) {
+      const remote = element && element.remote;
+      const hasApi = !!(remote && typeof remote.watchAvailability === "function");
+      let available = false;
+      let state = hasApi ? CastState.UNAVAILABLE : CastState.UNSUPPORTED;
+      let watchId = null;
+      let started = false;
+      const sourceCastable = () => getSource ? isCastableSource2(getSource()) : true;
+      const emit = () => onChange && onChange(state, { available });
+      function setState(next) {
+        if (next === state) return;
+        state = next;
+        emit();
+      }
+      function syncFromRemote() {
+        if (!hasApi) return setState(CastState.UNSUPPORTED);
+        const s = remote.state;
+        if (s === "connecting") return setState(CastState.CONNECTING);
+        if (s === "connected") return setState(CastState.CONNECTED);
+        setState(sourceCastable() ? CastState.UNAVAILABLE : CastState.UNSUPPORTED);
+      }
+      const onConnecting = () => setState(CastState.CONNECTING);
+      const onConnect = () => setState(CastState.CONNECTED);
+      const onDisconnect = () => {
+        setState(CastState.DISCONNECTED);
+        syncFromRemote();
+      };
+      return {
+        /** Begin watching for devices and tracking connection state. Idempotent. */
+        start() {
+          if (started) return;
+          started = true;
+          if (!hasApi) {
+            setState(CastState.UNSUPPORTED);
+            return;
+          }
+          remote.addEventListener("connecting", onConnecting);
+          remote.addEventListener("connect", onConnect);
+          remote.addEventListener("disconnect", onDisconnect);
+          remote.watchAvailability((isAvailable) => {
+            available = isAvailable;
+            if (remote.state === "disconnected") {
+              setState(sourceCastable() && isAvailable ? CastState.UNAVAILABLE : CastState.UNSUPPORTED);
+            }
+            emit();
+          }).then((id) => {
+            watchId = id;
+          }).catch(() => {
+            setState(CastState.UNSUPPORTED);
+          });
+        },
+        /** Open the native device picker. No-op when unsupported or no device. */
+        async prompt() {
+          if (!hasApi || !sourceCastable()) return;
+          try {
+            await remote.prompt();
+          } catch (e) {
+          }
+        },
+        /** Re-evaluate after the media source changes (e.g. navigating items). */
+        updateSource() {
+          syncFromRemote();
+        },
+        getState() {
+          return state;
+        },
+        isAvailable() {
+          return available && sourceCastable();
+        },
+        isConnected() {
+          return state === CastState.CONNECTED;
+        },
+        destroy() {
+          if (hasApi) {
+            remote.removeEventListener("connecting", onConnecting);
+            remote.removeEventListener("connect", onConnect);
+            remote.removeEventListener("disconnect", onDisconnect);
+            if (watchId != null && remote.cancelWatchAvailability) {
+              remote.cancelWatchAvailability(watchId).catch(() => {
+              });
+            }
+          }
+          started = false;
+        }
+      };
+    }
+    return { isCastableSource: isCastableSource2, createCasting: createCasting2 };
+  })();
+  var { createImageRenderer } = /* @__PURE__ */ (() => {
+    const ZOOM_KEY_STEP = 1.4;
+    const PAN_KEY_STEP = 60;
+    function createImageRenderer2(item, deps = {}) {
+      const emitter = new Emitter();
+      const opts = deps.options && deps.options.image || deps.options || {};
+      const transform = createTransform({
+        fitMode: opts.fitMode || FitMode.FIT,
+        maxScale: opts.maxScale,
+        doubleTapScale: opts.doubleTapScale
+      });
+      const recognizer = createGestureRecognizer({ isZoomed: () => transform.isZoomed() });
+      let element = null;
+      let viewport = null;
+      let ro = null;
+      let detachGestures = null;
+      let active = false;
+      let load = LoadState.IDLE;
+      let vpRect = { left: 0, top: 0, width: 0, height: 0 };
+      if (item.width && item.height) transform.setNatural(item.width, item.height);
+      const emit = (type, payload) => emitter.emit(type, payload);
+      const local = (x, y) => ({ x: x - vpRect.left, y: y - vpRect.top });
+      function measureViewport() {
+        if (!viewport) return;
+        const r = viewport.getBoundingClientRect();
+        vpRect = { left: r.left, top: r.top, width: r.width, height: r.height };
+        transform.setViewport(r.width, r.height);
+      }
+      function paint() {
+        const s = transform.getState();
+        if (element) {
+          element.style.transformOrigin = "0 0";
+          element.style.transform = `matrix(${s.matrix.join(",")})`;
+        }
+        emit(RendererEvent.TRANSFORM, s);
+      }
+      function apply(fn) {
+        fn();
+        paint();
+        emit(RendererEvent.CAPABILITY);
+      }
+      function onLoaded() {
+        if (!element) return;
+        const w = element.naturalWidth || item.width || 0;
+        const h = element.naturalHeight || item.height || 0;
+        if (w && h) {
+          transform.setNatural(w, h);
+          element.style.width = `${w}px`;
+          element.style.height = `${h}px`;
+        }
+        load = LoadState.LOADED;
+        emit(RendererEvent.LOAD, { state: load });
+        emit(RendererEvent.CAPABILITY);
+        paint();
+      }
+      function onError(e) {
+        load = LoadState.ERROR;
+        emit(RendererEvent.LOAD, { state: load, error: e });
+      }
+      function wireGestures() {
+        recognizer.on("pan", ({ dx, dy }) => apply(() => transform.panBy(dx, dy)));
+        recognizer.on(
+          "pinch",
+          ({ scaleDelta, dx, dy, cx, cy }) => apply(() => {
+            const p = local(cx, cy);
+            transform.zoomBy(scaleDelta, p.x, p.y);
+            transform.panBy(dx, dy);
+          })
+        );
+        recognizer.on(
+          "wheelzoom",
+          ({ factor, x, y }) => apply(() => {
+            const p = local(x, y);
+            transform.zoomBy(factor, p.x, p.y);
+          })
+        );
+        recognizer.on(
+          "doubletap",
+          ({ x, y }) => apply(() => {
+            const p = local(x, y);
+            transform.zoomTo(transform.doubleTapTarget(), p.x, p.y);
+          })
+        );
+        recognizer.on(
+          "navmove",
+          ({ dx, total }) => emit(RendererEvent.INTENT, { type: "dragprogress", axis: "horizontal", dx, total })
+        );
+        recognizer.on("navend", ({ willNavigate, direction }) => {
+          if (willNavigate) emit(RendererEvent.INTENT, { type: Intent.NAVIGATE, direction });
+          else emit(RendererEvent.INTENT, { type: "dragprogress", axis: "horizontal", dx: 0, total: 0 });
+        });
+        recognizer.on(
+          "dismissmove",
+          ({ dy, total, progress }) => emit(RendererEvent.INTENT, { type: "dragprogress", axis: "vertical", dy, total, progress })
+        );
+        recognizer.on("dismissend", ({ willDismiss }) => {
+          if (willDismiss) emit(RendererEvent.INTENT, { type: Intent.DISMISS });
+          else emit(RendererEvent.INTENT, { type: "dragprogress", axis: "vertical", dy: 0, total: 0, progress: 0 });
+        });
+      }
+      const renderer = defineRenderer({
+        type: MediaType.IMAGE,
+        mount(_item, el) {
+          element = el;
+          viewport = deps.viewport || el.parentElement || el;
+          element.style.transformOrigin = "0 0";
+          measureViewport();
+          ro = new ResizeObserver(() => {
+            measureViewport();
+            paint();
+          });
+          ro.observe(viewport);
+          load = LoadState.LOADING;
+          emit(RendererEvent.LOAD, { state: load });
+          if (element.complete && element.naturalWidth) onLoaded();
+          else {
+            element.addEventListener("load", onLoaded);
+            element.addEventListener("error", onError);
+          }
+          paint();
+        },
+        activate() {
+          active = true;
+          if (!detachGestures && element) {
+            wireGestures();
+            detachGestures = recognizer.attach(element);
+          }
+          measureViewport();
+          paint();
+        },
+        deactivate() {
+          active = false;
+          if (detachGestures) {
+            detachGestures();
+            detachGestures = null;
+          }
+          recognizer.reset();
+        },
+        unmount() {
+          if (detachGestures) detachGestures();
+          detachGestures = null;
+          if (ro) ro.disconnect();
+          ro = null;
+          if (element) {
+            element.removeEventListener("load", onLoaded);
+            element.removeEventListener("error", onError);
+          }
+          recognizer.reset();
+          emitter.clear();
+          element = null;
+          viewport = null;
+        },
+        handleKey(e) {
+          switch (e.key) {
+            case "+":
+            case "=":
+              apply(() => transform.zoomBy(ZOOM_KEY_STEP));
+              return true;
+            case "-":
+            case "_":
+              apply(() => transform.zoomBy(1 / ZOOM_KEY_STEP));
+              return true;
+            case "ArrowLeft":
+            case "ArrowRight":
+            case "ArrowUp":
+            case "ArrowDown": {
+              if (!transform.isZoomed()) return false;
+              const dx = e.key === "ArrowLeft" ? PAN_KEY_STEP : e.key === "ArrowRight" ? -PAN_KEY_STEP : 0;
+              const dy = e.key === "ArrowUp" ? PAN_KEY_STEP : e.key === "ArrowDown" ? -PAN_KEY_STEP : 0;
+              apply(() => transform.panBy(dx, dy));
+              return true;
+            }
+            default:
+              return false;
+          }
+        },
+        isZoomed() {
+          return transform.isZoomed();
+        },
+        getCapabilities() {
+          return {
+            type: MediaType.IMAGE,
+            zoom: transform.getZoomCapability(),
+            playback: null,
+            tracks: null,
+            castable: false,
+            fullscreen: true,
+            download: true
+          };
+        },
+        getState() {
+          return { load, transform: transform.getState(), source: item.src };
+        },
+        on: (type, fn) => emitter.on(type, fn),
+        // ---- consumer-facing controls (not part of the shell contract) ----------
+        zoomIn(factor = ZOOM_KEY_STEP) {
+          apply(() => transform.zoomBy(factor));
+        },
+        zoomOut(factor = ZOOM_KEY_STEP) {
+          apply(() => transform.zoomBy(1 / factor));
+        },
+        zoomTo(scale, ox, oy) {
+          apply(() => transform.zoomTo(scale, ox, oy));
+        },
+        panBy(dx, dy) {
+          apply(() => transform.panBy(dx, dy));
+        },
+        rotateLeft() {
+          apply(() => transform.rotateLeft());
+        },
+        rotateRight() {
+          apply(() => transform.rotateRight());
+        },
+        flipHorizontal() {
+          apply(() => transform.flipHorizontal());
+        },
+        flipVertical() {
+          apply(() => transform.flipVertical());
+        },
+        setFitMode(mode) {
+          apply(() => transform.setFitMode(mode));
+        },
+        reset() {
+          apply(() => transform.reset());
+        },
+        resetZoom() {
+          apply(() => transform.resetZoom());
+        },
+        getTransform() {
+          return transform.getState();
+        },
+        getSource() {
+          return item.src;
+        }
+      });
+      return renderer;
+    }
+    return { createImageRenderer: createImageRenderer2 };
+  })();
+  var { createVideoRenderer } = (() => {
+    const DEFAULT_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+    const isIOS = typeof navigator !== "undefined" && (/iP(hone|ad|od)/.test(navigator.platform || "") || /Mac/.test(navigator.platform || "") && navigator.maxTouchPoints > 1);
+    function createVideoRenderer2(item, deps = {}) {
+      const emitter = new Emitter();
+      const opts = deps.options && deps.options.video || deps.options || {};
+      const rates = opts.rates || DEFAULT_RATES;
+      const seekStep = opts.seekStep || 10;
+      const volumeStep = opts.volumeStep || 0.1;
+      const fps = opts.fps || 25;
+      const recognizer = createGestureRecognizer({ isZoomed: () => false });
+      let element = null;
+      let active = false;
+      let load = LoadState.IDLE;
+      let detachGestures = null;
+      let casting = null;
+      let controlsVisible = true;
+      let pip = false;
+      let autoplay = { attempted: false, blocked: false, muted: false };
+      let captions = [];
+      let currentCaptions = -1;
+      let captionStyle = { background: "rgba(0,0,0,0.75)", color: "#fff", fontSize: "1em", opacity: 1, ...opts.captionStyle || {} };
+      let fetchAbort = null;
+      const currentSrc = () => item.src || item.sources && item.sources[0] && item.sources[0].src || "";
+      const emit = (type, payload) => emitter.emit(type, payload);
+      function bufferedAhead(v) {
+        try {
+          const b = v.buffered;
+          if (!b || !b.length || !isFinite(v.duration) || v.duration <= 0) return 0;
+          for (let i = 0; i < b.length; i++) {
+            if (v.currentTime >= b.start(i) && v.currentTime <= b.end(i)) return Math.min(1, b.end(i) / v.duration);
+          }
+          return Math.min(1, b.end(b.length - 1) / v.duration);
+        } catch {
+          return 0;
+        }
+      }
+      function playbackStatus() {
+        const v = element;
+        if (!v) return null;
+        const state = v.ended ? PlayState.ENDED : v.paused ? PlayState.PAUSED : PlayState.PLAYING;
+        return {
+          state,
+          currentTime: v.currentTime,
+          duration: v.duration,
+          buffered: bufferedAhead(v),
+          seeking: v.seeking,
+          volume: v.volume,
+          muted: v.muted,
+          speed: v.playbackRate,
+          loop: v.loop,
+          pip
+        };
+      }
+      const emitPlayback = () => emit(RendererEvent.PLAYBACK, playbackStatus());
+      const emitPlaybackThrottled = frameThrottle(emitPlayback);
+      function captionList() {
+        return captions.map((c) => ({ index: c.index, label: c.label, srclang: c.srclang, kind: c.def.kind || "captions" }));
+      }
+      function emitTracks() {
+        emit(RendererEvent.TRACKS, { captions: captionList(), audio: [], current: currentCaptions });
+      }
+      async function ensureCaptionLoaded(i) {
+        const c = captions[i];
+        if (!c || c.loaded) return;
+        c.loaded = true;
+        if (c.def.src) {
+          try {
+            fetchAbort = typeof AbortController !== "undefined" ? new AbortController() : null;
+            const text = await fetch(c.def.src, fetchAbort ? { signal: fetchAbort.signal } : void 0).then((r) => r.text());
+            c.cueTrack = createCueTrack(parseVTT(text).cues);
+          } catch {
+            c.cueTrack = createCueTrack([]);
+          }
+        } else {
+          c.cueTrack = createCueTrack([]);
+        }
+      }
+      function setupCaptions() {
+        const defs = (item.tracks || []).filter((t) => !t.kind || t.kind === "captions" || t.kind === "subtitles");
+        captions = defs.map((def2, index) => ({
+          def: def2,
+          index,
+          label: def2.label || def2.srclang || `Track ${index + 1}`,
+          srclang: def2.srclang || "",
+          cueTrack: null,
+          loaded: false
+        }));
+        const def = captions.findIndex((c) => c.def.default);
+        currentCaptions = def >= 0 ? def : -1;
+        emitTracks();
+        if (currentCaptions >= 0) ensureCaptionLoaded(currentCaptions).then(emitTracks);
+      }
+      function updateCues() {
+        if (currentCaptions < 0 || !element) return;
+        const c = captions[currentCaptions];
+        if (!c || !c.cueTrack) return;
+        const { cues, changed } = c.cueTrack.update(element.currentTime);
+        if (changed) emit(RendererEvent.CUES, { cues, trackIndex: currentCaptions, style: captionStyle });
+      }
+      const onTimeUpdate = () => {
+        emitPlaybackThrottled();
+        updateCues();
+      };
+      const onPlay = () => emitPlayback();
+      const onPause = () => emitPlayback();
+      const onEnded = () => emitPlayback();
+      const onSeeking = () => emitPlayback();
+      const onSeeked = () => {
+        if (currentCaptions >= 0 && captions[currentCaptions]?.cueTrack) captions[currentCaptions].cueTrack.reset();
+        emitPlayback();
+        updateCues();
+      };
+      const onVolume = () => emitPlayback();
+      const onRate = () => emitPlayback();
+      const onDuration = () => emitPlayback();
+      const onProgress = () => emitPlayback();
+      const onLoadedMeta = () => {
+        load = LoadState.LOADED;
+        emit(RendererEvent.LOAD, { state: load });
+        emit(RendererEvent.CAPABILITY);
+        emitPlayback();
+      };
+      const onWaiting = () => {
+        load = LoadState.LOADING;
+        emit(RendererEvent.LOAD, { state: load });
+      };
+      const onCanPlay = () => {
+        if (load !== LoadState.LOADED) {
+          load = LoadState.LOADED;
+          emit(RendererEvent.LOAD, { state: load });
+        }
+      };
+      const onError = (e) => {
+        load = LoadState.ERROR;
+        emit(RendererEvent.LOAD, { state: load, error: element && element.error ? element.error : e });
+      };
+      const onEnterPip = () => {
+        pip = true;
+        emitPlayback();
+      };
+      const onLeavePip = () => {
+        pip = false;
+        emitPlayback();
+      };
+      const MEDIA_EVENTS = [
+        ["timeupdate", onTimeUpdate],
+        ["play", onPlay],
+        ["playing", onPlay],
+        ["pause", onPause],
+        ["ended", onEnded],
+        ["seeking", onSeeking],
+        ["seeked", onSeeked],
+        ["volumechange", onVolume],
+        ["ratechange", onRate],
+        ["durationchange", onDuration],
+        ["progress", onProgress],
+        ["loadedmetadata", onLoadedMeta],
+        ["waiting", onWaiting],
+        ["canplay", onCanPlay],
+        ["enterpictureinpicture", onEnterPip],
+        ["leavepictureinpicture", onLeavePip]
+      ];
+      function wireGestures() {
+        recognizer.on("tap", () => {
+          controlsVisible = !controlsVisible;
+          emit(RendererEvent.CONTROLS, { visible: controlsVisible });
+        });
+        recognizer.on(
+          "navmove",
+          ({ dx, total }) => emit(RendererEvent.INTENT, { type: "dragprogress", axis: "horizontal", dx, total })
+        );
+        recognizer.on("navend", ({ willNavigate, direction }) => {
+          if (willNavigate) emit(RendererEvent.INTENT, { type: Intent.NAVIGATE, direction });
+          else emit(RendererEvent.INTENT, { type: "dragprogress", axis: "horizontal", dx: 0, total: 0 });
+        });
+        recognizer.on(
+          "dismissmove",
+          ({ dy, total, progress }) => emit(RendererEvent.INTENT, { type: "dragprogress", axis: "vertical", dy, total, progress })
+        );
+        recognizer.on("dismissend", ({ willDismiss }) => {
+          if (willDismiss) emit(RendererEvent.INTENT, { type: Intent.DISMISS });
+          else emit(RendererEvent.INTENT, { type: "dragprogress", axis: "vertical", dy: 0, total: 0, progress: 0 });
+        });
+      }
+      async function tryAutoplay() {
+        if (!element) return;
+        autoplay = { attempted: true, blocked: false, muted: false };
+        try {
+          await element.play();
+        } catch {
+          element.muted = true;
+          autoplay.muted = true;
+          try {
+            await element.play();
+          } catch {
+            autoplay.blocked = true;
+          }
+        }
+        emit(RendererEvent.LOAD, { state: load, autoplay });
+        emitPlayback();
+      }
+      const renderer = defineRenderer({
+        type: MediaType.VIDEO,
+        mount(_item, el) {
+          element = el;
+          element.playsInline = true;
+          element.setAttribute("playsinline", "");
+          if (typeof element.preservesPitch === "boolean") element.preservesPitch = true;
+          load = LoadState.LOADING;
+          emit(RendererEvent.LOAD, { state: load });
+          for (const [type, fn] of MEDIA_EVENTS) element.addEventListener(type, fn);
+          element.addEventListener("error", onError, true);
+          setupCaptions();
+          casting = createCasting({
+            element,
+            getSource: currentSrc,
+            onChange: (state, info) => emit(RendererEvent.CAST, { state, available: info.available })
+          });
+          if (element.readyState >= 1) onLoadedMeta();
+          emitPlayback();
+        },
+        activate() {
+          active = true;
+          if (!detachGestures && element) {
+            wireGestures();
+            detachGestures = recognizer.attach(element);
+          }
+          if (casting) casting.start();
+          if (opts.autoplay) tryAutoplay();
+          emitTracks();
+          emitPlayback();
+        },
+        deactivate() {
+          active = false;
+          if (element && !element.paused) element.pause();
+          if (detachGestures) {
+            detachGestures();
+            detachGestures = null;
+          }
+          recognizer.reset();
+        },
+        unmount() {
+          if (element) {
+            try {
+              element.pause();
+            } catch {
+            }
+            for (const [type, fn] of MEDIA_EVENTS) element.removeEventListener(type, fn);
+            element.removeEventListener("error", onError, true);
+          }
+          if (detachGestures) detachGestures();
+          detachGestures = null;
+          if (casting) casting.destroy();
+          casting = null;
+          if (fetchAbort) fetchAbort.abort();
+          recognizer.reset();
+          emitter.clear();
+          element = null;
+        },
+        handleKey(e) {
+          const v = element;
+          if (!v) return false;
+          switch (e.key) {
+            case " ":
+            case "k":
+              this.toggle();
+              return true;
+            case "ArrowLeft":
+              this.seekBy(-seekStep);
+              return true;
+            case "ArrowRight":
+              this.seekBy(seekStep);
+              return true;
+            case "ArrowUp":
+              this.volumeBy(volumeStep);
+              return true;
+            case "ArrowDown":
+              this.volumeBy(-volumeStep);
+              return true;
+            case "m":
+              this.toggleMute();
+              return true;
+            case "c":
+              this.cycleCaptions();
+              return true;
+            case "l":
+              this.toggleLoop();
+              return true;
+            case ",":
+              this.frameStep(-1);
+              return true;
+            case ".":
+              this.frameStep(1);
+              return true;
+            default:
+              if (/^[0-9]$/.test(e.key)) {
+                this.seekToPercent(Number(e.key) * 10);
+                return true;
+              }
+              return false;
+          }
+        },
+        isZoomed() {
+          return false;
+        },
+        getCapabilities() {
+          return {
+            type: MediaType.VIDEO,
+            zoom: null,
+            playback: {
+              supported: true,
+              canSeek: true,
+              canSetRate: true,
+              canSetVolume: !isIOS,
+              // iOS ignores programmatic volume (device-wide control)
+              rates,
+              pip: typeof document !== "undefined" && !!document.pictureInPictureEnabled,
+              pitchShift: false
+            },
+            tracks: { captions: captionList(), audio: [] },
+            castable: isCastableSource(currentSrc()),
+            fullscreen: true,
+            download: true
+          };
+        },
+        getState() {
+          return {
+            load,
+            playback: playbackStatus(),
+            tracks: { captions: captionList(), audio: [] },
+            currentCaptions,
+            captionStyle,
+            controlsVisible,
+            autoplay,
+            pip,
+            cast: casting ? casting.getState() : null,
+            poster: item.poster || null,
+            source: currentSrc()
+          };
+        },
+        on: (type, fn) => emitter.on(type, fn),
+        // ---- consumer controls ---------------------------------------------------
+        play() {
+          return element && element.play();
+        },
+        pause() {
+          if (element) element.pause();
+        },
+        toggle() {
+          if (!element) return;
+          if (element.paused || element.ended) element.play();
+          else element.pause();
+        },
+        stop() {
+          if (!element) return;
+          element.pause();
+          element.currentTime = 0;
+        },
+        restart() {
+          if (!element) return;
+          element.currentTime = 0;
+          element.play();
+        },
+        seek(time) {
+          if (element) element.currentTime = Math.max(0, isFinite(element.duration) ? Math.min(time, element.duration) : time);
+        },
+        seekBy(delta) {
+          if (element) this.seek(element.currentTime + delta);
+        },
+        seekToPercent(pct) {
+          if (element && isFinite(element.duration)) this.seek(pct / 100 * element.duration);
+        },
+        frameStep(dir) {
+          if (element && element.paused) this.seek(element.currentTime + dir / fps);
+        },
+        setVolume(v) {
+          if (element) element.volume = Math.max(0, Math.min(1, v));
+        },
+        getVolume() {
+          return element ? element.volume : 0;
+        },
+        volumeBy(delta) {
+          if (element) this.setVolume(element.volume + delta);
+        },
+        mute() {
+          if (element) element.muted = true;
+        },
+        unmute() {
+          if (element) element.muted = false;
+        },
+        toggleMute() {
+          if (element) element.muted = !element.muted;
+        },
+        setSpeed(rate) {
+          if (element) element.playbackRate = rate;
+        },
+        setLoop(on) {
+          if (element) element.loop = !!on;
+          emitPlayback();
+        },
+        toggleLoop() {
+          if (element) this.setLoop(!element.loop);
+        },
+        /** Switch captions by index, or pass -1 / null to turn them off. */
+        setCaptions(index) {
+          currentCaptions = index == null || index < 0 ? -1 : index;
+          if (currentCaptions >= 0) {
+            ensureCaptionLoaded(currentCaptions).then(() => {
+              if (captions[currentCaptions]?.cueTrack) captions[currentCaptions].cueTrack.reset();
+              updateCues();
+              emitTracks();
+            });
+          } else {
+            emit(RendererEvent.CUES, { cues: [], trackIndex: -1, style: captionStyle });
+          }
+          emitTracks();
+        },
+        cycleCaptions() {
+          const next = currentCaptions + 1 >= captions.length ? -1 : currentCaptions + 1;
+          this.setCaptions(next);
+        },
+        setCaptionByLang(lang) {
+          const i = captions.findIndex((c) => c.srclang === lang);
+          this.setCaptions(i);
+        },
+        /** Caption text styling is emitted preference state — the consumer applies it. */
+        setCaptionStyle(style) {
+          captionStyle = { ...captionStyle, ...style };
+          emit(RendererEvent.CUES, { cues: [], trackIndex: currentCaptions, style: captionStyle, styleOnly: true });
+          return captionStyle;
+        },
+        getCaptionStyle() {
+          return captionStyle;
+        },
+        async togglePictureInPicture() {
+          if (!element || !document.pictureInPictureEnabled) return;
+          try {
+            if (document.pictureInPictureElement === element) await document.exitPictureInPicture();
+            else await element.requestPictureInPicture();
+          } catch {
+          }
+        },
+        requestCast() {
+          if (casting) casting.prompt();
+        },
+        getSource() {
+          return currentSrc();
+        },
+        getPoster() {
+          return item.poster || null;
+        }
+      });
+      return renderer;
+    }
+    return { createVideoRenderer: createVideoRenderer2 };
+  })();
+  var { createAudioRenderer } = /* @__PURE__ */ (() => {
+    const DEFAULT_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+    function createAudioRenderer2(item, deps = {}) {
+      const emitter = new Emitter();
+      const opts = deps.options && deps.options.audio || deps.options || {};
+      const rates = opts.rates || DEFAULT_RATES;
+      const seekStep = opts.seekStep || 10;
+      const volumeStep = opts.volumeStep || 0.1;
+      const playlist = deps.playlist && deps.playlist.length ? deps.playlist : [{ item, index: deps.index || 0 }];
+      const queue = createQueue({
+        items: playlist,
+        index: deps.playlistIndex != null ? deps.playlistIndex : 0,
+        repeat: opts.repeat || RepeatMode.NONE,
+        playOnce: !!opts.playOnce
+      });
+      let element = null;
+      let active = false;
+      let load = LoadState.IDLE;
+      let casting = null;
+      let pitchSpeed = null;
+      let semitones = 0;
+      let speed = 1;
+      let waveformReady = false;
+      let lastWaveform = null;
+      const currentSrc = () => item.src || item.sources && item.sources[0] && item.sources[0].src || "";
+      const emit = (type, payload) => emitter.emit(type, payload);
+      function bufferedAhead(a) {
+        try {
+          const b = a.buffered;
+          if (!b || !b.length || !isFinite(a.duration) || a.duration <= 0) return 0;
+          for (let i = 0; i < b.length; i++) {
+            if (a.currentTime >= b.start(i) && a.currentTime <= b.end(i)) return Math.min(1, b.end(i) / a.duration);
+          }
+          return Math.min(1, b.end(b.length - 1) / a.duration);
+        } catch {
+          return 0;
+        }
+      }
+      function playbackStatus() {
+        const a = element;
+        if (!a) return null;
+        const state = a.ended ? PlayState.ENDED : a.paused ? PlayState.PAUSED : PlayState.PLAYING;
+        return {
+          state,
+          currentTime: a.currentTime,
+          duration: a.duration,
+          buffered: bufferedAhead(a),
+          seeking: a.seeking,
+          volume: a.volume,
+          muted: a.muted,
+          speed: a.playbackRate,
+          loop: a.loop,
+          pip: false
+        };
+      }
+      const emitPlayback = () => emit(RendererEvent.PLAYBACK, playbackStatus());
+      const emitPlaybackThrottled = frameThrottle(emitPlayback);
+      function queueState() {
+        return {
+          items: playlist.map((p, i) => ({ index: p.index, title: p.item && p.item.title || "", position: i })),
+          position: queue.index,
+          current: queue.index,
+          repeat: queue.getRepeat(),
+          playOnce: queue.getPlayOnce(),
+          ab: queue.getAB()
+        };
+      }
+      const emitQueue = () => emit(RendererEvent.TRACKS, queueState());
+      function handleEnded() {
+        const d = queue.onEnded();
+        if (d.action === "repeat") {
+          element.currentTime = 0;
+          element.play().catch(() => {
+          });
+        } else if (d.action === "advance") {
+          const target = playlist[d.index];
+          emit(RendererEvent.INTENT, { type: Intent.NAVIGATE, index: target ? target.index : void 0, autoplay: true });
+        }
+        emitPlayback();
+        emitQueue();
+      }
+      function checkAB() {
+        if (!element) return;
+        const target = queue.abSeek(element.currentTime);
+        if (target != null) element.currentTime = target;
+      }
+      const onTimeUpdate = () => {
+        checkAB();
+        emitPlaybackThrottled();
+      };
+      const onEndedEv = () => handleEnded();
+      const simple = () => emitPlayback();
+      const onLoadedMeta = () => {
+        load = LoadState.LOADED;
+        emit(RendererEvent.LOAD, { state: load });
+        emit(RendererEvent.CAPABILITY);
+        emitPlayback();
+      };
+      const onWaiting = () => {
+        load = LoadState.LOADING;
+        emit(RendererEvent.LOAD, { state: load });
+      };
+      const onError = (e) => {
+        load = LoadState.ERROR;
+        emit(RendererEvent.LOAD, { state: load, error: element && element.error ? element.error : e });
+      };
+      const MEDIA_EVENTS = [
+        ["timeupdate", onTimeUpdate],
+        ["ended", onEndedEv],
+        ["play", simple],
+        ["playing", simple],
+        ["pause", simple],
+        ["seeking", simple],
+        ["seeked", simple],
+        ["volumechange", simple],
+        ["ratechange", simple],
+        ["durationchange", simple],
+        ["progress", simple],
+        ["loadedmetadata", onLoadedMeta],
+        ["waiting", onWaiting],
+        ["canplay", simple]
+      ];
+      async function loadWaveform() {
+        if (item.peaks && item.peaks.length) {
+          waveformReady = true;
+          lastWaveform = { peaks: item.peaks, duration: item.duration };
+          emit(RendererEvent.WAVEFORM, lastWaveform);
+          return;
+        }
+        if (opts.waveform === false) return;
+        const src = currentSrc();
+        if (!src) return;
+        try {
+          const { peaks: peaks2, duration } = await decodePeaks({ url: src, buckets: opts.peakBuckets || 1e3, normalize: true });
+          waveformReady = true;
+          lastWaveform = { peaks: peaks2, duration };
+          emit(RendererEvent.WAVEFORM, lastWaveform);
+        } catch {
+        }
+      }
+      function setupMediaSession() {
+        if (typeof navigator === "undefined" || !navigator.mediaSession) return;
+        const md = item.mediaMetadata;
+        try {
+          if ((md || item.title) && typeof MediaMetadata !== "undefined") {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: md && md.title || item.title || "",
+              artist: md && md.artist || "",
+              album: md && md.album || "",
+              artwork: md && md.artwork || []
+            });
+          }
+          const set = (action, fn) => {
+            try {
+              navigator.mediaSession.setActionHandler(action, fn);
+            } catch {
+            }
+          };
+          set("play", () => renderer.play());
+          set("pause", () => renderer.pause());
+          set("previoustrack", () => renderer.prev());
+          set("nexttrack", () => renderer.next());
+          set("seekto", (d) => d && d.seekTime != null && renderer.seek(d.seekTime));
+        } catch {
+        }
+      }
+      const renderer = defineRenderer({
+        type: MediaType.AUDIO,
+        mount(_item, el) {
+          element = el;
+          if (typeof element.preservesPitch === "boolean") element.preservesPitch = true;
+          load = LoadState.LOADING;
+          emit(RendererEvent.LOAD, { state: load });
+          for (const [type, fn] of MEDIA_EVENTS) element.addEventListener(type, fn);
+          element.addEventListener("error", onError, true);
+          casting = createCasting({
+            element,
+            getSource: currentSrc,
+            onChange: (state, info) => emit(RendererEvent.CAST, { state, available: info.available })
+          });
+          if (element.readyState >= 1) onLoadedMeta();
+          emitQueue();
+          loadWaveform();
+          emitPlayback();
+        },
+        activate() {
+          active = true;
+          if (casting) casting.start();
+          setupMediaSession();
+          if (opts.autoplay) element.play().catch(() => {
+          });
+          if (lastWaveform) emit(RendererEvent.WAVEFORM, lastWaveform);
+          emitPlayback();
+          emitQueue();
+        },
+        deactivate() {
+          active = false;
+          if (element && !element.paused) element.pause();
+        },
+        unmount() {
+          if (element) {
+            try {
+              element.pause();
+            } catch {
+            }
+            for (const [type, fn] of MEDIA_EVENTS) element.removeEventListener(type, fn);
+            element.removeEventListener("error", onError, true);
+          }
+          if (casting) casting.destroy();
+          casting = null;
+          if (pitchSpeed) pitchSpeed.destroy();
+          pitchSpeed = null;
+          emitter.clear();
+          element = null;
+        },
+        handleKey(e) {
+          if (!element) return false;
+          switch (e.key) {
+            case " ":
+            case "k":
+              this.toggle();
+              return true;
+            case "ArrowLeft":
+              this.seekBy(-seekStep);
+              return true;
+            case "ArrowRight":
+              this.seekBy(seekStep);
+              return true;
+            case "ArrowUp":
+              this.volumeBy(volumeStep);
+              return true;
+            case "ArrowDown":
+              this.volumeBy(-volumeStep);
+              return true;
+            case "m":
+              this.toggleMute();
+              return true;
+            case "l":
+              this.toggleLoop();
+              return true;
+            default:
+              if (/^[0-9]$/.test(e.key)) {
+                this.seekToPercent(Number(e.key) * 10);
+                return true;
+              }
+              return false;
+          }
+        },
+        getCapabilities() {
+          return {
+            type: MediaType.AUDIO,
+            zoom: null,
+            playback: {
+              supported: true,
+              canSeek: true,
+              canSetRate: true,
+              canSetVolume: true,
+              rates,
+              pip: false,
+              pitchShift: true
+              // WSOLA worklet
+            },
+            tracks: null,
+            castable: isCastableSource(currentSrc()),
+            fullscreen: false,
+            download: true
+          };
+        },
+        getState() {
+          return {
+            load,
+            playback: playbackStatus(),
+            queue: queueState(),
+            waveformReady,
+            pitch: semitones,
+            speed,
+            cast: casting ? casting.getState() : null,
+            source: currentSrc(),
+            metadata: item.mediaMetadata || null
+          };
+        },
+        on: (type, fn) => emitter.on(type, fn),
+        // ---- consumer controls ---------------------------------------------------
+        play() {
+          return element && element.play();
+        },
+        pause() {
+          if (element) element.pause();
+        },
+        toggle() {
+          if (!element) return;
+          if (element.paused || element.ended) element.play();
+          else element.pause();
+        },
+        stop() {
+          if (!element) return;
+          element.pause();
+          element.currentTime = 0;
+        },
+        restart() {
+          if (!element) return;
+          element.currentTime = 0;
+          element.play();
+        },
+        seek(time) {
+          if (element) element.currentTime = Math.max(0, isFinite(element.duration) ? Math.min(time, element.duration) : time);
+        },
+        seekBy(delta) {
+          if (element) this.seek(element.currentTime + delta);
+        },
+        seekToPercent(pct) {
+          if (element && isFinite(element.duration)) this.seek(pct / 100 * element.duration);
+        },
+        setVolume(v) {
+          if (element) element.volume = Math.max(0, Math.min(1, v));
+        },
+        getVolume() {
+          return element ? element.volume : 0;
+        },
+        volumeBy(d) {
+          if (element) this.setVolume(element.volume + d);
+        },
+        mute() {
+          if (element) element.muted = true;
+        },
+        unmute() {
+          if (element) element.muted = false;
+        },
+        toggleMute() {
+          if (element) element.muted = !element.muted;
+        },
+        setLoop(on) {
+          if (element) element.loop = !!on;
+          emitPlayback();
+        },
+        toggleLoop() {
+          if (element) this.setLoop(!element.loop);
+        },
+        // Speed without pitch change — the native path (preservesPitch).
+        setSpeed(rate) {
+          speed = rate > 0 ? rate : 1;
+          if (element) {
+            element.playbackRate = speed;
+            if (typeof element.preservesPitch === "boolean") element.preservesPitch = true;
+          }
+          if (pitchSpeed) pitchSpeed.setSpeed(speed);
+          emitPlayback();
+        },
+        // Pitch without speed change — engages the WSOLA worklet lazily.
+        async setPitch(st) {
+          semitones = st;
+          if (!pitchSpeed && st !== 0) {
+            try {
+              pitchSpeed = await createPitchSpeed({ mediaElement: element, workletUrl: opts.workletUrl });
+              pitchSpeed.setSpeed(speed);
+            } catch {
+              semitones = 0;
+              return 0;
+            }
+          }
+          if (pitchSpeed) await pitchSpeed.setPitch(st);
+          emit(RendererEvent.CAPABILITY);
+          return semitones;
+        },
+        getPitch() {
+          return semitones;
+        },
+        // Queue / playlist
+        next() {
+          const r = queue.next();
+          if (r) emit(RendererEvent.INTENT, { type: Intent.NAVIGATE, index: queue.current().index, autoplay: true });
+          emitQueue();
+        },
+        prev() {
+          const r = queue.prev();
+          if (r) emit(RendererEvent.INTENT, { type: Intent.NAVIGATE, index: queue.current().index, autoplay: true });
+          emitQueue();
+        },
+        jumpTo(position) {
+          queue.jump(position);
+          emit(RendererEvent.INTENT, { type: Intent.NAVIGATE, index: queue.current().index, autoplay: true });
+          emitQueue();
+        },
+        setRepeat(mode) {
+          queue.setRepeat(mode);
+          emitQueue();
+        },
+        setPlayOnce(on) {
+          queue.setPlayOnce(on);
+          emitQueue();
+        },
+        setAB(a, b) {
+          queue.setAB(a, b);
+          emitQueue();
+        },
+        clearAB() {
+          queue.clearAB();
+          emitQueue();
+        },
+        requestCast() {
+          if (casting) casting.prompt();
+        },
+        getWaveformReady() {
+          return waveformReady;
+        },
+        getSource() {
+          return currentSrc();
+        }
+      });
+      return renderer;
+    }
+    return { createAudioRenderer: createAudioRenderer2 };
+  })();
+  var { MediaViewer } = (() => {
+    const FORWARDED = [
+      RendererEvent.LOAD,
+      RendererEvent.CAPABILITY,
+      RendererEvent.PLAYBACK,
+      RendererEvent.TRANSFORM,
+      RendererEvent.CUES,
+      RendererEvent.TRACKS,
+      RendererEvent.CAST,
+      RendererEvent.WAVEFORM,
+      RendererEvent.CONTROLS
+    ];
+    const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"]),video[controls],audio[controls]';
+    class MediaViewer2 {
+      /**
+       * @param {Object} opts
+       * @param {Item[]} opts.items
+       * @param {(item:any) => HTMLElement} opts.createElement   the element factory (§2.2)
+       * @param {typeof createRendererRegistry} opts.registry
+       * @param {HTMLElement} [opts.container]   the viewer root (focus trap + fullscreen target)
+       * @param {HTMLElement} [opts.stage]       where media elements are appended (default: container)
+       * @param {boolean} [opts.wrap=false]      wrap vs clamp at the ends
+       * @param {number} [opts.preload=1]        neighbor preload radius (±N)
+       * @param {boolean} [opts.closeOnEscape=true]
+       * @param {number} [opts.transitionMs=0]   match your CSS transition; engine waits this long before open/closed
+       * @param {Object} [opts.options]          per-renderer options ({image,video,audio})
+       * @param {{enabled?:boolean,key?:string,storage?:Storage}} [opts.prefs]
+       * @param {() => void} [opts.onChange]     fired on any state change (like virtualization-engine)
+       */
+      constructor(opts = {}) {
+        this.items = opts.items || [];
+        this.createElement = opts.createElement;
+        this.registry = opts.registry;
+        this.container = opts.container || null;
+        this.stage = opts.stage || opts.container || null;
+        this.wrap = !!opts.wrap;
+        this.preload = opts.preload != null ? opts.preload : 1;
+        this.closeOnEscape = opts.closeOnEscape !== false;
+        this.options = opts.options || {};
+        this.onChange = opts.onChange;
+        this.prefs = {
+          enabled: false,
+          key: "media-engine:prefs",
+          storage: typeof localStorage !== "undefined" ? localStorage : null,
+          ...opts.prefs || {}
+        };
+        if (!this.createElement) throw new Error("media-engine: opts.createElement (the element factory) is required");
+        if (!this.registry) throw new Error("media-engine: opts.registry is required");
+        this.emitter = new Emitter();
+        this.lifecycle = Lifecycle.CLOSED;
+        this.currentIndex = -1;
+        this.direction = 0;
+        this.slots = /* @__PURE__ */ new Map();
+        this.active = null;
+        this.fullscreen = false;
+        this.theater = false;
+        this.dimLevel = 0;
+        this._invoker = null;
+        this._prevOverflow = "";
+        this._timer = 0;
+        this._fwdOffs = [];
+        this._savedPrefs = this._loadPrefs();
+        this._audioPlaylist = this.items.map((item, index) => ({ item, index })).filter((s) => s.item && s.item.type === MediaType.AUDIO);
+        this._mq = typeof matchMedia !== "undefined" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+        this.reducedMotion = !!(this._mq && this._mq.matches);
+        this._onMq = () => {
+          this.reducedMotion = !!(this._mq && this._mq.matches);
+          this._notify();
+        };
+        if (this._mq && this._mq.addEventListener) this._mq.addEventListener("change", this._onMq);
+        this._onKeyDown = this._onKeyDown.bind(this);
+        this._onFsChange = this._onFsChange.bind(this);
+        if (typeof document !== "undefined") document.addEventListener("fullscreenchange", this._onFsChange);
+        this.transitionMs = opts.transitionMs || 0;
+      }
+      // ---- public: lifecycle ----------------------------------------------------
+      /**
+       * Open the viewer at an index (a first-class path, not "open then jump").
+       * @param {number} index
+       * @param {{fromRect?:DOMRect, autoplay?:boolean}} [o]
+       */
+      open(index = 0, o = {}) {
+        if (this.lifecycle === Lifecycle.OPEN || this.lifecycle === Lifecycle.OPENING) {
+          this.goTo(index, o);
+          return;
+        }
+        this._clearTimer();
+        this.currentIndex = clamp(index, 0, Math.max(0, this.items.length - 1));
+        this.direction = 0;
+        this.lifecycle = Lifecycle.OPENING;
+        this._lockScroll();
+        this._captureFocus();
+        if (typeof document !== "undefined") document.addEventListener("keydown", this._onKeyDown, true);
+        this._reconcile();
+        if (o.autoplay) this._playActive();
+        this.emitter.emit("phase", { phase: Lifecycle.OPENING, index: this.currentIndex, fromRect: o.fromRect || null });
+        this.emitter.emit("indexchange", { index: this.currentIndex, item: this.currentItem() });
+        this._notify();
+        this._schedule(() => {
+          this.lifecycle = Lifecycle.OPEN;
+          this.emitter.emit("phase", { phase: Lifecycle.OPEN, index: this.currentIndex });
+          this._notify();
+        });
+      }
+      /** Close the viewer, running the exit transition (engine waits transitionMs). */
+      close() {
+        if (this.lifecycle === Lifecycle.CLOSED || this.lifecycle === Lifecycle.CLOSING) return;
+        this._clearTimer();
+        this.lifecycle = Lifecycle.CLOSING;
+        this.emitter.emit("phase", { phase: Lifecycle.CLOSING, index: this.currentIndex });
+        this._notify();
+        this._schedule(() => this._teardown());
+      }
+      // ---- public: navigation ---------------------------------------------------
+      /** @param {{autoplay?:boolean}} [o] */
+      next(o) {
+        const t = this._step(1);
+        if (t != null) this.goTo(t, o);
+      }
+      /** @param {{autoplay?:boolean}} [o] */
+      prev(o) {
+        const t = this._step(-1);
+        if (t != null) this.goTo(t, o);
+      }
+      /**
+       * Navigate to an index (clamped/wrapped). No-op if it's already current.
+       * @param {number} index
+       * @param {{autoplay?:boolean}} [o]
+       */
+      goTo(index, o = {}) {
+        if (!this.items.length) return;
+        let i = index;
+        if (this.wrap) i = (i % this.items.length + this.items.length) % this.items.length;
+        else i = clamp(i, 0, this.items.length - 1);
+        if (i === this.currentIndex) return;
+        this.direction = i > this.currentIndex ? 1 : -1;
+        this.currentIndex = i;
+        this._reconcile();
+        if (o.autoplay) this._playActive();
+        this.emitter.emit("transition", { direction: this.direction, index: i });
+        this.emitter.emit("indexchange", { index: i, item: this.currentItem() });
+        this._notify();
+      }
+      // ---- public: state & controls passthrough ---------------------------------
+      /** The active renderer (the consumer calls its type-specific controls). */
+      getRenderer() {
+        return this.active ? this.active.renderer : null;
+      }
+      currentItem() {
+        return this.items[this.currentIndex] || null;
+      }
+      getItems() {
+        return this.items;
+      }
+      hasNext() {
+        return this.wrap ? this.items.length > 1 : this.currentIndex < this.items.length - 1;
+      }
+      hasPrev() {
+        return this.wrap ? this.items.length > 1 : this.currentIndex > 0;
+      }
+      /** Subscribe to shell events AND forwarded active-renderer events. Returns off. */
+      on(type, fn) {
+        return this.emitter.on(type, fn);
+      }
+      /** Full snapshot for the consumer to render any chrome from. */
+      getState() {
+        const item = this.currentItem();
+        const r = this.getRenderer();
+        return {
+          lifecycle: this.lifecycle,
+          currentIndex: this.currentIndex,
+          count: this.items.length,
+          item,
+          hasNext: this.hasNext(),
+          hasPrev: this.hasPrev(),
+          direction: this.direction,
+          fullscreen: this.fullscreen,
+          fullscreenAvailable: this._fullscreenAvailable(),
+          fullscreenFallback: !this._fullscreenAvailable(),
+          theater: this.theater,
+          dimLevel: this.dimLevel,
+          reducedMotion: this.reducedMotion,
+          aria: this._aria(item),
+          capabilities: r ? r.getCapabilities() : null,
+          renderer: r ? r.getState() : null
+        };
+      }
+      // ---- fullscreen / theater -------------------------------------------------
+      _fullscreenAvailable() {
+        return typeof document !== "undefined" && !!document.fullscreenEnabled;
+      }
+      toggleFullscreen() {
+        if (this.fullscreen) this.exitFullscreen();
+        else this.requestFullscreen();
+      }
+      requestFullscreen() {
+        const el = this.container;
+        if (!el) return;
+        if (!this._fullscreenAvailable()) {
+          this.fullscreen = true;
+          this.emitter.emit("fullscreen", { active: true, fallback: true });
+          this._notify();
+          return;
+        }
+        if (el.requestFullscreen) el.requestFullscreen().catch(() => {
+        });
+      }
+      exitFullscreen() {
+        if (!this._fullscreenAvailable()) {
+          this.fullscreen = false;
+          this.emitter.emit("fullscreen", { active: false, fallback: true });
+          this._notify();
+          return;
+        }
+        if (document.fullscreenElement) document.exitFullscreen().catch(() => {
+        });
+      }
+      _onFsChange() {
+        this.fullscreen = !!(typeof document !== "undefined" && document.fullscreenElement);
+        this.emitter.emit("fullscreen", { active: this.fullscreen, fallback: false });
+        this._notify();
+      }
+      /** Theater / lights-out: the engine emits intent + level; the consumer dims the page. */
+      setTheater(on, dimLevel = on ? 0.85 : 0) {
+        this.theater = !!on;
+        this.dimLevel = dimLevel;
+        this.emitter.emit("theater", { theater: this.theater, dimLevel: this.dimLevel });
+        this._notify();
+      }
+      toggleTheater() {
+        this.setTheater(!this.theater);
+      }
+      // ---- teardown -------------------------------------------------------------
+      destroy() {
+        this._clearTimer();
+        if (typeof document !== "undefined") {
+          document.removeEventListener("keydown", this._onKeyDown, true);
+          document.removeEventListener("fullscreenchange", this._onFsChange);
+        }
+        if (this._mq && this._mq.removeEventListener) this._mq.removeEventListener("change", this._onMq);
+        for (const i of [...this.slots.keys()]) this._destroySlot(i);
+        this._unlockScroll();
+        this.emitter.clear();
+        this.active = null;
+        this.lifecycle = Lifecycle.CLOSED;
+      }
+      // ---- internals: window / slots -------------------------------------------
+      _step(dir) {
+        if (!this.items.length) return null;
+        let i = this.currentIndex + dir;
+        if (i < 0) return this.wrap ? this.items.length - 1 : null;
+        if (i >= this.items.length) return this.wrap ? 0 : null;
+        return i;
+      }
+      _windowIndices() {
+        const out = /* @__PURE__ */ new Set();
+        const n = this.items.length;
+        for (let d = -this.preload; d <= this.preload; d++) {
+          let i = this.currentIndex + d;
+          if (this.wrap) i = (i % n + n) % n;
+          if (i >= 0 && i < n) out.add(i);
+        }
+        return out;
+      }
+      _reconcile() {
+        const want = this._windowIndices();
+        for (const i of [...this.slots.keys()]) if (!want.has(i)) this._destroySlot(i);
+        for (const i of want) if (!this.slots.has(i)) this._createSlot(i);
+        for (const [i, slot] of this.slots) {
+          const isCurrent = i === this.currentIndex;
+          if (slot.element) slot.element.style.display = isCurrent ? "" : "none";
+          if (isCurrent) this._setActive(slot);
+          else if (slot.active) {
+            slot.renderer.deactivate();
+            slot.active = false;
+          }
+        }
+      }
+      _createSlot(i) {
+        const item = this.items[i];
+        const element = this.createElement(item);
+        if (this.stage && element && element.parentNode !== this.stage) this.stage.appendChild(element);
+        const deps = { viewport: this.stage, options: this.options, index: i };
+        if (item.type === MediaType.AUDIO) {
+          deps.playlist = this._audioPlaylist;
+          deps.playlistIndex = this._audioPlaylist.findIndex((s) => s.index === i);
+        }
+        const renderer = this.registry.create(item, deps);
+        const slot = { index: i, item, element, renderer, active: false, offs: [] };
+        slot.offs.push(
+          renderer.on(RendererEvent.INTENT, (intent) => {
+            if (slot !== this.active) return;
+            this._handleIntent(intent);
+          })
+        );
+        renderer.mount(item, element);
+        this.slots.set(i, slot);
+        return slot;
+      }
+      _destroySlot(i) {
+        const slot = this.slots.get(i);
+        if (!slot) return;
+        if (slot === this.active) {
+          this._unforward();
+          this.active = null;
+        }
+        for (const off of slot.offs) off();
+        try {
+          slot.renderer.unmount();
+        } catch {
+        }
+        if (slot.element && slot.element.parentNode) slot.element.parentNode.removeChild(slot.element);
+        this.slots.delete(i);
+      }
+      _setActive(slot) {
+        if (this.active === slot) return;
+        if (this.active) {
+          this._unforward();
+          this.active.renderer.deactivate();
+          this.active.active = false;
+        }
+        this.active = slot;
+        this._applyPrefs(slot.renderer);
+        this._forward(slot);
+        slot.renderer.activate();
+        slot.active = true;
+        this.emitter.emit("rendererchange", { index: slot.index, renderer: slot.renderer });
+      }
+      _forward(slot) {
+        for (const type of FORWARDED) {
+          this._fwdOffs.push(
+            slot.renderer.on(type, (payload) => {
+              this.emitter.emit(type, payload);
+              if (type === RendererEvent.PLAYBACK || type === RendererEvent.TRACKS || type === RendererEvent.CAPABILITY) {
+                this._maybeSavePrefs();
+              }
+              this._notify();
+            })
+          );
+        }
+      }
+      _unforward() {
+        for (const off of this._fwdOffs) off();
+        this._fwdOffs = [];
+      }
+      _handleIntent(intent) {
+        switch (intent.type) {
+          case Intent.NAVIGATE:
+            if (intent.index != null) this.goTo(intent.index, { autoplay: intent.autoplay });
+            else if (intent.direction === "next") this.next({ autoplay: intent.autoplay });
+            else if (intent.direction === "prev") this.prev({ autoplay: intent.autoplay });
+            break;
+          case Intent.DISMISS:
+          case Intent.CLOSE:
+            this.close();
+            break;
+          default:
+            this.emitter.emit("dragprogress", intent);
+            break;
+        }
+      }
+      _playActive() {
+        const r = this.getRenderer();
+        if (r && typeof r.play === "function") {
+          try {
+            const p = r.play();
+            if (p && p.catch) p.catch(() => {
+            });
+          } catch {
+          }
+        }
+      }
+      // ---- internals: keyboard / focus -----------------------------------------
+      _onKeyDown(e) {
+        if (this.lifecycle !== Lifecycle.OPEN && this.lifecycle !== Lifecycle.OPENING) return;
+        if (e.key === "Tab") {
+          this._trapFocus(e);
+          return;
+        }
+        const r = this.getRenderer();
+        if (r && r.handleKey(e)) {
+          e.preventDefault();
+          this._notify();
+          return;
+        }
+        switch (e.key) {
+          case "Escape":
+            if (this.closeOnEscape) {
+              e.preventDefault();
+              this.close();
+            }
+            break;
+          case "f":
+          case "F":
+            e.preventDefault();
+            this.toggleFullscreen();
+            break;
+          case "ArrowLeft":
+            e.preventDefault();
+            this.prev();
+            break;
+          case "ArrowRight":
+            e.preventDefault();
+            this.next();
+            break;
+          case "Home":
+            e.preventDefault();
+            this.goTo(0);
+            break;
+          case "End":
+            e.preventDefault();
+            this.goTo(this.items.length - 1);
+            break;
+          default:
+            break;
+        }
+      }
+      _trapFocus(e) {
+        const root = this.container;
+        if (!root) return;
+        const nodes = [...root.querySelectorAll(FOCUSABLE)].filter(
+          (el) => el.offsetWidth || el.offsetHeight || el.getClientRects().length
+        );
+        if (nodes.length === 0) {
+          e.preventDefault();
+          root.focus();
+          return;
+        }
+        const first = nodes[0];
+        const last = nodes[nodes.length - 1];
+        const activeEl = typeof document !== "undefined" ? document.activeElement : null;
+        if (e.shiftKey && activeEl === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && activeEl === last) {
+          e.preventDefault();
+          first.focus();
+        } else if (!root.contains(activeEl)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+      _captureFocus() {
+        if (typeof document === "undefined") return;
+        this._invoker = document.activeElement;
+        const root = this.container;
+        if (root) {
+          if (!root.hasAttribute("tabindex")) root.setAttribute("tabindex", "-1");
+          root.focus();
+        }
+      }
+      _restoreFocus() {
+        if (this._invoker && this._invoker.focus) this._invoker.focus();
+        this._invoker = null;
+      }
+      _lockScroll() {
+        if (typeof document === "undefined") return;
+        this._prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+      }
+      _unlockScroll() {
+        if (typeof document === "undefined") return;
+        document.body.style.overflow = this._prevOverflow || "";
+      }
+      // ---- internals: transitions / teardown -----------------------------------
+      _effectiveMs() {
+        return this.reducedMotion ? 0 : this.transitionMs;
+      }
+      // Schedule a deferred settle (OPENING→OPEN, CLOSING→teardown). A generation
+      // counter invalidates any pending settle when open/close interrupts it, so a
+      // close() during an opening transition can't later resurrect the OPEN phase.
+      _schedule(fn) {
+        const ms = this._effectiveMs();
+        const gen = this._gen = (this._gen || 0) + 1;
+        const run = () => {
+          if (gen === this._gen) fn();
+        };
+        if (ms <= 0) Promise.resolve().then(run);
+        else this._timer = setTimeout(run, ms);
+      }
+      _clearTimer() {
+        if (this._timer) {
+          clearTimeout(this._timer);
+          this._timer = 0;
+        }
+        this._gen = (this._gen || 0) + 1;
+      }
+      _teardown() {
+        for (const i of [...this.slots.keys()]) this._destroySlot(i);
+        if (typeof document !== "undefined") document.removeEventListener("keydown", this._onKeyDown, true);
+        this._unlockScroll();
+        this._restoreFocus();
+        this.active = null;
+        this.currentIndex = -1;
+        this.lifecycle = Lifecycle.CLOSED;
+        if (this.fullscreen && this._fullscreenAvailable() && document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {
+          });
+        }
+        this.fullscreen = false;
+        this.emitter.emit("phase", { phase: Lifecycle.CLOSED });
+        this._notify();
+      }
+      // ---- internals: ARIA / prefs / notify ------------------------------------
+      _aria(item) {
+        const n = this.items.length;
+        return {
+          role: "dialog",
+          modal: true,
+          label: item && (item.title || item.caption) || "Media viewer",
+          itemLabel: item ? item.title || item.caption || "" : "",
+          counter: n ? `${this.currentIndex + 1} of ${n}` : "",
+          position: this.currentIndex + 1,
+          setSize: n
+        };
+      }
+      _loadPrefs() {
+        if (!this.prefs.enabled || !this.prefs.storage) return {};
+        try {
+          return JSON.parse(this.prefs.storage.getItem(this.prefs.key) || "{}") || {};
+        } catch {
+          return {};
+        }
+      }
+      _applyPrefs(r) {
+        if (!this.prefs.enabled) return;
+        const p = this._savedPrefs || {};
+        try {
+          if (p.volume != null && r.setVolume) r.setVolume(p.volume);
+          if (p.muted != null && (p.muted ? r.mute : r.unmute)) (p.muted ? r.mute : r.unmute).call(r);
+          if (p.speed != null && r.setSpeed) r.setSpeed(p.speed);
+          if (p.captions != null && r.setCaptions) r.setCaptions(p.captions);
+          if (p.pitch != null && r.setPitch) r.setPitch(p.pitch);
+        } catch {
+        }
+      }
+      _maybeSavePrefs() {
+        if (!this.prefs.enabled || !this.prefs.storage) return;
+        const r = this.getRenderer();
+        if (!r) return;
+        const st = r.getState ? r.getState() : {};
+        const pb = st.playback || {};
+        const next = {
+          ...this._savedPrefs,
+          ...pb.volume != null ? { volume: pb.volume } : {},
+          ...pb.muted != null ? { muted: pb.muted } : {},
+          ...pb.speed != null ? { speed: pb.speed } : {},
+          ...st.currentCaptions != null ? { captions: st.currentCaptions } : {},
+          ...st.pitch != null ? { pitch: st.pitch } : {}
+        };
+        this._savedPrefs = next;
+        try {
+          this.prefs.storage.setItem(this.prefs.key, JSON.stringify(next));
+        } catch {
+        }
+      }
+      _notify() {
+        this.emitter.emit("change", this.getState());
+        if (this.onChange) this.onChange();
+      }
+    }
+    return { MediaViewer: MediaViewer2 };
+  })();
+  function defaultRegistry() {
+    return createRendererRegistry().register(MediaType.IMAGE, createImageRenderer).register(MediaType.VIDEO, createVideoRenderer).register(MediaType.AUDIO, createAudioRenderer);
+  }
+  function createViewer(opts = {}) {
+    return new MediaViewer({ ...opts, registry: opts.registry || defaultRegistry() });
+  }
+
+  // _me-entry.mjs
+  function buildGallery() {
+    // Real royalty-free assets from ./assets, chosen to show the same engine
+    // handling very different resolutions, aspect ratios, and framings.
+    return [
+      {
+        type: "image",
+        title: "Square \xB7 1:1",
+        caption: "image-1.1.jpg — 1000\xD71000",
+        src: "../demo/assets/image-1.1.jpg",
+        width: 1000,
+        height: 1000
+      },
+      {
+        type: "image",
+        title: "Landscape \xB7 16:9",
+        caption: "image-16.9.jpg — 1600\xD7900",
+        src: "../demo/assets/image-16.9.jpg",
+        width: 1600,
+        height: 900
+      },
+      {
+        type: "image",
+        title: "Portrait \xB7 2:3",
+        caption: "image-2.3.jpg — 2000\xD73000",
+        src: "../demo/assets/image-2.3.jpg",
+        width: 2000,
+        height: 3000
+      },
+      {
+        type: "image",
+        title: "Tall \xB7 9:16",
+        caption: "image-9.16.jpg — 900\xD71600",
+        src: "../demo/assets/image-9.16.jpg",
+        width: 900,
+        height: 1600
+      },
+      {
+        type: "video",
+        title: "Video \xB7 horizontal",
+        caption: "video-horizontal.mp4 — 640\xD7360",
+        sources: [{ src: "../demo/assets/video-horizontal.mp4", type: "video/mp4" }],
+        width: 640,
+        height: 360
+      },
+      {
+        type: "video",
+        title: "Video \xB7 portrait",
+        caption: "video-portrait.mp4 — 720\xD71280",
+        sources: [{ src: "../demo/assets/video-portrait.mp4", type: "video/mp4" }],
+        width: 720,
+        height: 1280
+      },
+      {
+        type: "video",
+        title: "Video \xB7 video.mp4",
+        caption: "video.mp4 — 640\xD7360 (identical file to video-horizontal.mp4)",
+        sources: [{ src: "../demo/assets/video.mp4", type: "video/mp4" }],
+        width: 640,
+        height: 360
+      },
+      {
+        type: "audio",
+        title: "Audio \xB7 MP3",
+        caption: "audio.mp3 — ~3:00",
+        src: "../demo/assets/audio.mp3",
+        mediaMetadata: { title: "audio.mp3", artist: "media-engine demo", album: "assets" }
+      }
+    ];
+  }
+  var $ = (id) => document.getElementById(id);
+  var items = buildGallery();
+  var viewerEl = $("viewer");
+  var stage = $("stage");
+  var launcher = $("launcher");
+  var peaks = null;
+  var captionsEnabled = true;
+  var abA = null, abB = null;
+  var fmt = (s) => {
+    if (!isFinite(s) || s < 0) s = 0;
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${String(sec).padStart(2, "0")}`;
+  };
+  function createElement(item) {
+    if (item.type === MediaType.IMAGE) {
+      const img = new Image();
+      img.src = item.src;
+      img.alt = item.title || "";
+      img.draggable = false;
+      img.style.position = "absolute";
+      img.style.top = "0";
+      img.style.left = "0";
+      img.style.touchAction = "none";
+      return img;
+    }
+    if (item.type === MediaType.VIDEO) {
+      const video = document.createElement("video");
+      video.playsInline = true;
+      video.preload = "metadata";
+      if (item.poster) video.poster = item.poster;
+      for (const source of item.sources || [{ src: item.src }]) {
+        const el = document.createElement("source");
+        el.src = source.src;
+        if (source.type) el.type = source.type;
+        video.appendChild(el);
+      }
+      return video;
+    }
+    const audio = document.createElement("audio");
+    audio.preload = "metadata";
+    if (item.sources) {
+      for (const source of item.sources) {
+        const el = document.createElement("source");
+        el.src = source.src;
+        if (source.type) el.type = source.type;
+        audio.appendChild(el);
+      }
+    } else {
+      audio.src = item.src;
+    }
+    return audio;
+  }
+  var viewer = createViewer({
+    items,
+    createElement,
+    container: viewerEl,
+    stage,
+    wrap: true,
+    preload: 1,
+    transitionMs: 0,
+    prefs: { enabled: false },
+    options: { video: { autoplay: false }, audio: { waveform: true } }
+  });
+  items.forEach((item, index) => {
+    const button = document.createElement("button");
+    button.className = "tile";
+    const visual = item.type === MediaType.IMAGE || item.poster ? `<img src="${item.poster || item.src}" alt="">` : `<div class="placeholder"></div>`;
+    button.innerHTML = `${visual}<strong>${item.title || item.type}</strong><span>${item.type}</span>`;
+    button.addEventListener("click", () => viewer.open(index));
+    launcher.appendChild(button);
+  });
+  viewer.on("phase", ({ phase }) => {
+    viewerEl.classList.toggle("open", phase !== "closed");
+  });
+  viewer.on(RendererEvent.WAVEFORM, (payload) => {
+    peaks = payload.peaks || null;
+    drawWaveform(0);
+  });
+  viewer.on(RendererEvent.CUES, ({ cues }) => {
+    $("captions").textContent = captionsEnabled && cues && cues.length ? cues.map((cue) => cue.plain).join("\n") : "";
+  });
+  viewer.on("dragprogress", (d) => {
+    stage.style.transform = d.total ? `translate(${d.axis === "horizontal" ? d.total : 0}px, ${d.axis === "vertical" ? d.total : 0}px)` : "";
+  });
+  viewer.on("transition", () => {
+    stage.style.transform = "";
+  });
+  var raf2 = 0;
+  function scheduleRender() {
+    if (raf2) return;
+    raf2 = requestAnimationFrame(() => {
+      raf2 = 0;
+      render();
+    });
+  }
+  [
+    "change",
+    "rendererchange",
+    "fullscreen",
+    RendererEvent.LOAD,
+    RendererEvent.PLAYBACK,
+    RendererEvent.TRANSFORM,
+    RendererEvent.CAPABILITY,
+    RendererEvent.TRACKS,
+    RendererEvent.CAST
+  ].forEach((event) => viewer.on(event, scheduleRender));
+  function render() {
+    const state = viewer.getState();
+    if (state.lifecycle === "closed") return;
+    const caps = state.capabilities || {};
+    const rendererState = state.renderer || {};
+    const playback = rendererState.playback || null;
+    const renderer = viewer.getRenderer();
+    $("title").textContent = state.item ? state.item.title || "" : "";
+    $("caption").textContent = state.item ? state.item.caption || "" : "";
+    $("counter").textContent = state.aria ? state.aria.counter : "";
+    $("prev").disabled = !state.hasPrev;
+    $("next").disabled = !state.hasNext;
+    const status = $("status");
+    if (rendererState.load === "loading") {
+      status.textContent = "Loading...";
+    } else if (rendererState.load === "error") {
+      status.textContent = state.item && state.item.type === MediaType.VIDEO ? "Video not found. Drop sample.mp4 into /demo to test video." : `Could not load this ${state.item ? state.item.type : "item"}.`;
+    } else {
+      status.textContent = "";
+    }
+    const isImage = caps.type === MediaType.IMAGE;
+    const hasPlayback = !!caps.playback;
+    $("image-tools").classList.toggle("hidden", !isImage);
+    $("playback-tools").classList.toggle("hidden", !hasPlayback);
+    $("waveform").classList.toggle("hidden", caps.type !== MediaType.AUDIO);
+    if (hasPlayback && playback) {
+      $("play").textContent = playback.state === "playing" ? "Pause" : "Play";
+      $("time").textContent = `${fmt(playback.currentTime)} / ${fmt(playback.duration)}`;
+      if (document.activeElement !== $("seek")) {
+        $("seek").value = playback.duration ? Math.round(playback.currentTime / playback.duration * 1e3) : 0;
+      }
+      if (document.activeElement !== $("volume")) {
+        $("volume").value = playback.muted ? 0 : playback.volume;
+      }
+      if (document.activeElement !== $("speed")) {
+        $("speed").value = String(playback.speed || 1);
+        $("speedVal").textContent = (playback.speed || 1).toFixed(2) + "x";
+      }
+      $("mute").textContent = playback.muted || playback.volume === 0 ? "Unmute" : "Mute";
+      if (caps.type === MediaType.AUDIO) drawWaveform(playback.duration ? playback.currentTime / playback.duration : 0);
+    }
+    const hasCaptions = !!(caps.tracks && caps.tracks.captions && caps.tracks.captions.length && renderer && renderer.setCaptions);
+    $("captions-toggle").classList.toggle("hidden", !hasCaptions);
+    $("captions-toggle").textContent = captionsEnabled ? "Captions on" : "Captions off";
+    $("fullscreen").textContent = state.fullscreen ? "Exit Fullscreen" : "Fullscreen";
+    $("repeat").classList.toggle("hidden", !hasPlayback);
+    if (playback) $("repeat").textContent = playback.loop ? "Repeat: on" : "Repeat: off";
+    const canPip = caps.type === MediaType.VIDEO && !!(caps.playback && caps.playback.pip);
+    $("pip").classList.toggle("hidden", !canPip);
+    if (playback) $("pip").textContent = playback.pip ? "Exit PiP" : "PiP";
+    const castState = rendererState.cast;
+    $("cast").classList.toggle("hidden", !hasPlayback);
+    $("cast").disabled = !(caps.castable && castState && castState !== CastState.UNSUPPORTED && castState !== CastState.UNAVAILABLE);
+    $("cast").textContent = castState === CastState.CONNECTED ? "Casting" : castState === CastState.CONNECTING ? "Connecting…" : "Cast";
+    const isAudio = caps.type === MediaType.AUDIO;
+    $("audio-tools").classList.toggle("hidden", !isAudio);
+    if (isAudio && rendererState.pitch != null && document.activeElement !== $("pitch")) {
+      $("pitch").value = String(rendererState.pitch);
+      $("pitchVal").textContent = (rendererState.pitch > 0 ? "+" : "") + rendererState.pitch.toFixed(2);
+    }
+    $("ab").textContent = abA != null && abB != null ? "A-B on" : abA != null ? "A-B: set B" : "A-B";
+    if (castState === CastState.CONNECTED) status.textContent = "Casting.";
+  }
+  function drawWaveform(progress) {
+    const canvas = $("waveform");
+    if (!peaks || canvas.classList.contains("hidden")) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const barW = w / peaks.length;
+    for (let i = 0; i < peaks.length; i++) {
+      const barH = Math.max(1, peaks[i] * h * 0.85);
+      ctx.fillStyle = i / peaks.length <= progress ? "#eee" : "#555";
+      ctx.fillRect(i * barW, (h - barH) / 2, Math.max(1, barW), barH);
+    }
+  }
+  $("close").addEventListener("click", () => viewer.close());
+  $("prev").addEventListener("click", () => viewer.prev());
+  $("next").addEventListener("click", () => viewer.next());
+  $("image-tools").addEventListener("click", (event) => {
+    const action = event.target && event.target.dataset ? event.target.dataset.img : "";
+    const renderer = viewer.getRenderer();
+    if (action && renderer && typeof renderer[action] === "function") renderer[action]();
+  });
+  $("play").addEventListener("click", () => {
+    const renderer = viewer.getRenderer();
+    if (renderer && renderer.toggle) renderer.toggle();
+  });
+  $("mute").addEventListener("click", () => {
+    const renderer = viewer.getRenderer();
+    if (renderer && renderer.toggleMute) renderer.toggleMute();
+  });
+  $("volume").addEventListener("input", (event) => {
+    const renderer = viewer.getRenderer();
+    if (renderer && renderer.setVolume) renderer.setVolume(parseFloat(event.target.value));
+  });
+  $("speed").addEventListener("input", (event) => {
+    const renderer = viewer.getRenderer();
+    const v = parseFloat(event.target.value);
+    if (renderer && renderer.setSpeed) renderer.setSpeed(v);
+    $("speedVal").textContent = v.toFixed(2) + "x";
+  });
+  $("seek").addEventListener("input", (event) => {
+    const state = viewer.getState();
+    const playback = state.renderer && state.renderer.playback;
+    const renderer = viewer.getRenderer();
+    if (renderer && renderer.seek && playback && isFinite(playback.duration)) {
+      renderer.seek(parseInt(event.target.value, 10) / 1e3 * playback.duration);
+    }
+  });
+  $("captions-toggle").addEventListener("click", () => {
+    captionsEnabled = !captionsEnabled;
+    const renderer = viewer.getRenderer();
+    if (renderer && renderer.setCaptions) renderer.setCaptions(captionsEnabled ? 0 : -1);
+    if (!captionsEnabled) $("captions").textContent = "";
+    render();
+  });
+  $("fullscreen").addEventListener("click", () => viewer.toggleFullscreen());
+  $("repeat").addEventListener("click", () => {
+    const renderer = viewer.getRenderer();
+    if (renderer && renderer.toggleLoop) renderer.toggleLoop();
+  });
+  $("pip").addEventListener("click", () => {
+    const renderer = viewer.getRenderer();
+    if (renderer && renderer.togglePictureInPicture) renderer.togglePictureInPicture();
+  });
+  $("cast").addEventListener("click", () => {
+    const renderer = viewer.getRenderer();
+    if (renderer && renderer.requestCast) renderer.requestCast();
+  });
+  $("pitch").addEventListener("input", (event) => {
+    const renderer = viewer.getRenderer();
+    const v = parseFloat(event.target.value);
+    if (renderer && renderer.setPitch) renderer.setPitch(v);
+    $("pitchVal").textContent = (v > 0 ? "+" : "") + v.toFixed(2);
+  });
+  $("ab").addEventListener("click", () => {
+    const renderer = viewer.getRenderer();
+    const pb = viewer.getState().renderer && viewer.getState().renderer.playback;
+    const t = pb ? pb.currentTime : 0;
+    if (!renderer) return;
+    if (abA == null) abA = t;
+    else if (abB == null) {
+      abB = Math.max(t, abA + 0.1);
+      if (renderer.setAB) renderer.setAB(abA, abB);
+    } else {
+      abA = abB = null;
+      if (renderer.clearAB) renderer.clearAB();
+    }
+    render();
+  });
+  viewer.on("rendererchange", () => {
+    abA = abB = null;
+  });
+})();
+  </script>
+</body>
+</html>

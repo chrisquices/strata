@@ -4,28 +4,17 @@ import { basename } from "node:path";
 import vuePlugin from "@deps/build/vue-sfc-plugin.ts";
 
 const root = new URL("../../", import.meta.url).pathname;
-const outdir = root + "dist";
+const outdir = root + "docs";
 const tailwind = import.meta.dir + "/cli-tailwindcss";
-const stylesheetLink = '<link rel="stylesheet" href="/dist/app.css">';
-
-const externalStylesheetPlugin: Bun.BunPlugin = {
-  name: "external-stylesheet",
-  setup(build) {
-    build.onLoad({ filter: /index\.html$/ }, async ({ path }) => ({
-      contents: (await Bun.file(path).text()).replace(stylesheetLink, ""),
-      loader: "html",
-    }));
-  },
-};
 
 // Builds one HTML entrypoint into a self-contained file: bundles + inlines its JS (and any CSS),
-// then links the shared, externally-compiled Tailwind stylesheet. Used for the docs app and for
+// then inlines the shared, compiled Tailwind stylesheet. Used for the docs app and for
 // each template app (which the docs Templates section embeds via <iframe>).
-async function buildSelfContainedHtml(entrypoint: string, entryOutdir: string, cssHref: string) {
+async function buildSelfContainedHtml(entrypoint: string, entryOutdir: string, sharedCss: string) {
   const result = await Bun.build({
     entrypoints: [entrypoint],
     outdir: entryOutdir,
-    plugins: [externalStylesheetPlugin, vuePlugin],
+    plugins: [vuePlugin],
     minify: true,
     splitting: false,
     target: "browser",
@@ -68,7 +57,7 @@ async function buildSelfContainedHtml(entrypoint: string, entryOutdir: string, c
     }
   }
 
-  html = html.replace("</head>", `  <link rel="stylesheet" href="${cssHref}">\n</head>`);
+  html = html.replace("</head>", `  <style>${sharedCss}</style>\n</head>`);
 
   await Bun.write(htmlOutput.path, html);
 
@@ -82,10 +71,9 @@ async function buildSelfContainedHtml(entrypoint: string, entryOutdir: string, c
 }
 
 await rm(outdir, { recursive: true, force: true });
+await mkdir(outdir, { recursive: true });
 
-const htmlOutputPath = await buildSelfContainedHtml(root + "src/index.html", outdir, "./app.css");
-
-// Compile one Tailwind entry. Used for the docs app.css and for each template's own app.css.
+// Compile the shared Tailwind entry once for inlining into every HTML entrypoint.
 async function compileCss(input: string, output: string) {
   const proc = Bun.spawn([tailwind, "-i", input, "-o", output, "--minify"], {
     cwd: root,
@@ -98,7 +86,12 @@ async function compileCss(input: string, output: string) {
   }
 }
 
-await compileCss(root + "src/app.css", outdir + "/app.css");
+const temporaryStylesheet = outdir + "/app.css";
+await compileCss(root + "src/app.css", temporaryStylesheet);
+const sharedCss = await Bun.file(temporaryStylesheet).text();
+await rm(temporaryStylesheet, { force: true });
+
+const htmlOutputPath = await buildSelfContainedHtml(root + "src/index.html", outdir, sharedCss);
 
 const assetsSource = root + "src/assets";
 
@@ -125,8 +118,8 @@ if (existsSync(assetsSource)) {
 }
 
 // Templates are built LAST. Each src/pages/templates/<slug>/ is its own standalone app (own hash
-// router + pages) compiled to dist/templates/<slug>/index.html. They all link the ONE shared
-// /app.css (single global theme); the Theme Tweaker applies its overrides into them at runtime.
+// router + pages) compiled to docs/templates/<slug>/index.html. They all inline the same shared
+// CSS (single global theme); the Theme Tweaker applies its overrides into them at runtime.
 const templatesSource = root + "src/pages/templates";
 
 if (existsSync(templatesSource)) {
@@ -137,7 +130,7 @@ if (existsSync(templatesSource)) {
       console.warn(`Skipping template "${entry.name}": no index.html entrypoint`);
       continue;
     }
-    await buildSelfContainedHtml(templateEntrypoint, `${outdir}/templates/${entry.name}`, "./app.css");
+    await buildSelfContainedHtml(templateEntrypoint, `${outdir}/templates/${entry.name}`, sharedCss);
   }
 }
 

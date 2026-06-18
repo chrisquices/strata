@@ -9,7 +9,7 @@
 
       // Source
       "@/*": ["./src/*"],
-      "@ui/*": ["./src/components/ui/*"],
+      "@ui/*": ["./deps/strata/ui/*"],
       "@app/*": ["./src/components/app/*"],
 
       // Backend Packages

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hotkey Engine (keyboard shortcuts) demo</title>
+<style>
+  /* ============================================================
+     ALL of this is the CONSUMER's chrome. hotkey-engine.js ships
+     NO UI and NO CSS — no command palette, no modal, no cheatsheet.
+     The engine matches keystrokes and fires handlers; everything you
+     see (the palette, the modal, the cheatsheet, the pending "g…"
+     indicator) is rendered HERE from getBindings() + the emitted state.
+     Delete this file and the engine is unchanged and still fully
+     tested by Gate 1.
+     ============================================================ */
+  * { box-sizing: border-box; }
+  :root {
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a; --ink:#e7e9ee;
+    --muted:#9aa3b2; --accent:#5b9cff; --accent2:#7cf2c0; --ok:#46c08a; --warn:#ffb454; --bad:#ff6b6b;
+  }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, sans-serif; }
+  a { color: var(--accent); }
+  header { padding: 16px 22px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0 0 2px; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  header .scope { margin-top: 6px; color: var(--warn); font-size: 12.5px; }
+  main { max-width: 1080px; margin: 0 auto; padding: 22px; display: grid; gap: 22px; }
+  @media (min-width: 880px) { .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; } }
+
+  section.demo { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  section.demo > h2 { margin: 0 0 3px; font-size: 15px; }
+  section.demo > .desc { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; }
+
+  kbd { font: 11px ui-monospace, monospace; background: #0c0e12; border: 1px solid var(--line);
+        border-bottom-width: 2px; border-radius: 5px; padding: 2px 6px; color: var(--ink); white-space: nowrap; }
+  code { color: var(--accent); font-family: ui-monospace, monospace; }
+
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  button { font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line);
+           border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.on { background: var(--accent); color: #0b0e14; border-color: var(--accent); }
+  button.danger:hover { border-color: var(--bad); }
+
+  /* Live state strip */
+  .state { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; font: 12.5px ui-monospace, monospace; }
+  .state .pill { display: inline-flex; gap: 7px; align-items: center; background: #0c0e12; border: 1px solid var(--line);
+                 border-radius: 999px; padding: 4px 11px; }
+  .state .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .state .dot.on { background: var(--ok); } .state .dot.off { background: var(--bad); }
+  .state b { color: var(--accent2); font-weight: 600; }
+  #pending { color: var(--warn); min-width: 64px; }
+  #pending.empty { color: var(--muted); }
+
+  /* nav list (typing-guard / j-k demo) */
+  .navlist { list-style: none; margin: 10px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+  .navlist li { padding: 8px 12px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; }
+  .navlist li:first-child { border-top: 0; }
+  .navlist li.cur { background: rgba(91,156,255,.16); box-shadow: inset 3px 0 0 var(--accent); }
+  .navlist li .tag { color: var(--muted); font: 11px ui-monospace, monospace; }
+
+  input[type=text], textarea { width: 100%; font: inherit; color: var(--ink); background: #0c0e12;
+        border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  input[type=text]:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  label.field { display: block; margin-top: 10px; }
+  label.field > span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  .note { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .note b { color: var(--accent2); }
+
+  /* flash toast (consumer-rendered) */
+  #flash { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-16px); opacity: 0;
+           background: var(--ok); color: #06140d; font-weight: 600; padding: 8px 16px; border-radius: 9px; z-index: 60;
+           transition: opacity .18s, transform .18s; pointer-events: none; }
+  #flash.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* overlay shared (palette + modal + help) */
+  .overlay { position: fixed; inset: 0; background: rgba(5,7,11,.62); display: none; z-index: 50;
+             align-items: flex-start; justify-content: center; padding-top: 12vh; }
+  .overlay.open { display: flex; }
+  .sheet { width: min(560px, 92vw); background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+           box-shadow: 0 24px 60px rgba(0,0,0,.5); overflow: hidden; }
+  .sheet h3 { margin: 0; padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+  .sheet h3 .hint { color: var(--muted); font: 11px ui-monospace, monospace; }
+  .sheet .body { padding: 14px 16px; }
+  .palette-results { list-style: none; margin: 12px 0 0; padding: 0; }
+  .palette-results li { padding: 9px 11px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .palette-results li.cur { background: rgba(91,156,255,.18); }
+  .palette-results li .k { color: var(--muted); }
+
+  /* cheatsheet */
+  .cheat { display: grid; gap: 14px; }
+  .cheat .grp h4 { margin: 0 0 7px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .cheat table { width: 100%; border-collapse: collapse; }
+  .cheat td { padding: 5px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  .cheat td:last-child { text-align: right; white-space: nowrap; }
+  .cheat tr:first-child td { border-top: 0; }
+  .cheat .muted { color: var(--muted); }
+
+  #log { background: #0c0e12; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+         min-height: 38px; font: 12px/1.6 ui-monospace, monospace; color: var(--muted); white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hotkey Engine — keyboard shortcuts</h1>
+  <p>Headless shortcut engine: it registers chords + sequences, listens for keydown, matches against active scopes with a typing-guard, and fires handlers. This page is a reference <b>consumer</b> — it renders the palette, modal, cheatsheet and the pending-sequence indicator from the engine's state.</p>
+  <p class="scope">The engine ships NO UI and NO CSS. Everything visible here is consumer-rendered. The engine only attaches one keydown listener and fires handlers / exposes <code>getBindings()</code> + state.</p>
+</header>
+
+<main>
+  <!-- LIVE STATE -->
+  <section class="demo">
+    <h2>Live state — what the engine exposes</h2>
+    <p class="desc">From <code>getState()</code> + <code>subscribe()</code> / <code>on('sequence')</code>. The pending box shows an in-progress sequence (press <kbd>g</kbd> and pause).</p>
+    <div class="state">
+      <span class="pill"><span id="dot-enabled" class="dot on"></span> engine <b id="s-enabled">enabled</b></span>
+      <span class="pill">platform <b id="s-platform">–</b> · mod = <b id="s-mod">–</b></span>
+      <span class="pill">scopes <b id="s-scopes">global</b></span>
+      <span class="pill">pending <span id="pending" class="empty">·</span></span>
+      <span class="pill"><b id="s-count">0</b> bindings</span>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button id="btn-toggle">Disable engine</button>
+      <button id="btn-unbind" class="danger">Unbind <kbd id="lbl-unbind">⌘K</kbd></button>
+      <button id="btn-rebind" style="display:none">Re-bind ⌘K</button>
+      <span class="note" style="margin:0">Try a shortcut after disabling / unbinding — nothing fires.</span>
+    </div>
+  </section>
+
+  <div class="cols">
+    <!-- CHORDS -->
+    <section class="demo">
+      <h2>1 · Chords</h2>
+      <p class="desc">Modifier combos matched on the <b>exact</b> modifier set.</p>
+      <table class="cheat"><tbody>
+        <tr><td><kbd id="k-palette">⌘K</kbd></td><td class="muted">open the command palette (an overlay this page renders)</td></tr>
+        <tr><td><kbd id="k-save">⌘S</kbd></td><td class="muted">save — <code>preventDefault</code> stops the browser's Save dialog</td></tr>
+        <tr><td><kbd>?</kbd></td><td class="muted">toggle the keyboard cheatsheet (a Shift+/ symbol binding)</td></tr>
+      </tbody></table>
+      <p class="note">Press <kbd id="k-save2">⌘S</kbd> — you get a "Saved" flash and <b>no browser Save dialog</b>.</p>
+    </section>
+
+    <!-- SEQUENCES -->
+    <section class="demo">
+      <h2>2 · Sequences (Vim-style)</h2>
+      <p class="desc">Press the keys in succession. <kbd>g</kbd> alone is held until the timeout, since it is also the prefix of the longer sequences.</p>
+      <table class="cheat"><tbody>
+        <tr><td><kbd>g</kbd> <kbd>g</kbd></td><td class="muted">go to top (flash)</td></tr>
+        <tr><td><kbd>g</kbd> <kbd>i</kbd></td><td class="muted">highlight the Inbox panel</td></tr>
+      </tbody></table>
+      <p class="note" id="inbox">Inbox panel — <b id="inbox-state">idle</b>. Watch the <b>pending</b> box above light up <code>g…</code> as you press <kbd>g</kbd>.</p>
+    </section>
+
+    <!-- SCOPES / MODAL -->
+    <section class="demo">
+      <h2>3 · Scopes — a modal pushes a scope</h2>
+      <p class="desc">Opening the dialog <code>pushScope('modal')</code>. While open, <kbd>Esc</kbd> closes it (shadowing the global <kbd>Esc</kbd>) and <kbd id="k-confirm">⌘↵</kbd> confirms — a shortcut that <b>only</b> works in the modal scope.</p>
+      <div class="row">
+        <button id="btn-open-modal">Open dialog</button>
+        <span class="note" style="margin:0">Global <kbd>Esc</kbd> clears the nav selection (section 4); the modal's <kbd>Esc</kbd> shadows it.</span>
+      </div>
+    </section>
+
+    <!-- TYPING GUARD -->
+    <section class="demo">
+      <h2>4 · Typing-guard</h2>
+      <p class="desc"><kbd>j</kbd> / <kbd>k</kbd> move the cursor below. Focus the input and they <b>stop</b> firing (you can type "jk" freely) — but <kbd id="k-save3">⌘S</kbd> still saves.</p>
+      <ul class="navlist" id="navlist">
+        <li><span>Welcome aboard</span><span class="tag">unread</span></li>
+        <li><span>Your weekly digest</span><span class="tag">unread</span></li>
+        <li><span>Invoice #2043</span><span class="tag">paid</span></li>
+        <li><span>Re: launch plan</span><span class="tag">3 replies</span></li>
+        <li><span>Security alert</span><span class="tag">important</span></li>
+      </ul>
+      <label class="field"><span>Type here — bare <kbd>j</kbd>/<kbd>k</kbd> are suppressed; <kbd id="k-save4">⌘S</kbd> still fires</span>
+        <input id="ti" type="text" placeholder="try typing jkjk gg ? — the cursor above won't move"></label>
+      <p class="note" id="guard-note">Cursor at item <b id="cur-idx">1</b>.</p>
+    </section>
+  </div>
+
+  <!-- CHEATSHEET (from getBindings) -->
+  <section class="demo">
+    <h2>5 · Shortcuts cheatsheet — rendered from <code>getBindings()</code></h2>
+    <p class="desc">This whole table is built from the engine's registered bindings (grouped by scope). It re-renders on every <code>change</code> — bind/unbind/scope. Press <kbd>?</kbd> for the overlay version.</p>
+    <div class="cheat" id="cheat"></div>
+  </section>
+
+  <!-- ACTIVITY LOG -->
+  <section class="demo">
+    <h2>Activity — handlers the engine fired</h2>
+    <div id="log">Press a shortcut…</div>
+  </section>
+</main>
+
+<!-- consumer-rendered overlays -->
+<div id="flash"></div>
+
+<div class="overlay" id="palette">
+  <div class="sheet">
+    <h3>Command palette <span class="hint">scope: palette · Esc to close</span></h3>
+    <div class="body">
+      <input id="palette-input" type="text" placeholder="Type a command…">
+      <ul class="palette-results">
+        <li class="cur"><span>New document</span><span class="k">⌘N</span></li>
+        <li><span>Go to inbox</span><span class="k">g i</span></li>
+        <li><span>Toggle theme</span><span class="k">⌘⇧L</span></li>
+      </ul>
+      <p class="note">Typing here is guarded — bare shortcuts won't fire while this input has focus.</p>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal">
+  <div class="sheet">
+    <h3>Settings <span class="hint">scope: modal · Esc closes · ⌘↵ confirms</span></h3>
+    <div class="body">
+      <label class="field"><span>Display name</span><input type="text" value="Ada Lovelace"></label>
+      <p class="note">This dialog pushed the <b>modal</b> scope. <kbd>Esc</kbd> here closes the dialog (it shadows the global <kbd>Esc</kbd>); <kbd id="k-confirm2">⌘↵</kbd> confirms.</p>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="help">
+  <div class="sheet">
+    <h3>Keyboard shortcuts <span class="hint">? or Esc to close</span></h3>
+    <div class="body"><div class="cheat" id="help-cheat"></div></div>
+  </div>
+</div>
+
+<script type="module" src="hotkey-engine.demo.js"></script>
+</body>
+</html>

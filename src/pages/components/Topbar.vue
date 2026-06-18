@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ComponentLayout from "@app/component/ComponentLayout.vue";
-import { Hexagon } from '@lucide/vue';
+import { Layers } from '@lucide/vue';
 import Topbar from '@ui/Topbar/Topbar.vue';
 import TopbarStart from '@ui/Topbar/TopbarStart.vue';
 import TopbarEnd from '@ui/Topbar/TopbarEnd.vue';
@@ -29,8 +29,8 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
         <div class="w-full overflow-hidden rounded-large border border-border" data-demo="basic">
           <Topbar :sticky="false">
             <TopbarStart>
-              <Hexagon class="size-icon-large text-foreground" />
-              <TopbarTitle>Strata UI</TopbarTitle>
+              <Layers class="size-icon-large text-foreground" />
+              <TopbarTitle>Strata</TopbarTitle>
             </TopbarStart>
             <TopbarEnd>
               <Button variant="muted">Docs</Button>

@@ -4,8 +4,6 @@ import { ref } from 'vue';
 import Progress from '@ui/Progress/Progress.vue';
 import ProgressIndicator from '@ui/Progress/ProgressIndicator.vue';
 import Slider from '@ui/Slider/Slider.vue';
-import SliderRange from '@ui/Slider/SliderRange.vue';
-import SliderThumb from '@ui/Slider/SliderThumb.vue';
 
 import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
 import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
@@ -31,10 +29,7 @@ const value = ref(60);
         <div class="flex w-80 flex-col gap-4" data-demo="determinate">
           <Progress :value="value"><ProgressIndicator /></Progress>
           <div class="w-48">
-            <Slider v-model="value" :min="0" :max="100">
-              <SliderRange />
-              <SliderThumb />
-            </Slider>
+            <Slider v-model="value" :min="0" :max="100" />
           </div>
         </div>
       </ComponentItemSectionExample>

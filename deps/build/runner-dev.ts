@@ -4,8 +4,7 @@ import { normalize } from "node:path";
 const root = new URL("../../", import.meta.url).pathname;
 const bun = import.meta.dir + "/cli-bun";
 const buildScript = import.meta.dir + "/runner-build.ts";
-const output = root + "dist/index.html";
-const stylesheet = root + "dist/app.css";
+const output = root + "docs/index.html";
 const port = Number(Bun.env.PORT ?? 3000);
 const reloadClients = new Set<ReadableStreamDefaultController<string>>();
 const watchers: FSWatcher[] = [];
@@ -66,6 +65,7 @@ function watchPath(path: string, recursive = false) {
 }
 
 watchPath(root + "src", true);
+watchPath(root + "deps/strata/ui", true);
 
 await build();
 
@@ -104,25 +104,12 @@ const server = Bun.serve({
       });
     }
 
-    // Each template's own compiled stylesheet (dist/templates/<slug>/app.css).
-    if (url.pathname.startsWith("/templates/") && url.pathname.endsWith(".css")) {
-      const cssPath = normalize(decodeURIComponent(url.pathname));
-      if (cssPath.startsWith("/templates/")) {
-        const file = Bun.file(root + "dist" + cssPath);
-        if (await file.exists()) {
-          return new Response(file, {
-            headers: { "Cache-Control": "no-store", "Content-Type": "text/css; charset=utf-8" },
-          });
-        }
-      }
-    }
-
     // Template apps (own self-contained HTML, embedded by the docs Templates section via <iframe>).
     if (url.pathname.startsWith("/templates/") && url.pathname.endsWith(".html")) {
-      // Re-validate after decoding so percent-encoded "../" can't escape dist/ (as the assets route does).
+      // Re-validate after decoding so percent-encoded "../" can't escape docs/ (as the assets route does).
       const templatePath = normalize(decodeURIComponent(url.pathname));
       if (templatePath.startsWith("/templates/")) {
-        const file = Bun.file(root + "dist" + templatePath);
+        const file = Bun.file(root + "docs" + templatePath);
         if (await file.exists()) {
           const html = await file.text();
           return new Response(html.replace("</body>", `${reloadClient}</body>`), {
@@ -145,22 +132,13 @@ const server = Bun.serve({
       });
     }
 
-    if (url.pathname === "/app.css" || url.pathname === "/dist/app.css") {
-      return new Response(Bun.file(stylesheet), {
-        headers: {
-          "Cache-Control": "no-store",
-          "Content-Type": "text/css; charset=utf-8",
-        },
-      });
-    }
-
     if (url.pathname === "/favicon.ico") {
       return new Response(null, { status: 204 });
     }
 
     if (url.pathname.startsWith("/assets/")) {
       const assetPath = normalize(decodeURIComponent(url.pathname));
-      const asset = Bun.file(root + "dist" + assetPath);
+      const asset = Bun.file(root + "docs" + assetPath);
 
       if (assetPath.startsWith("/assets/") && (await asset.exists())) {
         return new Response(asset, {

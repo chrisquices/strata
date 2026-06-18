@@ -19,7 +19,7 @@ const data = [
         { id: 'tree', label: 'Tree.vue', icon: FileText },
       ] },
       { id: 'assets', label: 'assets', icon: Folder, children: [
-        { id: 'logo', label: 'logo.png', icon: Image },
+        { id: 'image', label: 'image.png', icon: Image },
       ] },
       { id: 'main', label: 'main.ts', icon: FileText },
     ],

@@ -38,7 +38,7 @@ const open = ref(false);
             <CollapsibleTrigger as-child>
               <Button variant="secondary" class="group w-full justify-between">
                 Toggle details
-                <ChevronDown class="size-icon-small transition-transform duration-base group-data-[state=open]:rotate-180" />
+                <ChevronDown class="size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180" />
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>

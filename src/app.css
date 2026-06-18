@@ -1,26 +1,13 @@
 @import "tailwindcss";
-
-/* Fonts — vendored Geist, SIL OFL (license: /assets/fonts/OFL.txt) */
-@font-face {
-    font-family: 'Geist';
-    src: url('./assets/fonts/geist-variable.woff2') format('woff2');
-    font-weight: 100 900;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Geist Mono';
-    src: url('./assets/fonts/geist-mono-variable.woff2') format('woff2');
-    font-weight: 100 900;
-    font-display: swap;
-}
+@source "../deps/strata/ui";
 
 /* Theme tokens — generate Tailwind utilities (bg-*, text-*, rounded-*, h-*, …) */
 @theme {
     /* Typography */
-    --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
-    --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-sans: ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
     --text-2xs: 0.625rem; /* 10px — micro labels (Badge/Chip sm) */
+
     /* Colors */
     --color-background: rgb(25 26 29);
     --color-surface: rgb(37 38 42);
@@ -74,9 +61,9 @@
 :root {
     color-scheme: dark;
 
-    --duration-fast: 100ms;
-    --duration-base: 200ms;
-    --duration-slow: 300ms;
+    --duration-100: 100ms;
+    --duration-200: 200ms;
+    --duration-300: 300ms;
 }
 
 @media (prefers-color-scheme: light) {
@@ -149,14 +136,14 @@ textarea:disabled,
 }
 
 /* Duration utilities */
-@utility duration-fast {
-    transition-duration: var(--duration-fast);
+@utility duration-100 {
+    transition-duration: var(--duration-100);
 }
-@utility duration-base {
-    transition-duration: var(--duration-base);
+@utility duration-200 {
+    transition-duration: var(--duration-200);
 }
-@utility duration-slow {
-    transition-duration: var(--duration-slow);
+@utility duration-300 {
+    transition-duration: var(--duration-300);
 }
 
 /* Z-index utilities */
@@ -194,7 +181,7 @@ textarea:disabled,
 /* Animations — reka-ui content transitions, keyed off data-state */
 
 /* Menu / popover */
-@keyframes strata-ui-pop-in {
+@keyframes strata-pop-in {
     from {
         opacity: 0;
         transform: scale(0.95);
@@ -205,23 +192,23 @@ textarea:disabled,
     }
 }
 
-@keyframes strata-ui-pop-out {
+@keyframes strata-pop-out {
     to {
         opacity: 0;
         transform: scale(0.97);
     }
 }
 
-.strata-ui-menu-pop[data-state='open'] {
-    animation: strata-ui-pop-in var(--duration-fast) ease-out;
+.strata-menu-pop[data-state='open'] {
+    animation: strata-pop-in var(--duration-100) ease-out;
 }
 
-.strata-ui-menu-pop[data-state='closed'] {
-    animation: strata-ui-pop-out var(--duration-fast) ease-in forwards;
+.strata-menu-pop[data-state='closed'] {
+    animation: strata-pop-out var(--duration-100) ease-in forwards;
 }
 
 /* Overlay */
-@keyframes strata-ui-fade-in {
+@keyframes strata-fade-in {
     from {
         opacity: 0;
     }
@@ -230,27 +217,27 @@ textarea:disabled,
     }
 }
 
-@keyframes strata-ui-fade-out {
+@keyframes strata-fade-out {
     to {
         opacity: 0;
     }
 }
 
-.strata-ui-overlay-fade[data-state='open'] {
-    animation: strata-ui-fade-in var(--duration-fast) ease-out;
+.strata-overlay-fade[data-state='open'] {
+    animation: strata-fade-in var(--duration-100) ease-out;
 }
 
-.strata-ui-overlay-fade[data-state='closed'] {
-    animation: strata-ui-fade-out var(--duration-fast) ease-in forwards;
+.strata-overlay-fade[data-state='closed'] {
+    animation: strata-fade-out var(--duration-100) ease-in forwards;
 }
 
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .strata-ui-menu-pop[data-state='open'],
-    .strata-ui-menu-pop[data-state='closed'],
-    .strata-ui-overlay-fade[data-state='open'],
-    .strata-ui-overlay-fade[data-state='closed'] {
+    .strata-menu-pop[data-state='open'],
+    .strata-menu-pop[data-state='closed'],
+    .strata-overlay-fade[data-state='open'],
+    .strata-overlay-fade[data-state='closed'] {
         animation: none;
     }
 }

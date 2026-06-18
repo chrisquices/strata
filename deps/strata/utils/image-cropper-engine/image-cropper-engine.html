@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image Cropper Engine demo</title>
+<style>
+  /* ============================================================
+     ALL of this is the CONSUMER's chrome. image-cropper-engine.js ships
+     no DOM and no CSS — the stage, the crop frame, the circular
+     mask, the dimmed exterior, the grid, every button and the
+     slider below are rendered HERE from the state the engine
+     emits. Delete this file and the engine is unchanged.
+     ============================================================ */
+  * { box-sizing: border-box; }
+  :root { --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --ink:#e7e9ee; --muted:#9aa3b2; --accent:#5b9cff; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, sans-serif; }
+  a { color: var(--accent); }
+  header { padding: 16px 22px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0 0 2px; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: minmax(320px, 1fr) 320px; gap: 22px; padding: 22px; align-items: start; }
+  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+
+  /* The stage = the consumer's container. The engine just tells us where the crop
+     window goes; overflow:hidden clips the image + dim to the stage. */
+  .stage { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #000;
+           overflow: hidden; border: 1px solid var(--line); border-radius: 10px;
+           touch-action: none; cursor: grab; user-select: none; }
+  .stage:active { cursor: grabbing; }
+  .stage img.src { position: absolute; top: 0; left: 0; transform-origin: 0 0; will-change: transform;
+                   -webkit-user-drag: none; user-drag: none; pointer-events: none; }
+
+  /* The crop frame: a box-shadow with a huge spread dims everything OUTSIDE it.
+     For a circle we just round the corners — the dim follows the shape. */
+  .frame { position: absolute; pointer-events: none; box-shadow: 0 0 0 9999px rgba(0,0,0,.55);
+           outline: 1px solid rgba(255,255,255,.9); }
+  .frame.round { border-radius: 50%; }
+  .frame .grid { position: absolute; inset: 0; opacity: .5; }
+  .frame .grid::before, .frame .grid::after { content: ""; position: absolute; background: rgba(255,255,255,.4); }
+  .frame .grid::before { left: 33.33%; right: 33.33%; top: 0; bottom: 0; border-left: 1px solid rgba(255,255,255,.4); border-right: 1px solid rgba(255,255,255,.4); }
+  .frame .grid::after { top: 33.33%; bottom: 33.33%; left: 0; right: 0; border-top: 1px solid rgba(255,255,255,.4); border-bottom: 1px solid rgba(255,255,255,.4); }
+  .frame.round .grid { display: none; }
+
+  .panel { display: flex; flex-direction: column; gap: 16px; }
+  .group { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .group h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  button, select { font: inherit; color: var(--ink); background: #222733; border: 1px solid var(--line);
+                   border-radius: 7px; padding: 7px 11px; cursor: pointer; }
+  button:hover, select:hover { border-color: #3a4250; background: #272d3a; }
+  button.on { background: var(--accent); border-color: var(--accent); color: #08101f; font-weight: 600; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  label.field { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  label.field span { color: var(--muted); }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .export { width: 100%; background: var(--accent); border-color: var(--accent); color: #08101f; font-weight: 700; padding: 10px; }
+  .result { grid-column: 1 / -1; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .result h2 { margin: 0 0 12px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .result .out { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+  .result img { max-width: 280px; max-height: 280px; background:
+    linear-gradient(45deg,#2a2f3a 25%,transparent 25%),linear-gradient(-45deg,#2a2f3a 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#2a2f3a 75%),linear-gradient(-45deg,transparent 75%,#2a2f3a 75%);
+    background-size: 18px 18px; background-position: 0 0,0 9px,9px -9px,-9px 0; border: 1px solid var(--line); border-radius: 6px; }
+  .result.round img { border-radius: 50%; }
+  .meta { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); white-space: pre-line; }
+  .warn { color: #ffb454; }
+  code { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Image Cropper Engine — reference consumer</h1>
+  <p><a href="./">&larr; demos</a> &nbsp;·&nbsp; Headless engine: <code>../image-cropper-engine.js</code> + <code>../image-cropper-engine-export.js</code>.
+     Drag to pan · wheel / pinch to zoom · the crop stays covered. Every pixel below is consumer-rendered from emitted state.</p>
+</header>
+
+<main>
+  <!-- The stage. The engine emits crop {x,y,w,h}, previewMatrix and round; the
+       consumer positions the <img>, the frame, the dim and the grid. -->
+  <div class="stage" id="stage">
+    <img class="src" id="img" alt="">
+    <div class="frame" id="frame"><div class="grid"></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="group">
+      <h2>Image</h2>
+      <select id="pick">
+        <option value="../demo/assets/image-2.3.jpg" selected>Portrait 2000×3000 (large)</option>
+        <option value="../demo/assets/image-16.9.jpg">Landscape 1600×900</option>
+        <option value="../demo/assets/image-1.1.jpg">Square 1000×1000</option>
+        <option value="../demo/assets/image-9.16.jpg">Tall 900×1600</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <h2>Zoom</h2>
+      <input type="range" id="zoom" min="1" max="6" step="0.01" value="1">
+      <label class="field"><span>scale</span> <span id="zoomval" class="meta"></span></label>
+    </div>
+
+    <div class="group">
+      <h2>Shape</h2>
+      <div class="btns" id="shapes">
+        <button data-shape="rect" class="on">Rect</button>
+        <button data-shape="square">Square</button>
+        <button data-shape="circle">Circle</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Aspect ratio</h2>
+      <div class="btns" id="ratios">
+        <button data-w="1" data-h="1" class="on">1:1</button>
+        <button data-w="4" data-h="3">4:3</button>
+        <button data-w="16" data-h="9">16:9</button>
+        <button data-w="3" data-h="2">3:2</button>
+        <button data-free="1">Free</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Orientation</h2>
+      <div class="btns">
+        <button id="rotl">⟲ Rotate</button>
+        <button id="rotr">⟳ Rotate</button>
+        <button id="fliph">⇆ Flip H</button>
+        <button id="flipv">⇅ Flip V</button>
+        <button id="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Output</h2>
+      <div class="row">
+        <select id="size">
+          <option value="256">256 px</option>
+          <option value="512" selected>512 px</option>
+          <option value="1024">1024 px</option>
+          <option value="0">native (source res)</option>
+        </select>
+        <select id="fmt">
+          <option value="image/png" selected>PNG</option>
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/webp">WebP</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="export" id="export">Export crop ▸</button>
+  </div>
+
+  <div class="result" id="result">
+    <h2>Exported output (the real deliverable)</h2>
+    <div class="out">
+      <img id="outimg" alt="export appears here">
+      <div class="meta" id="outmeta">Frame the image, then press “Export crop”.
+The engine emits the source-pixel rect + orientation; the export helper bakes it to these pixels.</div>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="./image-cropper-engine.demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Virtualization Engine demo</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #111; color: #eee; font: 14px/1.45 system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { padding: 16px; border-bottom: 1px solid #333; background: #151515; }
+  header a { color: #ddd; }
+  h1 { margin: 8px 0 12px; font-size: 22px; }
+  .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  label { display: flex; align-items: center; gap: 8px; color: #ccc; }
+  button, input, select { font: inherit; }
+  button, select { border: 1px solid #444; background: #222; color: #eee; padding: 6px 8px; }
+  input[type="range"] { accent-color: #eee; }
+  input[type="number"] { width: 90px; border: 1px solid #444; background: #222; color: #eee; padding: 6px 8px; }
+  #scroller { flex: 1; min-height: 0; overflow: auto; background: #0b0b0b; }
+  #spacer { position: relative; width: 100%; }
+  .cell { position: absolute; inset: 0 auto auto 0; overflow: hidden; background: #1d1d1d; border: 1px solid #222; }
+  .cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cell span { position: absolute; top: 0; left: 0; padding: 2px 6px; color: #fff; background: rgb(0 0 0 / 65%); font: 12px/1.4 ui-monospace, monospace; }
+  #monitor { position: fixed; right: 12px; bottom: 12px; margin: 0; padding: 10px 12px; white-space: pre; background: rgb(0 0 0 / 78%); color: #eee; border: 1px solid #333; font: 12px/1.55 ui-monospace, monospace; }
+</style>
+</head>
+<body>
+  <header>
+    <a href="./">Back to demos</a>
+    <h1>Virtualization Engine</h1>
+    <div class="controls">
+      <label>Item width <input id="size" type="range" min="80" max="420" value="160"><span id="sizeVal">160 px</span></label>
+      <label>Strategy
+        <select id="strategy">
+          <option value="grid">gridLayout</option>
+          <option value="list">listLayout</option>
+        </select>
+      </label>
+      <label>Jump to <input id="jump" type="number" min="0" max="9999" value="5000"></label>
+      <button id="jumpBtn" type="button">Go</button>
+      <button id="destroy" type="button">Destroy</button>
+    </div>
+  </header>
+
+  <div id="scroller"><div id="spacer"></div></div>
+  <pre id="monitor"></pre>
+
+<script type="module">
+import { VirtualizationEngine, gridLayout, listLayout } from './virtualization-engine.js';
+
+const COUNT = 10000;
+const $ = (id) => document.getElementById(id);
+const scroller = $('scroller');
+const spacer = $('spacer');
+const monitor = $('monitor');
+const sizeEl = $('size');
+const sizeVal = $('sizeVal');
+const strategyEl = $('strategy');
+const jumpEl = $('jump');
+const jumpBtn = $('jumpBtn');
+const destroyBtn = $('destroy');
+const images = [
+  '../demo/assets/image-1.1.jpg',
+  '../demo/assets/image-16.9.jpg',
+  '../demo/assets/image-2.3.jpg',
+  '../demo/assets/image-9.16.jpg',
+];
+
+const pool = [];
+let minItemWidth = Number(sizeEl.value);
+let strategy = 'grid';
+
+const makeLayout = () => strategy === 'grid'
+  ? gridLayout({ minItemWidth, aspectRatio: 1, gap: 8 })
+  : listLayout({ itemHeight: 72, gap: 8 });
+
+const render = ({ virtualItems, totalSize, stats }) => {
+  spacer.style.height = `${totalSize}px`;
+
+  while (pool.length < virtualItems.length) {
+    const element = document.createElement('div');
+    const image = document.createElement('img');
+    const label = document.createElement('span');
+    element.className = 'cell';
+    image.alt = '';
+    image.draggable = false;
+    element.append(image, label);
+    element._image = image;
+    element._label = label;
+    spacer.appendChild(element);
+    pool.push(element);
+  }
+
+  for (let index = 0; index < pool.length; index++) {
+    const element = pool[index];
+    const item = virtualItems[index];
+    if (!item) {
+      element.style.display = 'none';
+      continue;
+    }
+
+    element.style.display = '';
+    element.style.transform = `translate(${item.x}px, ${item.y}px)`;
+    element.style.width = `${item.width}px`;
+    element.style.height = `${item.height}px`;
+    const imageKey = item.index % images.length;
+    if (element._imageKey !== imageKey) {
+      element._image.src = images[imageKey];
+      element._imageKey = imageKey;
+    }
+    element._label.textContent = item.index;
+  }
+
+  monitor.textContent = `Showing ${stats.visibleCount} of ${stats.total.toLocaleString()} items
+strategy   : ${stats.layoutName}
+columns    : ${stats.columns}
+item size  : ${Math.round(stats.itemWidth)} x ${stats.itemHeight} px
+pool size  : ${pool.length}
+first index: ${stats.firstIndex}
+scrollTop  : ${Math.round(stats.scrollTop)} px`;
+};
+
+const engine = new VirtualizationEngine({
+  scrollElement: scroller,
+  count: COUNT,
+  layout: makeLayout,
+  onChange: render,
+});
+
+sizeEl.addEventListener('input', () => {
+  minItemWidth = Number(sizeEl.value);
+  sizeVal.textContent = `${minItemWidth} px`;
+  if (strategy === 'grid') engine.setLayout(makeLayout);
+});
+
+strategyEl.addEventListener('change', () => {
+  strategy = strategyEl.value;
+  sizeEl.disabled = strategy !== 'grid';
+  engine.setLayout(makeLayout);
+});
+
+jumpBtn.addEventListener('click', () => {
+  engine.scrollToIndex(Number.parseInt(jumpEl.value, 10) || 0);
+});
+
+destroyBtn.addEventListener('click', () => {
+  engine.destroy();
+  for (const control of [sizeEl, strategyEl, jumpEl, jumpBtn, destroyBtn]) control.disabled = true;
+  destroyBtn.textContent = 'Destroyed';
+});
+</script>
+</body>
+</html>
+

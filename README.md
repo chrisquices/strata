@@ -1,10 +1,10 @@
 <br />
 <div align="center">
-    <img src="./src/assets/img/logo.png" alt="Logo" height="100">
+    <img src="./logo.png" alt="Logo" height="100">
 </div>
 
 
-<h1 align="center">Strata UI</h1>
+<h1 align="center">Strata</h1>
 
 <p align="center">
     A source-first Vue UI kit with reusable primitives for building application interfaces without package registry ceremony.
@@ -29,7 +29,7 @@
 
 ## Overview
 
-Strata UI is a source-first Vue UI kit designed to be copied directly into a project rather than installed from a package registry. The components and shared stylesheet become part of the project and can be used, modified, or extended like any other application code.
+Strata is a source-first Vue UI kit designed to be copied directly into a project rather than installed from a package registry. The components and shared stylesheet become part of the project and can be used, modified, or extended like any other application code.
 
 It includes foundational interface primitives such as buttons, fields, menus, dialogs, sheets, tabs, tables, calendars, date pickers, dropdowns, popovers, tooltips, sliders, toggles, navigation, upload controls, and more.
 
@@ -42,15 +42,15 @@ It includes foundational interface primitives such as buttons, fields, menus, di
 - Reka UI (`reka-ui`)
 - Lucide Vue (`@lucide/vue`)
 
-The components and shared stylesheet are included with Strata UI. Bun and the vendored dependencies under `deps/` are only required when developing Strata UI itself.
+The components and shared stylesheet are included with Strata. Bun and the vendored dependencies under `deps/` are only required when developing Strata itself.
 
 ---
 
 ## Installation
 
-Copy `src/components/ui`, `src/app.css`, and `src/assets/fonts` into your Vue project. Preserve the `assets/fonts` path relative to `app.css` so the included Geist fonts resolve correctly.
+Copy `deps/strata/ui` and `src/app.css` into your Vue project.
 
-Strata UI's `app.css` contains the default theme, component utilities, and shared styles used by the components. In a new project, use it as your application stylesheet. In an existing project, merge or adapt it to fit your current styles while retaining the tokens, utilities, and component rules that Strata UI relies on.
+Strata's `app.css` contains the default theme, component utilities, and shared styles used by the components. In a new project, use it as your application stylesheet. In an existing project, merge or adapt it to fit your current styles while retaining the tokens, utilities, and component rules that Strata relies on.
 
 Import the stylesheet once from your application entry point:
 
@@ -64,7 +64,7 @@ The copied source belongs to your project and may be modified as needed.
 
 ## Updating
 
-Updates are optional. Because Strata UI is copied into your project as owned source, there is no automatic update process or expectation that projects stay synchronized.
+Updates are optional. Because Strata is copied into your project as owned source, there is no automatic update process or expectation that projects stay synchronized.
 
 If a newer component or fix is useful, copy that change into your project and merge it with any local modifications.
 
@@ -74,21 +74,13 @@ If a newer component or fix is useful, copy that change into your project and me
 
 The copied components belong to your project. Edit them directly, wrap them, compose them, or remove anything you do not need.
 
-The default colors, typography, spacing, radii, shadows, animations, and shared behavior are defined in `app.css`. Modify those values to adapt Strata UI to your application.
+The default colors, typography, spacing, radii, shadows, animations, and shared behavior are defined in `app.css`. Modify those values to adapt Strata to your application.
 
 ---
 
-## Developing Strata UI
+## Developing Strata
 
-Strata UI includes an offline development and build pipeline under `deps/`. No package installation is required.
-
-Maintainers can activate the repository hooks:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-The post-commit hook publishes the current `dist/` output to the [Strata UI demo repository](https://github.com/chrisquices/strata-ui-demo). It requires Git LFS and repository access.
+Strata includes an offline development and build pipeline under `deps/`. No package installation is required.
 
 Run the development server:
 
@@ -104,14 +96,14 @@ Build the static output:
 ./deps/build/cli-bun deps/build/runner-build.ts
 ```
 
-The build writes the self-contained output to `dist/`.
+The build writes the self-contained output to `docs/`.
 
 ---
 
 ## Philosophy
 
-Strata UI is intentionally self-contained. Its development and build dependencies are vendored under `deps/`, allowing the repository to run and build offline without global installations, package registry access, or a separate dependency installation step.
+Strata is intentionally self-contained. Its development and build dependencies are vendored under `deps/`, allowing the repository to run and build offline without global installations, package registry access, or a separate dependency installation step.
 
-This is primarily a preference for personal projects: I prefer the project to not depend on external package availability simply to remain buildable. Everything needed to work on Strata UI is kept with the repository.
+This is primarily a preference for personal projects: I prefer the project to not depend on external package availability simply to remain buildable. Everything needed to work on Strata is kept with the repository.
 
-This approach is not a recommendation for every project. Consuming projects may use their normal package manager and dependency workflow; Strata UI's components are still ordinary Vue source files.
+This approach is not a recommendation for every project. Consuming projects may use their normal package manager and dependency workflow; Strata's components are still ordinary Vue source files.

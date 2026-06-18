@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>web-utils demo</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: #111; color: #eee; font: 15px/1.5 system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 40px 20px; }
+  h1 { margin: 0 0 28px; font-size: 28px; }
+  section { border: 1px solid #333; padding: 24px; margin: 0 0 28px; background: #171717; }
+  h2 { margin: 0 0 8px; font-size: 22px; }
+  p { margin: 0 0 18px; color: #bbb; }
+  a { display: inline-block; color: #111; background: #eee; padding: 8px 12px; text-decoration: none; }
+  a:hover { background: #fff; }
+</style>
+</head>
+<body>
+<main>
+  <h1>web-utils demos</h1>
+
+  <section>
+    <h2>Media Engine</h2>
+    <p>Headless image, video, and audio viewer using media-engine.js.</p>
+    <a href="../media-engine/media-engine.html">Open Media Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Virtualization Engine</h2>
+    <p>Headless list and grid virtualization using virtualization-engine.js.</p>
+    <a href="../virtualization-engine/virtualization-engine.html">Open Virtualization Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Toast Engine</h2>
+    <p>Headless toast/notification queue, lifecycle, and positioning using toast-engine.js.</p>
+    <a href="../toast-engine/toast-engine.html">Open Toast Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Datetime Engine</h2>
+    <p>Headless date/time picker: calendar-grid generation, single/range selection, hover preview, time, and constraints using datetime-engine.js.</p>
+    <a href="../datetime-engine/datetime-engine.html">Open Datetime Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Color Engine</h2>
+    <p>Headless color math: color-space conversion, parsing/serialization, WCAG contrast, accessible-color adjustment, palette/harmony, and perceptual gradients using color-engine.js.</p>
+    <a href="../color-engine/color-engine.html">Open Color Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Image Cropper Engine</h2>
+    <p>Headless image crop + transform for uploads (avatars, covers): frame an image with pan/zoom/rotate/flip behind a fixed crop window, with the coverage invariant and exact output geometry, using image-cropper-engine.js (+ image-cropper-engine-export.js).</p>
+    <a href="../image-cropper-engine/image-cropper-engine.html">Open Image Cropper Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Drag-and-Drop Engine (File Intake)</h2>
+    <p>Headless file intake: accept files via drag-drop, paste, and a file-picker (with folder traversal), validate them against consumer rules, emit drag-state + the accepted/rejected collection with previews, using drag-n-drop-engine.js. Intake only — uploading stays the app's job.</p>
+    <a href="../drag-n-drop-engine/drag-n-drop-engine.html">Open Drag-and-Drop Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Sortable Engine (drag to reorder)</h2>
+    <p>Headless drag-to-reorder: reorder items within a list or move them between connected kanban columns by pointer-drag or keyboard, with drop-index math, cross-list movement, drag handles, and auto-scroll, using sortable-engine.js. Emits the key order + drag-state; the consumer renders the lists, the lifted item, and the gap.</p>
+    <a href="../sortable-engine/sortable-engine.html">Open Sortable Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Selection Engine (marquee multi-select)</h2>
+    <p>Headless multi-selection: click, shift-range, ctrl/⌘-toggle, select-all, and rubber-band marquee selection with cached-geometry hit-testing (no per-move getBoundingClientRect), delta output, an optional spatial index, and auto-scroll across off-screen items, using selection-engine.js. Composes with virtualization-engine for huge lists. Emits the selected key set + deltas + marquee rect; the consumer renders the tiles, the selected state, and the box.</p>
+    <a href="../selection-engine/selection-engine.html">Open Selection Engine demo</a>
+  </section>
+
+  <section>
+    <h2>Hotkey Engine (keyboard shortcuts)</h2>
+    <p>Headless keyboard-shortcut engine: register chords (⌘⇧P) and Vim-style key sequences (g g, g i) bound to handlers, with scopes/contexts, a typing-guard (bare letter shortcuts don't fire while typing in an input), conflict resolution, and cross-platform mod (⌘ on Mac ⇄ Ctrl elsewhere), using hotkey-engine.js. The engine listens + matches + fires; it emits the registered bindings and live matching state. The consumer renders the palette, modal, cheatsheet, and the pending-sequence indicator.</p>
+    <a href="../hotkey-engine/hotkey-engine.html">Open Hotkey Engine demo</a>
+  </section>
+</main>
+</body>
+</html>

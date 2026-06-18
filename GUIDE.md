@@ -2,7 +2,7 @@
 
 A Vue UI kit — 80+ components and headless engines for color, dates, media, drag-and-drop, virtualization, and more.
 
-- **Primitives (`/src/components/ui`):** 80+ foundational, reusable UI components designed for use across projects.
+- **Primitives (`/deps/strata/ui`):** 80+ foundational, reusable UI components designed for use across projects.
 - **Blocks (`/src/components/blocks`):** Generic, reusable components composed from primitives to provide complete interface patterns.
 - **App (`/src/components/app`):** Project-specific compositions similar to blocks, but designed exclusively for this application and not intended for reuse elsewhere.
 - **Headless Engines:** Presentation-independent APIs that provide complex behavior for building specialized components and workflows.
@@ -17,7 +17,7 @@ The vendored build pipeline compiles the Vue source into self-contained static o
 - Resolves Vue imports to the vendored runtime.
 - Bundles and inlines application JavaScript and Vue SFC styles.
 - Compiles `/src/app.css` with the vendored Tailwind v4 standalone binary.
-- Produces `/dist/index.html` and `/dist/app.css`, which run directly in modern browsers without a server or internet connection.
+- Produces a self-contained `/docs/index.html` with inlined JavaScript and CSS, which runs directly in modern browsers without a server or internet connection.
 
 ## Running the Project
 
@@ -46,14 +46,15 @@ Development mode performs full-page live reloads rather than state-preserving Vu
 
 1. Never modify, add to, delete, rename, move, or replace this GUIDE.md file unless the user explicitly instructs you to do so.
 3. Follow the user's requested names, packages, files, tools, and actions exactly. If a requested item is unavailable, ambiguous, appears incorrect, or differs from a preferred alternative, stop immediately without making changes or substitutions, report the discrepancy, and wait for the user to provide the next step. Never substitute an alternative item without explicit permission.
-5. Project infrastructure is frozen without explicit user permission. Never add, install, vendor, update, edit, delete, rename, or replace dependencies, libraries, packages, configuration files, or any top-level or otherwise important file or folder (e.g., `deps/`, `tsconfig.json`, the build scripts in `deps/build/`) unless the user explicitly permits or instructs that specific change. If a task requires something that is missing — for example, a component being ported imports a library that is not vendored in `deps/` — stop immediately, report exactly what is missing, and wait for the user. Do not attempt to obtain, vendor, shim, stub, or otherwise work around the missing item. (Running the documented build and dev commands, including their output to `dist/`, is normal operation, not an infrastructure change.)
+5. Project infrastructure is frozen without explicit user permission. Never add, install, vendor, update, edit, delete, rename, or replace dependencies, libraries, packages, configuration files, or any top-level or otherwise important file or folder (e.g., `deps/`, `tsconfig.json`, the build scripts in `deps/build/`) unless the user explicitly permits or instructs that specific change. If a task requires something that is missing — for example, a component being ported imports a library that is not vendored in `deps/` — stop immediately, report exactly what is missing, and wait for the user. Do not attempt to obtain, vendor, shim, stub, or otherwise work around the missing item. (Running the documented build and dev commands, including their output to `docs/`, is normal operation, not an infrastructure change.)
 6. Testing happens only on the user's explicit instruction — their instruction is the sole trigger. Unprompted, never write tests or verification code: no test files, no one-off test or verification scripts, no debug harnesses or temporary scaffolds, not even to check your own work with the intent to delete afterward. If a check seems needed and none was requested, note it in your report and stop. When the user explicitly instructs testing (e.g., "test it"), run any tests that already exist, and create temporary tests where none exist — run them, report the results, then delete the temporary ones so they leave no trace in the project. (Running the documented build remains normal operation at any time and needs no test instruction.)
+7. Never create a `.claude` directory or any Claude-specific settings or configuration files unless the agent first explicitly offers to add them and the user explicitly accepts that offer. Do not infer consent from a general request or create them as incidental setup.
 
 ## When working with components in general
 
 1. SFCs are written `lang="ts"`, but the build transpiles via Bun with no type-checking — types are documentation only; runtime correctness is what's enforced. Don't rely on the build to catch type errors.
 2. Props use the `String as PropType<'a' | 'b'>` cast plus an inline `validator` (e.g. `validator: (v) => ['sm','md','lg'].includes(v)`). Match this idiom for every enum prop.
-3. Date/time components take an ISO-string `v-model` — `"2026-06-14"` (single) or `{ start, end }` (range) — converted to/from `@internationalized/date` objects in `src/components/ui/Shared/date.ts`. Reuse those converters; never expose raw `Date`/`DateValue`.
+3. Date/time components take an ISO-string `v-model` — `"2026-06-14"` (single) or `{ start, end }` (range) — converted to/from `@internationalized/date` objects in `deps/strata/ui/Shared/date.ts`. Reuse those converters; never expose raw `Date`/`DateValue`.
 4. For components built on a calendar/field primitive, `placeholder` (the visible month, or visible time for `TimeField`) must stay a writable `ref` synced to the value with a `watch`, never a `computed` — it's bound to `v-model:placeholder`, so a `computed` breaks prev/next navigation.
 
 ## When working with reka-ui

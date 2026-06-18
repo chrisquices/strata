@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toast Engine demo</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: #111; color: #eee; font: 14px/1.45 system-ui, sans-serif; }
+  header { padding: 16px; border-bottom: 1px solid #333; background: #151515; }
+  header a { color: #ddd; }
+  h1 { margin: 8px 0 4px; font-size: 22px; }
+  p.lede { margin: 0 0 16px; color: #aaa; max-width: 760px; }
+  main { padding: 24px 16px 120px; max-width: 760px; }
+  .panel { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin: 0 0 18px; }
+  .panel.group { padding: 14px; border: 1px solid #2c2c2c; background: #161616; border-radius: 8px; }
+  .panel h2 { width: 100%; margin: 0 0 2px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #888; }
+  label { display: inline-flex; align-items: center; gap: 8px; color: #ccc; }
+  button, select, input { font: inherit; }
+  button {
+    border: 1px solid #444; background: #222; color: #eee; padding: 8px 12px; border-radius: 6px; cursor: pointer;
+  }
+  button:hover { background: #2c2c2c; }
+  button.kind-success { border-color: #2f6b46; }
+  button.kind-warning { border-color: #806a2a; }
+  button.kind-error { border-color: #7a3636; }
+  select, input[type="number"] { border: 1px solid #444; background: #222; color: #eee; padding: 7px 8px; border-radius: 6px; }
+  input[type="number"] { width: 64px; }
+  code { background: #000; padding: 1px 5px; border-radius: 4px; color: #cbd; }
+  .hint { color: #888; font-size: 13px; }
+
+  /* ============================================================
+     Toast UI — ENTIRELY consumer-owned. The engine ships none of this.
+     ============================================================ */
+  .toast-region {
+    position: fixed; z-index: 50; display: flex; flex-direction: column; gap: 10px;
+    padding: 16px; width: 360px; max-width: calc(100vw - 32px); pointer-events: none;
+  }
+  .toast-region > * { pointer-events: auto; }
+  .toast-region[data-position="top-left"]      { top: 0; left: 0; align-items: flex-start; }
+  .toast-region[data-position="top-center"]     { top: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+  .toast-region[data-position="top-right"]      { top: 0; right: 0; align-items: flex-end; }
+  .toast-region[data-position="bottom-left"]    { bottom: 0; left: 0; flex-direction: column-reverse; align-items: flex-start; }
+  .toast-region[data-position="bottom-center"]  { bottom: 0; left: 50%; transform: translateX(-50%); flex-direction: column-reverse; align-items: center; }
+  .toast-region[data-position="bottom-right"]   { bottom: 0; right: 0; flex-direction: column-reverse; align-items: flex-end; }
+
+  .toast {
+    position: relative; width: 100%; display: grid; grid-template-columns: 24px 1fr 20px; gap: 10px;
+    align-items: start; padding: 13px 14px; border-radius: 10px; overflow: hidden;
+    background: #1e1e1e; border: 1px solid #333; color: #f0f0f0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+    transition: opacity .28s ease, transform .3s cubic-bezier(.22, 1, .36, 1);
+  }
+  .toast-icon {
+    width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 13px; font-weight: 700; color: #111; background: #888;
+  }
+  .toast-body { min-width: 0; }
+  .toast-title { font-weight: 600; word-break: break-word; }
+  .toast-desc { margin-top: 2px; color: #b6b6b6; font-size: 13px; word-break: break-word; }
+  .toast-close {
+    padding: 0; width: 20px; height: 20px; line-height: 1; border: 0; border-radius: 5px;
+    background: transparent; color: #999; cursor: pointer; font-size: 12px;
+  }
+  .toast-close:hover { background: #333; color: #fff; }
+
+  /* per-type accents (a tag the consumer styles; the engine implies nothing) */
+  .toast[data-type="info"]    { border-left: 3px solid #3b82f6; }
+  .toast[data-type="info"]    .toast-icon { background: #3b82f6; color: #fff; }
+  .toast[data-type="success"] { border-left: 3px solid #22c55e; }
+  .toast[data-type="success"] .toast-icon { background: #22c55e; color: #06250f; }
+  .toast[data-type="warning"] { border-left: 3px solid #eab308; }
+  .toast[data-type="warning"] .toast-icon { background: #eab308; color: #2a2300; }
+  .toast[data-type="error"]   { border-left: 3px solid #ef4444; }
+  .toast[data-type="error"]   .toast-icon { background: #ef4444; color: #2a0606; }
+  .toast[data-type="loading"] { border-left: 3px solid #888; }
+  .toast[data-type="loading"] .toast-icon { background: #444; color: #eee; animation: toast-spin 1s linear infinite; }
+  @keyframes toast-spin { to { transform: rotate(360deg); } }
+
+  /* lifecycle phases drive the enter/exit transitions */
+  .toast[data-phase="entering"] { opacity: 0; }
+  .toast[data-phase="visible"]  { opacity: 1; transform: none; }
+  .toast[data-phase="exiting"]  { opacity: 0; transform: scale(.96); }
+  /* directional slide from/to the edge the region hugs */
+  .toast-region[data-position$="right"]  .toast[data-phase="entering"],
+  .toast-region[data-position$="right"]  .toast[data-phase="exiting"]  { transform: translateX(115%); }
+  .toast-region[data-position$="left"]   .toast[data-phase="entering"],
+  .toast-region[data-position$="left"]   .toast[data-phase="exiting"]  { transform: translateX(-115%); }
+  .toast-region[data-position="top-center"]    .toast[data-phase="entering"],
+  .toast-region[data-position="top-center"]    .toast[data-phase="exiting"]    { transform: translateY(-130%); }
+  .toast-region[data-position="bottom-center"] .toast[data-phase="entering"],
+  .toast-region[data-position="bottom-center"] .toast[data-phase="exiting"]    { transform: translateY(130%); }
+
+  /* auto-dismiss progress bar; paused in lockstep with the engine via [data-paused] */
+  .toast-bar {
+    position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; transform-origin: left center;
+    transform: scaleX(1); background: currentColor; opacity: .5;
+  }
+  .toast[data-type="info"]    .toast-bar { color: #3b82f6; }
+  .toast[data-type="success"] .toast-bar { color: #22c55e; }
+  .toast[data-type="warning"] .toast-bar { color: #eab308; }
+  .toast[data-type="error"]   .toast-bar { color: #ef4444; }
+  .toast-bar[data-run="true"]  { animation: toast-shrink linear forwards; }
+  .toast-bar[data-run="false"] { display: none; }
+  .toast[data-paused="true"] .toast-bar { animation-play-state: paused; }
+  @keyframes toast-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+  .toast-more {
+    align-self: stretch; text-align: center; padding: 6px; border-radius: 8px;
+    background: #1a1a1a; border: 1px dashed #3a3a3a; color: #9aa; font-size: 12px;
+  }
+
+  /* reduced motion: the engine emits the flag + removes promptly; we kill animation */
+  body[data-reduce-motion="true"] .toast { transition: none; }
+  body[data-reduce-motion="true"] .toast[data-phase="entering"] { opacity: 1; transform: none; }
+  body[data-reduce-motion="true"] .toast-bar { display: none; }
+  body[data-reduce-motion="true"] .toast[data-type="loading"] .toast-icon { animation: none; }
+</style>
+</head>
+<body data-reduce-motion="false">
+  <header>
+    <a href="./">← Back to demos</a>
+    <h1>Toast Engine</h1>
+    <p class="lede">
+      A headless toast engine: it owns the queue, timers, stacking order, position grouping,
+      overflow and lifecycle, and emits state. <strong>Every pixel below is rendered by the demo
+      consumer</strong> (<code>toast-engine/toast-engine.demo.js</code>) from that state — the engine ships no DOM and no CSS.
+    </p>
+  </header>
+
+  <main>
+    <div class="panel group">
+      <h2>Fire a toast</h2>
+      <button id="btn-info">Info</button>
+      <button id="btn-success" class="kind-success">Success</button>
+      <button id="btn-warning" class="kind-warning">Warning</button>
+      <button id="btn-error" class="kind-error">Error (sticky)</button>
+      <button id="btn-promise-ok">Promise → resolve</button>
+      <button id="btn-promise-fail">Promise → reject</button>
+      <button id="btn-spam">Spam 6 (overflow)</button>
+      <button id="btn-dismiss-all">Dismiss all</button>
+    </div>
+
+    <div class="panel group">
+      <h2>Engine configuration</h2>
+      <label>Position
+        <select id="sel-position">
+          <option value="top-left">top-left</option>
+          <option value="top-center">top-center</option>
+          <option value="top-right" selected>top-right</option>
+          <option value="bottom-left">bottom-left</option>
+          <option value="bottom-center">bottom-center</option>
+          <option value="bottom-right">bottom-right</option>
+        </select>
+      </label>
+      <label>Order
+        <select id="sel-order">
+          <option value="newest-first" selected>newest-first</option>
+          <option value="newest-last">newest-last</option>
+        </select>
+      </label>
+      <label>Overflow
+        <select id="sel-overflow">
+          <option value="queue" selected>queue (+N more)</option>
+          <option value="evict">evict oldest</option>
+        </select>
+      </label>
+      <label>Max visible <input id="inp-max" type="number" min="1" max="9" value="3"></label>
+      <label><input id="chk-hover" type="checkbox" checked> pause on hover</label>
+    </div>
+
+    <p class="hint">
+      Hover a toast to freeze its timer and progress bar (remaining time is preserved on leave).
+      Switch to another browser tab mid-toast and back — the timer pauses while hidden.
+      Toggle OS “Reduce motion” to see animations skipped while removal stays prompt
+      (reduced motion: <strong id="rm-status">off</strong>).
+      Changing order/overflow/max/hover rebuilds the toaster.
+    </p>
+  </main>
+
+  <script type="module" src="./toast-engine.demo.js"></script>
+</body>
+</html>

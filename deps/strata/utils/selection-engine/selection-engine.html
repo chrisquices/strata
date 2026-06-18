@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selection Engine (marquee multi-select) demo</title>
+<style>
+  /* ============================================================
+     ALL of this is the CONSUMER's chrome. selection-engine.js ships
+     no item DOM and no CSS — the tiles, the selected highlight, and
+     the marquee box are rendered HERE from the selected key set +
+     deltas + marquee rect the engine emits. Delete this file and the
+     engine is unchanged and still fully tested by Gate 1.
+     ============================================================ */
+  * { box-sizing: border-box; }
+  :root {
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a; --ink:#e7e9ee;
+    --muted:#9aa3b2; --accent:#5b9cff; --accent2:#7cf2c0; --ok:#46c08a; --warn:#ffb454;
+  }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, sans-serif; }
+  a { color: var(--accent); }
+  header { padding: 16px 22px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0 0 2px; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  header .scope { margin-top: 6px; color: var(--warn); font-size: 12.5px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 22px; display: grid; gap: 26px; }
+
+  section.demo { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  section.demo > h2 { margin: 0 0 3px; font-size: 15px; }
+  section.demo > .desc { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; }
+  kbd { font: 11px ui-monospace, monospace; background: #0c0e12; border: 1px solid var(--line);
+        border-bottom-width: 2px; border-radius: 5px; padding: 1px 5px; color: var(--ink); }
+  code { color: var(--accent); font-family: ui-monospace, monospace; }
+
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .toolbar button { font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line);
+                    border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+  .toolbar button:hover { border-color: var(--accent); }
+  .toolbar .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .toolbar .seg button { border: 0; border-radius: 0; border-left: 1px solid var(--line); }
+  .toolbar .seg button:first-child { border-left: 0; }
+  .toolbar .seg button.on { background: var(--accent); color: #0b0e14; }
+  .toolbar .count { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--accent2); font-weight: 600; }
+  .toolbar label { color: var(--muted); display: inline-flex; gap: 7px; align-items: center; }
+
+  /* The selection SURFACE: a positioning context for absolutely-placed tiles + the box.
+     touch-action:none so a drag-marquee on touch doesn't scroll the page. */
+  .surface { position: relative; user-select: none; -webkit-user-select: none; touch-action: none; }
+
+  /* A tile — entirely the consumer's element. The engine only knows its key + rect. */
+  .tile { position: absolute; top: 0; left: 0; border-radius: 8px; overflow: hidden;
+          border: 1px solid var(--line); background: var(--panel2); cursor: pointer; }
+  .tile .idx { position: absolute; left: 5px; bottom: 4px; font: 11px/1.3 ui-monospace, monospace;
+               color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  /* Selected state — the consumer's highlight, driven by the emitted set + deltas. */
+  .tile.sel { outline: 3px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+  .tile.sel::after { content: '✓'; position: absolute; top: 3px; right: 4px; width: 17px; height: 17px;
+                     background: var(--accent); color: #06101f; border-radius: 50%; font: 12px/17px system-ui;
+                     text-align: center; font-weight: 700; }
+  .tile.disabled { opacity: .34; cursor: not-allowed; }
+
+  /* The MARQUEE BOX — a consumer-rendered element placed at the engine's emitted rect. */
+  .marquee { position: absolute; top: 0; left: 0; display: none; pointer-events: none;
+             background: rgba(91,156,255,.16); border: 1px solid var(--accent); border-radius: 3px; z-index: 5; }
+
+  .gallery { min-height: 120px; }
+  .hint { margin-top: 12px; color: var(--muted); font-size: 12px; }
+
+  /* Large virtualized grid. */
+  .vwrap { position: relative; }
+  .scroller { height: 460px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: #0b0d12; }
+  .scroller::-webkit-scrollbar { width: 11px; height: 11px; }
+  .scroller::-webkit-scrollbar-thumb { background: #2a2f3a; border-radius: 8px; }
+  .spacer { position: relative; width: 100%; }
+  .vtile { position: absolute; top: 0; left: 0; border-radius: 7px; border: 1px solid rgba(255,255,255,.06);
+           color: rgba(255,255,255,.82); font: 11px/1 ui-monospace, monospace; display: flex; align-items: center;
+           justify-content: center; cursor: pointer; will-change: transform; }
+  .vtile.sel { outline: 3px solid #fff; outline-offset: -2px; color: #fff; }
+  .vtile.sel::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,.18); border-radius: 6px; }
+
+  #log { background: #0c0e12; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+         min-height: 40px; font: 12px/1.55 ui-monospace, monospace; color: var(--muted); white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Selection Engine — marquee multi-select</h1>
+  <p>Headless selection: the engine owns the selection set + the drag-box hit-testing and emits state. This page renders every tile, the selected highlight, and the marquee box.</p>
+  <p class="scope">Selection (which keys are picked) — NOT reorder (sortable-engine) nor file intake (drag-n-drop-engine). The marquee drags on EMPTY space; pressing a tile is a click. The engine hit-tests SUPPLIED geometry (never the live DOM) and renders nothing.</p>
+</header>
+
+<main>
+  <section class="demo">
+    <h2>1 · Photo gallery — click · shift-range · ctrl/⌘-toggle · marquee</h2>
+    <p class="desc">
+      <b>Click</b> a tile to select it; <kbd>Shift</kbd>-click for a contiguous range (re-extends from the same anchor);
+      <kbd>Ctrl</kbd>/<kbd>⌘</kbd>-click to toggle a scattered set. <b>Drag on empty space</b> to rubber-band — the box
+      lights tiles up live as it touches them and de-selects as you drag back out. Hold <kbd>Shift</kbd> while starting a
+      drag to ADD to the selection. <kbd>Ctrl/⌘+A</kbd> select all · <kbd>Esc</kbd> clear. One tile is disabled.
+    </p>
+    <div class="toolbar">
+      <button id="g-all" type="button">Select all</button>
+      <button id="g-clear" type="button">Clear</button>
+      <button id="g-invert" type="button">Invert</button>
+      <label>Rule
+        <span class="seg" id="g-rule">
+          <button data-mode="intersect" class="on" type="button">intersect</button>
+          <button data-mode="contain" type="button">contain</button>
+        </span>
+      </label>
+      <label>Mode
+        <span class="seg" id="g-multi">
+          <button data-multi="true" class="on" type="button">multi</button>
+          <button data-multi="false" type="button">single</button>
+        </span>
+      </label>
+      <span class="count"><span id="g-count">0</span> selected</span>
+    </div>
+    <div id="gallery" class="surface gallery">
+      <div id="g-box" class="marquee"></div>
+    </div>
+    <p class="hint" id="g-hint">Drag a box around some photos.</p>
+  </section>
+
+  <section class="demo">
+    <h2>2 · Large virtualized grid — 10,000 items, smooth marquee, off-screen selection</h2>
+    <p class="desc">
+      The grid is <b>virtualized</b> (only the visible tiles are in the DOM) using <code>virtualization-engine.js</code>,
+      which computes positions for <b>all</b> 10,000 items. Those positions are fed to the selection engine as DATA, so the
+      marquee hit-tests cached geometry — <b>no <code>getBoundingClientRect</code> per move</b> — and stays smooth. Drag to
+      the top/bottom edge and it <b>auto-scrolls</b>, selecting items that were never even rendered. The selection survives
+      scrolling past them.
+    </p>
+    <div class="toolbar">
+      <button id="v-all" type="button">Select all 10k</button>
+      <button id="v-clear" type="button">Clear</button>
+      <button id="v-top" type="button">Scroll to top</button>
+      <span class="count"><span id="v-count">0</span> selected</span>
+    </div>
+    <div class="vwrap">
+      <div id="scroller" class="scroller">
+        <div id="spacer" class="spacer">
+          <div id="v-box" class="marquee"></div>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Tiles are colored by index. The white highlight + check overlay is the consumer painting the emitted selected set.</p>
+  </section>
+
+  <section class="demo">
+    <h2>Live state — what the engine emits</h2>
+    <p class="desc">The engine emits <code>{ selected:Set, count, anchor, delta:{entered,left}, marquee:{active,rect} }</code> on every change. The consumer renders from it. Latest first:</p>
+    <div id="log">No selection yet.</div>
+  </section>
+</main>
+
+<script type="module" src="selection-engine.demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drag-and-Drop Engine (File Intake) demo</title>
+<style>
+  /* ============================================================
+     ALL of this is the CONSUMER's chrome. drag-n-drop-engine.js
+     ships no DOM and no CSS — the drop zone, the drag-over glow,
+     the thumbnail grid, the rejected list, every button is
+     rendered HERE from the state the engine emits. Delete this
+     file and the engine is unchanged and still fully tested.
+     ============================================================ */
+  * { box-sizing: border-box; }
+  :root {
+    --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --ink:#e7e9ee; --muted:#9aa3b2;
+    --accent:#5b9cff; --ok:#46c08a; --bad:#ff6b6b; --warn:#ffb454;
+  }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, sans-serif; }
+  a { color: var(--accent); }
+  header { padding: 16px 22px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0 0 2px; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  header .scope { margin-top: 6px; color: var(--warn); font-size: 12.5px; }
+  main { max-width: 980px; margin: 0 auto; padding: 22px; }
+
+  .config { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center;
+            background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+            padding: 12px 16px; margin-bottom: 18px; }
+  .config label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; }
+  select, input[type="number"] { font: inherit; color: var(--ink); background: #222733;
+            border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; }
+  input[type="number"] { width: 64px; }
+
+  /* The drop zone = the consumer's element. The engine attaches listeners to it
+     and reads state; the look (border, glow, accept/reject tint) is all here. */
+  .dropzone { position: relative; border: 2px dashed var(--line); border-radius: 14px;
+              background: var(--panel); padding: 40px 24px; text-align: center;
+              transition: border-color .15s, background .15s, box-shadow .15s; }
+  .dropzone.over { border-style: solid; border-color: var(--accent);
+                   box-shadow: 0 0 0 4px rgba(91,156,255,.15) inset; background: #181d27; }
+  .dropzone.over[data-willaccept="yes"] { border-color: var(--ok); box-shadow: 0 0 0 4px rgba(70,192,138,.18) inset; }
+  .dropzone.over[data-willaccept="no"]  { border-color: var(--bad); box-shadow: 0 0 0 4px rgba(255,107,107,.18) inset; }
+  .dropzone .big { font-size: 28px; opacity: .8; }
+  .dropzone .hint { margin: 8px 0 14px; color: var(--muted); font-size: 14px; }
+  .dropzone.over .hint { color: var(--ink); font-weight: 600; }
+  .dz-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  button { font: inherit; color: var(--ink); background: #222733; border: 1px solid var(--line);
+           border-radius: 8px; padding: 8px 13px; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: #3a4250; background: #272d3a; }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #08101f; font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #6fa8ff; }
+
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+         margin: 22px 0 10px; }
+  .bar .stats { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* Accepted grid — thumbnails for images (from the engine's emitted preview URL),
+     a glyph for everything else. */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .card { position: relative; margin: 0; background: var(--panel); border: 1px solid var(--line);
+          border-radius: 10px; overflow: hidden; }
+  .card .thumb { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center;
+                 background: #0c0e12; }
+  .card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .thumb.glyph { font-size: 40px; }
+  .card .meta { display: flex; flex-direction: column; padding: 8px 10px 10px; gap: 1px; min-width: 0; }
+  .card .meta .name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .meta .sub { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .remove { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; padding: 0;
+                  border-radius: 50%; background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.15);
+                  line-height: 1; }
+  .card .remove:hover { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+
+  /* Rejected list — name + the engine's reason code & message. */
+  #rejected-section h2 { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  #rejected { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  #rejected li { display: flex; align-items: center; gap: 10px; background: rgba(255,107,107,.08);
+                 border: 1px solid rgba(255,107,107,.3); border-radius: 8px; padding: 7px 10px; }
+  #rejected .rname { font-size: 13px; }
+  #rejected .why { color: var(--bad); font-size: 12.5px; flex: 1; }
+  #rejected .dismiss { width: 24px; height: 24px; padding: 0; line-height: 1; border-radius: 6px; }
+
+  .upload-row { display: flex; align-items: center; gap: 14px; margin-top: 24px;
+                padding-top: 18px; border-top: 1px solid var(--line); }
+  .upload-note { color: var(--muted); font-size: 12.5px; }
+  code { color: var(--accent); font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Drag-and-Drop Engine — File Intake</h1>
+  <p>Headless intake: drop, paste, or pick files; the engine validates and emits state. This page renders every pixel.</p>
+  <p class="scope">Intake only — no upload. The engine never sends files anywhere; the “Upload” button below only logs what an app <em>would</em> do.</p>
+</header>
+
+<main>
+  <!-- Runtime rules → setOptions(), which re-validates the existing collection. -->
+  <div class="config">
+    <label>Accept
+      <select id="accept-sel">
+        <option value="images" selected>Images only</option>
+        <option value="images-pdf">Images + PDF</option>
+        <option value="any">Anything</option>
+      </select>
+    </label>
+    <label>Max files
+      <input id="maxfiles" type="number" min="1" value="12">
+    </label>
+    <label><input id="dedupe" type="checkbox" checked> Dedupe (name+size)</label>
+    <span style="color:var(--muted);font-size:12.5px">Max 5&nbsp;MB each · folders traverse</span>
+  </div>
+
+  <!-- The drop zone element. The consumer creates it and hands the object to attach(). -->
+  <div id="dropzone" class="dropzone" data-willaccept="unknown">
+    <div class="big" aria-hidden="true">⬇</div>
+    <div id="hint" class="hint">Drag files or a folder here, paste an image, or</div>
+    <div class="dz-actions">
+      <button id="browse" class="primary" type="button">Browse files…</button>
+      <button id="browse-folder" type="button">Choose folder…</button>
+    </div>
+  </div>
+
+  <div class="bar">
+    <span id="stats" class="stats">0 ready · 0 rejected · 0 B total</span>
+    <button id="clear" type="button">Clear all</button>
+  </div>
+
+  <div id="accepted" class="grid"></div>
+  <div id="accepted-empty" class="empty">No files yet — drop, paste, or browse to add some.</div>
+
+  <section id="rejected-section" style="margin-top:22px; display:none;">
+    <h2>Rejected</h2>
+    <ul id="rejected"></ul>
+  </section>
+
+  <div class="upload-row">
+    <button id="upload" class="primary" type="button" disabled>Upload (app’s job)</button>
+    <span id="upload-note" class="upload-note">Files are intaken and ready. Uploading is the consumer’s — the engine ships no transport.</span>
+  </div>
+</main>
+
+<script type="module" src="drag-n-drop-engine.demo.js"></script>
+</body>
+</html>
