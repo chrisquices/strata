@@ -1,18 +1,5 @@
 @import "tailwindcss";
 
-@source "./index.html";
-@source "./main.ts";
-@source "./components";
-@source "./pages";
-
-/* Shared theme layer for the docs app. Do NOT add another @import "tailwindcss" here. */
-
-
-/* Native UA chrome (pickers, scrollbars) follows the dark theme. */
-:root {
-    color-scheme: dark;
-}
-
 /* Fonts — vendored Geist, SIL OFL (license: /assets/fonts/OFL.txt) */
 @font-face {
     font-family: 'Geist';
@@ -34,7 +21,7 @@
     --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --text-2xs: 0.625rem; /* 10px — micro labels (Badge/Chip sm) */
-    /* Color — charcoal: lifted, faintly cool-neutral darks (not near-black) */
+    /* Colors */
     --color-background: rgb(25 26 29);
     --color-surface: rgb(37 38 42);
     --color-topbar: rgb(25 26 29);
@@ -51,8 +38,6 @@
     --color-warning: rgb(214 162 76);
     --color-warning-foreground: rgb(15 15 17);
     --color-overlay: rgb(0 0 0);
-    --color-media-viewer-topbar: rgb(25 26 29);
-    --color-media-viewer-bar: rgb(31 32 35);
 
     /* Radius */
     --radius-small: 0.25rem;
@@ -72,12 +57,10 @@
 
     /* Spacing — control rhythm + icon scale */
     --spacing-control: 2rem;
-    --spacing-control-extra-small: 1rem;
     --spacing-control-small: 1.5rem;
     --spacing-control-large: 2.5rem;
     --spacing-chrome-bar: 3.5rem;
-    --spacing-media-viewer-topbar: 3.5rem;
-    --spacing-media-viewer-title: 24rem;
+
     --spacing-control-x: 0.75rem;
     --spacing-control-indicator: 1rem;
     --spacing-card: 1rem;
@@ -88,42 +71,39 @@
     --spacing-icon-extra-large: 2.5rem;
 }
 
-/* Light theme — applied automatically when the OS prefers light. Dark is the default (in @theme
-   above). Neutrals are inverted; accents are deepened for contrast on light surfaces and their
-   foregrounds flip to white. Three elevation tiers: a soft cool-gray page (background) lifts the
-   white surfaces above it, with inputs a hair lower (faintly recessed). */
+:root {
+    color-scheme: dark;
+
+    --duration-fast: 100ms;
+    --duration-base: 200ms;
+    --duration-slow: 300ms;
+}
+
 @media (prefers-color-scheme: light) {
     :root {
         color-scheme: light;
-        --color-background: rgb(243 244 247); /* soft cool gray so white surfaces read as elevated */
+        --color-background: rgb(243 244 247);
         --color-surface: rgb(255 255 255);
-        --color-topbar: rgb(243 244 247); /* = background; retarget independently */
+        --color-topbar: rgb(243 244 247);
         --color-sidebar: rgb(243 244 247);
-        --color-input: rgb(249 250 252); /* a hair off-white — gently recessed against white surfaces */
-        --color-border: rgb(219 221 227); /* crisper hairline on white than the first pass */
-        --color-foreground: rgb(24 26 31); /* near-black, faintly cool */
+        --color-input: rgb(249 250 252);
+        --color-border: rgb(219 221 227);
+        --color-foreground: rgb(24 26 31);
         --color-muted: rgb(90 92 101);
-        --color-faint: rgb(110 113 121); /* darkened to clear WCAG AA (~4.6:1) on light background/surface */
+        --color-faint: rgb(110 113 121);
         --color-destructive: rgb(198 55 62);
         --color-destructive-foreground: rgb(255 255 255);
         --color-success: rgb(38 128 84);
         --color-success-foreground: rgb(255 255 255);
-        --color-warning: rgb(150 96 12); /* darkened so white-on-warning clears WCAG AA (~5.2:1) */
+        --color-warning: rgb(150 96 12);
         --color-warning-foreground: rgb(255 255 255);
-        /* Shadows read stronger against light surfaces */
+
         --shadow-raised: 0 1px 2px 0 rgb(15 18 26 / 0.08), 0 1px 3px 0 rgb(15 18 26 / 0.1);
         --shadow-panel: 0 4px 16px 0 rgb(15 18 26 / 0.1), 0 1px 4px 0 rgb(15 18 26 / 0.06);
         --shadow-overlay: 0 24px 48px -12px rgb(15 18 26 / 0.18), 0 8px 24px -8px rgb(15 18 26 / 0.12);
     }
 }
 
-/* Motion — durations used by the duration-* utilities and by component animation shorthands */
-:root {
-    --duration-fast: 120ms;
-    --duration-base: 180ms;
-    --duration-slow: 260ms;
-    --duration-slower: 400ms;
-}
 
 /* Clickable affordances */
 a[href],
@@ -178,9 +158,6 @@ textarea:disabled,
 @utility duration-slow {
     transition-duration: var(--duration-slow);
 }
-@utility duration-slower {
-    transition-duration: var(--duration-slower);
-}
 
 /* Z-index utilities */
 @utility z-sticky {
@@ -198,14 +175,17 @@ textarea:disabled,
 @utility z-modal {
     z-index: 60;
 }
+
 /* Layered above modals so menus/popovers opened from inside a Dialog/Sheet stack correctly. */
 @utility z-popover {
     z-index: 70;
 }
+
 /* Topmost — transient hints always above everything. */
 @utility z-tooltip {
     z-index: 80;
 }
+
 /* Toasts sit above even tooltips — a notification must never be hidden by a hover hint. */
 @utility z-toast {
     z-index: 90;
@@ -264,53 +244,6 @@ textarea:disabled,
     animation: strata-ui-fade-out var(--duration-fast) ease-in forwards;
 }
 
-/* Media viewer — transparent-track range inputs (custom track drawn behind) */
-.mv-range {
-    -webkit-appearance: none;
-    appearance: none;
-    height: 16px;
-    background: transparent;
-    cursor: pointer;
-}
-
-.mv-range::-webkit-slider-runnable-track {
-    height: 16px;
-    background: transparent;
-}
-
-.mv-range::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    margin-top: 2px;
-    border-radius: 9999px;
-    background: var(--color-foreground);
-    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
-}
-
-.mv-range::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    border: none;
-    border-radius: 9999px;
-    background: var(--color-foreground);
-    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
-}
-
-.mv-range::-moz-range-track {
-    height: 16px;
-    background: transparent;
-}
-
-.mv-range:focus {
-    outline: none;
-}
-
-.mv-range:disabled {
-    cursor: default;
-    opacity: 0.5;
-}
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
