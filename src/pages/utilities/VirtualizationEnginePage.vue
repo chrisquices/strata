@@ -21,25 +21,27 @@ import GridItemOverlay from '@ui/Grid/GridItemOverlay.vue';
 import Label from '@ui/Label/Label.vue';
 import Slider from '@ui/Slider/Slider.vue';
 
-type VirtualItem = {
+type VirtualItem = Readonly<{
   index: number;
   x: number;
   y: number;
   width: number;
   height: number;
-};
+}>;
 
 const media = [
   './assets/img-1080x1080.png',
   './assets/img-1080x1920.png',
   './assets/img-1920x1080.png',
-];
+] as const;
 
-const scroller = ref<HTMLElement>();
+const ITEM_COUNT = 10_000;
+
+const scroller = ref<HTMLElement | null>(null);
 const itemSize = ref(11);
 const totalSize = ref(0);
-const virtualItems = shallowRef<VirtualItem[]>([]);
-const stats = ref({
+const virtualItems = shallowRef<readonly VirtualItem[]>([]);
+const stats = shallowRef({
   layoutName: 'grid',
   visibleCount: 0,
   columns: 1,
@@ -50,19 +52,35 @@ const stats = ref({
 
 let engine: VirtualizationEngine | undefined;
 
+function createLayout(size = itemSize.value) {
+  return gridLayout({
+    minItemWidth: `${size}rem`,
+    aspectRatio: 1,
+    gap: 'gap-2',
+  });
+}
+
+let pendingSize: number | null = null;
+let layoutFrame: number | null = null;
+
+function updateItemSize(size: number) {
+  // Coalesce a fast slider drag into one anchored relayout per frame.
+  pendingSize = size;
+  if (layoutFrame !== null) return;
+  layoutFrame = requestAnimationFrame(() => {
+    layoutFrame = null;
+    if (pendingSize !== null) engine?.setLayout(createLayout(pendingSize));
+  });
+}
+
 onMounted(() => {
-  if (!scroller.value) return;
+  const scrollElement = scroller.value;
+  if (!scrollElement) return;
 
   engine = new VirtualizationEngine({
-    scrollElement: scroller.value,
-    count: 10000,
-    layout: () => {
-      return gridLayout({
-        minItemWidth: `${itemSize.value}rem`,
-        aspectRatio: 1,
-        gap: 'gap-2',
-      });
-    },
+    scrollElement,
+    count: ITEM_COUNT,
+    layout: createLayout(),
     overscan: 2,
     onChange: (state) => {
       totalSize.value = state.totalSize;
@@ -73,6 +91,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
   engine?.destroy();
 });
 
@@ -83,7 +102,6 @@ function itemStyle(item: VirtualItem) {
     height: `${item.height}px`,
   };
 }
-
 </script>
 
 <template>
@@ -91,8 +109,8 @@ function itemStyle(item: VirtualItem) {
     <ComponentItemHeader>
       <ComponentItemHeaderTitle>Virtualization Engine</ComponentItemHeaderTitle>
       <ComponentItemHeaderDescription>
-        A headless windowing engine rendering 10,000 media cells with a bounded DOM. Resize cells
-        without mounting every item.
+        A headless windowing engine rendering {{ ITEM_COUNT.toLocaleString() }} media cells with a
+        bounded DOM. Resize cells without mounting every item.
       </ComponentItemHeaderDescription>
     </ComponentItemHeader>
 
@@ -107,9 +125,7 @@ function itemStyle(item: VirtualItem) {
                 :min="7"
                 :max="17.5"
                 :step="0.5"
-                @update:model-value="engine?.setLayout(() => {
-                  return gridLayout({minItemWidth: `${itemSize}rem`, aspectRatio: 1, gap: '4px'});
-                })"
+                @update:model-value="updateItemSize"
             />
           </div>
         </CardContent>
@@ -118,7 +134,7 @@ function itemStyle(item: VirtualItem) {
       <Card class="overflow-hidden bg-background shadow-panel">
 
         <CardHeader class="border-b border-border bg-surface">
-          <CardTitle>{{ (10000).toLocaleString() }} items</CardTitle>
+          <CardTitle>{{ ITEM_COUNT.toLocaleString() }} items</CardTitle>
           <CardDescription>
             Only {{ stats.visibleCount }} are currently rendered
           </CardDescription>

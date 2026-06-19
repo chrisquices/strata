@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "strata-dev",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "PORT=3320 exec ./deps/build/cli-bun deps/build/runner-dev.ts"],
+      "port": 3320,
+      "env": { "PORT": "3320" }
+    }
+  ]
+}
