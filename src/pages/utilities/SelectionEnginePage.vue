@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { MousePointerClick, SquareDashedMousePointer, CheckSquare, X, Copy, Trash2, Lock } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -148,15 +148,15 @@ const box = computed(() => marqueeState.value.marquee.rect);
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Selection Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>Selection Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A consumer of the headless selection engine — it owns <strong class="font-medium text-foreground">what is selected</strong>:
       the set, the shift-range anchor, single/multi mode, disabled items, and the marquee
       (box hit-testing with touch/contain, additive, revert, delta-tracked for huge lists).
       The page reports clicks and pointer positions and paints the emitted state.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-1 flex flex-col gap-10">

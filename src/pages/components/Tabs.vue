@@ -1,34 +1,45 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
-import { ref } from 'vue';
+import ComponentContent from "@app/component/ComponentContent.vue";
+import {ref} from 'vue';
 import Tabs from '@ui/Tabs/Tabs.vue';
 import TabsList from '@ui/Tabs/TabsList.vue';
 import TabsTrigger from '@ui/Tabs/TabsTrigger.vue';
 import TabsContent from '@ui/Tabs/TabsContent.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
+import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
 
 const tab = ref('overview');
-const vtab = ref('general');
+const verticalTab = ref('general');
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Tabs</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>Switch between panels of related content; arrow keys move between tabs.</ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Tabs</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>Switch between panels of related content; arrow keys move between tabs.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Default -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Active: {{ tab }}</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Default</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>Horizontal tabs with one disabled trigger. Arrow keys move between triggers and
+        the matching panel shows below. Active: {{ tab }}
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-full max-w-md" data-demo="basic">
+        <div class="w-full max-w-md">
           <Tabs v-model="tab">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -49,11 +60,43 @@ const vtab = ref('general');
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Uncontrolled -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Vertical orientation. Active: {{ vtab }}</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Uncontrolled</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>Without v-model the active tab lives inside the component; default-value sets
+        which one starts open.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-full max-w-md" data-demo="vertical">
-          <Tabs v-model="vtab" orientation="vertical">
+        <div class="w-full max-w-md">
+          <Tabs default-value="account">
+            <TabsList>
+              <TabsTrigger value="account">Account</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="security">Security</TabsTrigger>
+            </TabsList>
+            <TabsContent value="account">
+              <p class="pt-4 text-sm text-muted">Name, email, and profile photo.</p>
+            </TabsContent>
+            <TabsContent value="notifications">
+              <p class="pt-4 text-sm text-muted">Choose which updates reach your inbox.</p>
+            </TabsContent>
+            <TabsContent value="security">
+              <p class="pt-4 text-sm text-muted">Password, two-factor, and active sessions.</p>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </ComponentItemSectionExample>
+    </ComponentItemSection>
+
+    <!-- Vertical -->
+    <ComponentItemSection>
+      <ComponentItemSectionTitle>Vertical</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>With orientation set to vertical, the triggers stack beside their panels and the
+        up and down arrows move between them. Active: {{ verticalTab }}
+      </ComponentItemSectionDescription>
+      <ComponentItemSectionExample>
+        <div class="w-full max-w-md">
+          <Tabs v-model="verticalTab" orientation="vertical">
             <TabsList>
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
@@ -72,6 +115,5 @@ const vtab = ref('general');
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

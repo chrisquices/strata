@@ -15,7 +15,7 @@ const emit = defineEmits(['toggle']);
     <span class="flex-1 truncate text-left">{{ label }}</span>
     <span class="shrink-0 tabular-nums normal-case tracking-normal text-faint/80">{{ count }}</span>
   </button>
-  <div class="grid" :style="{ gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows var(--duration-200) ease-out' }">
+  <div class="grid" :style="{ gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 200ms ease-out' }">
     <div class="overflow-hidden">
       <slot />
     </div>

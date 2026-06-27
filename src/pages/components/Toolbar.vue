@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
+import ComponentContent from "@app/component/ComponentContent.vue";
 import { ref } from 'vue';
 import { Bold, Italic, Underline, Share2 } from '@lucide/vue';
 import Toolbar from '@ui/Toolbar/Toolbar.vue';
@@ -7,9 +7,9 @@ import ToolbarButton from '@ui/Toolbar/ToolbarButton.vue';
 import ToolbarGroup from '@ui/Toolbar/ToolbarGroup.vue';
 import ToolbarSeparator from '@ui/Toolbar/ToolbarSeparator.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -20,12 +20,13 @@ const underline = ref(false);
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Toolbar</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>A container for grouped actions with roving focus — arrow keys move between controls.</ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
+  <ComponentHeader>
+    <ComponentHeaderTitle>Toolbar</ComponentHeaderTitle>
+    <ComponentHeaderDescription>A container for grouped actions with roving focus — arrow keys move between controls.</ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
   <div class="flex flex-col gap-14">
     <ComponentItemSection>
       <ComponentItemSectionDescription>Toggle buttons (pressed state) and an action, with a separator.</ComponentItemSectionDescription>
@@ -44,5 +45,5 @@ const underline = ref(false);
       </ComponentItemSectionExample>
     </ComponentItemSection>
   </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

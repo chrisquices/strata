@@ -5,9 +5,9 @@ import {
   RefreshCw, Scan, Check, AlertCircle, User, Film, Download,
   Crop, Hand, Eye,
 } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -177,16 +177,16 @@ function onShape(v) { if (v) shape.value = v; }
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Image Cropper Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>Image Cropper Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A consumer of the headless cropper engine. The engine owns the crop window, the
       cover-preserving transform (pan / zoom / rotate / flip), the gesture input, the resize
       observer and the exact output geometry — the source-pixel rectangle, orientation, final
       dimensions and an upscale warning. This page paints the frame and rasterises that geometry
       to PNG / JPEG / WebP on Apply. Works on a video frame too.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-1 flex flex-col gap-10">

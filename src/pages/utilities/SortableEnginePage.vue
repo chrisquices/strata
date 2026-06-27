@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { GripVertical, GripHorizontal, Plus, Lock, ArrowUp, ArrowDown, Shuffle } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -160,16 +160,16 @@ const chipGrabbed = (key) => chipState.value.drag.active && chipState.value.drag
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Sortable Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>Sortable Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A consumer of the headless reorder engine. It tracks pointer drags (with a move
       threshold and a lifted-item position) and keyboard reordering, computes the provisional
       order and cross-list (kanban) moves, honours locked / disabled items, announces every
       move for screen readers, and emits state — this page only registers the elements and
       paints the gap, the slide and the lifted clone.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-1 flex flex-col gap-10">

@@ -4,9 +4,9 @@ import {
   Keyboard, Command as CommandIcon, Search, Save, Copy, Scissors,
   Undo, Redo, Trash2, CornerDownLeft, CheckSquare, Layers, X, Play, AlertCircle,
 } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -170,16 +170,16 @@ function regIn(g) { return REG.filter((r) => r.group === g); }
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Hotkey Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>Hotkey Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A consumer of the headless hotkey engine. It registers bindings — <strong class="font-medium text-foreground">chords</strong>
       (<Kbd>{{ MOD }}</Kbd><Kbd>K</Kbd>), <strong class="font-medium text-foreground">sequences</strong>
       (<Kbd>G</Kbd> then <Kbd>I</Kbd>) and several combos per action — and the engine handles parsing,
       exact-modifier matching, the scope stack, the typing-guard (<Kbd>Esc</Kbd> and chords still pass),
       cross-platform <code class="rounded-small bg-surface px-1 py-0.5 font-mono text-xs">mod</code>, conflicts and dispatch.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-1 flex flex-col gap-10">

@@ -48,7 +48,7 @@ The components and shared stylesheet are included with Strata. Bun and the vendo
 
 ## Installation
 
-Copy `deps/strata/ui` and `src/app.css` into your Vue project.
+Copy `src/components/ui` and `src/app.css` into your Vue project.
 
 Strata's `app.css` contains the default theme, component utilities, and shared styles used by the components. In a new project, use it as your application stylesheet. In an existing project, merge or adapt it to fit your current styles while retaining the tokens, utilities, and component rules that Strata relies on.
 

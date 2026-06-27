@@ -1,53 +1,76 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
+import ComponentContent from "@app/component/ComponentContent.vue";
 import Tooltip from '@ui/Tooltip/Tooltip.vue';
 import TooltipTrigger from '@ui/Tooltip/TooltipTrigger.vue';
 import TooltipContent from '@ui/Tooltip/TooltipContent.vue';
 import Button from '@ui/Button/Button.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
+import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
+
+const sides = ['top', 'bottom', 'left', 'right'];
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Tooltip</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>A short label shown on hover or keyboard focus, positioned around the trigger.</ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Tooltip</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>
+      A short label shown on hover or keyboard focus, positioned around the trigger.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Default -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Hover or tab to the button.</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Default</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Hover or tab to the trigger to reveal a short contextual label.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div data-demo="basic">
-          <Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button variant="ghost">
+              Hover me
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            Saved 2 minutes ago
+          </TooltipContent>
+        </Tooltip>
+      </ComponentItemSectionExample>
+    </ComponentItemSection>
+
+    <!-- Sides -->
+    <ComponentItemSection>
+      <ComponentItemSectionTitle>Sides</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Content can be positioned on any side of the trigger.
+      </ComponentItemSectionDescription>
+      <ComponentItemSectionExample>
+        <div class="flex flex-wrap gap-3">
+          <Tooltip v-for="side in sides" :key="side">
             <TooltipTrigger>
-              <Button variant="muted">Hover me</Button>
+              <Button variant="ghost">
+                {{ side }}
+              </Button>
             </TooltipTrigger>
-            <TooltipContent>Saved 2 minutes ago</TooltipContent>
+            <TooltipContent :side="side">
+              On {{ side }}
+            </TooltipContent>
           </Tooltip>
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
-
-    <ComponentItemSection>
-      <ComponentItemSectionDescription>Sides.</ComponentItemSectionDescription>
-      <ComponentItemSectionExample>
-        <div class="flex gap-3" data-demo="sides">
-          <Tooltip v-for="s in ['top', 'right', 'bottom', 'left']" :key="s">
-            <TooltipTrigger>
-              <Button variant="muted">{{ s }}</Button>
-            </TooltipTrigger>
-            <TooltipContent :side="s">On {{ s }}</TooltipContent>
-          </Tooltip>
-        </div>
-      </ComponentItemSectionExample>
-    </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

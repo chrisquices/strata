@@ -6,9 +6,9 @@ import {
   ZoomIn, ZoomOut, RotateCcw, RotateCw, FlipHorizontal, RefreshCw, PictureInPicture2, Gauge, Music2,
   Eye, Wrench,
 } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -161,16 +161,16 @@ function imgCtl(m) { const rr = r(); if (has(rr, m)) rr[m](); }
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Media Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>Media Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A consumer of the headless media engine. One <code class="text-[11px]">createViewer</code> instance
       owns the gallery lifecycle, navigation and queue, mounts per-type renderers into a stage, and
       emits state — image zoom / rotate / flip, video play / seek / volume / speed / captions / PiP,
       audio play / seek / speed / pitch-shift / repeat. The page renders the gallery and the lightbox
       chrome and calls the active renderer's controls; the engine does the rest.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-1 flex flex-col gap-10">

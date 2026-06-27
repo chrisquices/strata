@@ -2,9 +2,9 @@
 import { ref, computed, watch } from 'vue';
 import { ChevronDown, Check, Copy, AlertCircle, ArrowRight,
   Code2, Eye, SlidersHorizontal, Layers, Palette, Gauge, Sparkles, Box } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -282,15 +282,15 @@ const mixTextColor = computed(() => toHex(idealTextColor(mixResult.value)));
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Color Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>Color Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A headless colour engine: parse almost any string, convert between HEX / RGB / HSL /
       HSV / OKLCH / OKLAB, read every channel, transform along a single axis, mix and
       build gradients across colour spaces, check WCAG contrast, and generate harmony
       schemes. Pick a working colour below — every section recomputes live.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-2 flex flex-col gap-7">

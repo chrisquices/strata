@@ -1,75 +1,126 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
-import { ref } from 'vue';
+import ComponentContent from '@app/component/ComponentContent.vue';
+import {ref} from 'vue';
+import Form from '@ui/Form/Form.vue';
+import FormField from '@ui/Form/FormField.vue';
+import Label from '@ui/Label/Label.vue';
 import Textarea from '@ui/Textarea/Textarea.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
+import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
 
-const bio = ref('');
+const biography = ref('');
 const note = ref('');
-const grow = ref('Type a few lines and watch the box grow to fit the content…');
-const bad = ref('too short');
+const expandingText = ref('Type a few lines and watch the box grow to fit the content...');
+const invalidValue = ref('too short');
+const disabledText = ref('Cannot edit this');
+const readonlyText = ref('Read only content');
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Textarea</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>A multi-line text field with sizes via rows, validation, optional auto-grow, and label association.</ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Textarea</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>
+      A multi-line text field with sizes via rows, validation, optional auto-grow, and label association.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Default -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Default, four rows.</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Default</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Default, four rows.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-full max-w-sm" data-demo="default">
-          <Textarea v-model="note" placeholder="Leave a note…" />
-        </div>
+        <Form class="max-w-sm">
+          <FormField>
+            <Label for="note-field">Note</Label>
+            <Textarea id="note-field" v-model="note"/>
+          </FormField>
+        </Form>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Labelled -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Labelled — id/name reach the textarea, so the label associates.</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Labelled</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Id and name reach the textarea, so the label associates.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="flex w-full max-w-sm flex-col gap-2" data-demo="labelled">
-          <label for="bio-field" class="text-sm text-muted">Bio</label>
-          <Textarea id="bio-field" name="bio" v-model="bio" rows="3" placeholder="A short bio…" />
-        </div>
+        <Form class="max-w-sm">
+          <FormField>
+            <Label for="biography-field">Biography</Label>
+            <Textarea id="biography-field" name="biography" v-model="biography" :rows="3"/>
+          </FormField>
+        </Form>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Auto-resize -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Auto-resize — grows with content.</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Auto-resize</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Grows with content.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-full max-w-sm" data-demo="autoresize">
-          <Textarea v-model="grow" auto-resize rows="2" />
-        </div>
+        <Form class="max-w-sm">
+          <FormField>
+            <Label for="expanding-text-field">Expanding text</Label>
+            <Textarea id="expanding-text-field" v-model="expandingText" auto-resize :rows="2"/>
+          </FormField>
+        </Form>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- States -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Disabled and read-only.</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>States</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Disabled and read-only.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="flex w-full max-w-sm flex-col gap-3" data-demo="states">
-          <Textarea model-value="Can't edit this" rows="2" disabled />
-          <Textarea model-value="Read only content" rows="2" readonly />
-        </div>
+        <Form class="max-w-sm">
+          <FormField>
+            <Label for="disabled-text-field" disabled>Disabled</Label>
+            <Textarea id="disabled-text-field" v-model="disabledText" :rows="2" disabled/>
+          </FormField>
+          <FormField>
+            <Label for="readonly-text-field">Read only</Label>
+            <Textarea id="readonly-text-field" v-model="readonlyText" :rows="2" readonly/>
+          </FormField>
+        </Form>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Invalid -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Invalid with an error message on hover/focus.</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Invalid</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Invalid with an error message on hover or focus.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-full max-w-sm" data-demo="error">
-          <Textarea v-model="bad" rows="3" error="Must be at least 20 characters" />
-        </div>
+        <Form class="max-w-sm">
+          <FormField>
+            <Label for="invalid-text-field">Message</Label>
+            <Textarea id="invalid-text-field" v-model="invalidValue" :rows="3">
+              Must be at least 20 characters.
+            </Textarea>
+          </FormField>
+        </Form>
       </ComponentItemSectionExample>
     </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

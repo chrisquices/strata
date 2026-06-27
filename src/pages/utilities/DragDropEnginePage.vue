@@ -4,16 +4,16 @@ import {
   UploadCloud, FolderInput, FolderOpen, Clipboard, X, Trash2, FileWarning, Plus, Eye,
   FileText, FileImage, FileVideo, FileArchive, File as FileIcon,
 } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
 import HeadlessReference from '@app/component/HeadlessReference.vue';
 import Button from '../../components/ui/Button/Button.vue';
 import Badge from '../../components/ui/Badge/Badge.vue';
-import FileSize from '../../components/ui/FileSize/FileSize.vue';
+import { formatFileSize } from '../../components/ui/Shared/utils';
 import Switch from '../../components/ui/Switch/Switch.vue';
 import Slider from '../../components/ui/Slider/Slider.vue';
 import { createDropZone } from '../../lib/drag-n-drop-engine/drag-n-drop-engine.js';
@@ -143,16 +143,16 @@ const presetEntries = Object.entries(ACCEPT_PRESETS).map(([k, p]) => ({ k, label
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Drag n' Drop Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>Drag n' Drop Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A consumer of the headless file-intake engine. It receives files dragged in, pasted,
       picked (files <em>or</em> whole folders), or added from code; validates each against a
       live rule set with size, count, total-size, type and duplicate rules; de-dups; makes and
       revokes previews; and emits per-file accepted/rejected state with a reason. Change a rule
       and the engine re-checks every file. Intake only — getting files in, not uploading.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-1 flex flex-col gap-10">
@@ -198,7 +198,7 @@ const presetEntries = Object.entries(ACCEPT_PRESETS).map(([k, p]) => ({ k, label
                   <span class="font-medium text-foreground">{{ view.counts.total }} file{{ view.counts.total === 1 ? '' : 's' }}</span>
                   <span class="text-faint">·</span><span class="text-success">{{ view.counts.accepted }} accepted</span>
                   <template v-if="view.counts.rejected"><span class="text-faint">·</span><span class="text-destructive">{{ view.counts.rejected }} rejected</span></template>
-                  <span class="text-faint">·</span><span><FileSize :bytes="view.totalSize" /></span>
+                  <span class="text-faint">·</span><span class="tabular-nums">{{ formatFileSize(view.totalSize) }}</span>
                 </div>
                 <Button variant="quiet" size="sm" @click="dz.clear()"><Trash2 class="size-icon-small" /> Clear all</Button>
               </div>
@@ -214,7 +214,7 @@ const presetEntries = Object.entries(ACCEPT_PRESETS).map(([k, p]) => ({ k, label
                     <div class="flex items-center justify-between gap-1.5">
                       <Badge v-if="!it.accepted" variant="destructive" class="gap-1"><FileWarning class="size-icon-extra-small" /> {{ it.message }}</Badge>
                       <template v-else>
-                        <span class="text-xs text-faint"><FileSize :bytes="it.size" /></span>
+                        <span class="text-xs tabular-nums text-faint">{{ formatFileSize(it.size) }}</span>
                         <button type="button" class="inline-flex items-center gap-1 rounded-small px-1 text-[10px] text-muted transition-colors hover:text-foreground focus-visible:outline-none" @click="peek(it.id, it.type)"><Eye class="size-icon-extra-small" /> {{ peeks[it.id] ? 'Hide' : 'Peek' }}</button>
                       </template>
                     </div>

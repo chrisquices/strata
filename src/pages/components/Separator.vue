@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
+import ComponentContent from "@app/component/ComponentContent.vue";
 import Separator from '@ui/Separator/Separator.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
@@ -12,36 +12,48 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Separator</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>A thin divider line, horizontal or vertical, built on reka's Separator.</ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Separator</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>A thin divider line, horizontal or vertical, built on reka's Separator.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Horizontal -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Horizontal</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>A full-width horizontal rule between stacked blocks of content.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="max-w-sm text-sm text-muted" data-demo="horizontal">
+        <div class="max-w-sm text-sm text-muted">
           <p>Section one.</p>
-          <Separator class="my-3" />
+          <Separator class="my-3"/>
           <p>Section two.</p>
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Vertical -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Vertical</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>A full-height vertical rule between inline items; the parent provides the
+        height.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="flex h-6 items-center gap-3 text-sm text-muted" data-demo="vertical">
+        <div class="flex h-6 items-center gap-3 text-sm text-muted">
           <span>Home</span>
-          <Separator orientation="vertical" />
+          <Separator orientation="vertical"/>
           <span>Docs</span>
-          <Separator orientation="vertical" />
+          <Separator orientation="vertical"/>
           <span>About</span>
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

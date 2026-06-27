@@ -6,7 +6,7 @@ import ComponentTailwindSafelist from './ComponentTailwindSafelist.vue';
 </script>
 
 <template>
-  <ComponentTailwindSafelist/>
+<!--  <ComponentTailwindSafelist/>-->
   <ComponentContent>
     <slot/>
   </ComponentContent>

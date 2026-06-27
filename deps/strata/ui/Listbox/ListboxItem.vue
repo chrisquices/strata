@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { PropType } from 'vue';
 import { ListboxItem, ListboxItemIndicator } from 'reka-ui';
 import { Check } from '@lucide/vue';
 
-defineProps({ value: { required: true }, disabled: { type: Boolean, default: false } });
+defineProps({ value: { type: [String, Number] as PropType<string | number>, required: true }, disabled: { type: Boolean, default: false } });
 </script>
 
 <template>

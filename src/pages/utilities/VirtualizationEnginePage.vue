@@ -4,10 +4,10 @@ import {
   VirtualizationEngine,
   gridLayout,
 } from '@deps/strata/utils/virtualization-engine/virtualization-engine.js';
-import ComponentLayout from '@app/component/ComponentLayout.vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
+import ComponentContent from '@app/component/ComponentLayout.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
 import Card from '@ui/Card/Card.vue';
 import CardContent from '@ui/Card/CardContent.vue';
 import CardDescription from '@ui/Card/CardDescription.vue';
@@ -105,14 +105,14 @@ function itemStyle(item: VirtualItem) {
 </script>
 
 <template>
-  <ComponentLayout>
-    <ComponentItemHeader>
-      <ComponentItemHeaderTitle>Virtualization Engine</ComponentItemHeaderTitle>
-      <ComponentItemHeaderDescription>
+  <ComponentContent>
+    <ComponentHeader>
+      <ComponentHeaderTitle>Virtualization Engine</ComponentHeaderTitle>
+      <ComponentHeaderDescription>
         A headless windowing engine rendering {{ ITEM_COUNT.toLocaleString() }} media cells with a
         bounded DOM. Resize cells without mounting every item.
-      </ComponentItemHeaderDescription>
-    </ComponentItemHeader>
+      </ComponentHeaderDescription>
+    </ComponentHeader>
 
     <div class="flex flex-col gap-8">
       <Card>
@@ -171,5 +171,5 @@ function itemStyle(item: VirtualItem) {
         </CardContent>
       </Card>
     </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

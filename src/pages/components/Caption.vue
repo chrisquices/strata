@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
+import ComponentContent from "@app/component/ComponentContent.vue";
 import Caption from '@ui/Caption/Caption.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
@@ -14,21 +14,27 @@ const tones = ['faint', 'muted', 'foreground', 'inherit'];
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Caption</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
-      A small uppercase label — tone-colored, rendered as whichever element fits the context.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Caption</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>
+      A small uppercase label — tone-colored, rendered as whichever element fits the context.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Tones -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Tones</ComponentItemSectionTitle>
       <ComponentItemSectionDescription>faint (default), muted, foreground, and inherit (takes the parent color).</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="flex flex-col gap-2" data-demo="tones">
-          <Caption v-for="t in tones" :key="t" :tone="t">{{ t }} caption</Caption>
+        <div class="flex flex-col gap-2">
+          <Caption v-for="tone in tones" :key="tone" :tone="tone">{{ tone }} caption</Caption>
           <div class="text-success">
             <Caption tone="inherit">inherit inside green text</Caption>
           </div>
@@ -36,11 +42,12 @@ const tones = ['faint', 'muted', 'foreground', 'inherit'];
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Element -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Element</ComponentItemSectionTitle>
       <ComponentItemSectionDescription>The `as` prop sets the rendered tag — span (default), p, div, label, or a heading.</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="flex flex-col gap-2" data-demo="as">
+        <div class="flex flex-col gap-2">
           <Caption tone="muted">span (default)</Caption>
           <Caption as="p" tone="muted">paragraph</Caption>
           <Caption as="div" tone="muted">div element</Caption>
@@ -49,6 +56,5 @@ const tones = ['faint', 'muted', 'foreground', 'inherit'];
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
+import ComponentContent from "@app/component/ComponentContent.vue";
 import Card from '@ui/Card/Card.vue';
 import CardHeader from '@ui/Card/CardHeader.vue';
 import CardTitle from '@ui/Card/CardTitle.vue';
@@ -9,9 +9,9 @@ import CardContent from '@ui/Card/CardContent.vue';
 import CardFooter from '@ui/Card/CardFooter.vue';
 import Button from '@ui/Button/Button.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
@@ -19,20 +19,26 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Card</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
-      A surface for grouped content — composable header (title/description/action), content, and footer.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Card</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>
+      A surface for grouped content — composable header (title/description/action), content, and footer.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Full card -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Full card</ComponentItemSectionTitle>
       <ComponentItemSectionDescription>Header with an action, content, and a footer.</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="max-w-sm" data-demo="full">
+        <div class="max-w-sm">
           <Card>
             <CardHeader>
               <CardTitle>Project settings</CardTitle>
@@ -53,11 +59,12 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Header without action -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Header without action</ComponentItemSectionTitle>
       <ComponentItemSectionDescription>Without an action, the header stays single-column.</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="max-w-sm" data-demo="no-action">
+        <div class="max-w-sm">
           <Card>
             <CardHeader>
               <CardTitle>Notifications</CardTitle>
@@ -71,11 +78,12 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Content only -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Content only</ComponentItemSectionTitle>
       <ComponentItemSectionDescription>With no header, CardContent adds its own top padding.</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="max-w-sm" data-demo="content-only">
+        <div class="max-w-sm">
           <Card>
             <CardContent>
               <p class="text-sm text-foreground">A bare card with just content inside.</p>
@@ -84,6 +92,5 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

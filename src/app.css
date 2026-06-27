@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@source "../deps/strata/ui";
+
+@source "./components/ui";
 
 /* Theme tokens — generate Tailwind utilities (bg-*, text-*, rounded-*, h-*, …) */
 @theme {
@@ -7,23 +8,22 @@
     --font-sans: ui-sans-serif, system-ui, sans-serif;
     --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
     --text-2xs: 0.625rem; /* 10px — micro labels (Badge/Chip sm) */
-
     /* Colors */
     --color-background: rgb(25 26 29);
-    --color-surface: rgb(37 38 42);
+    --color-surface: rgb(30 31 34 / 0.8);
     --color-topbar: rgb(25 26 29);
-    --color-sidebar: rgb(25 26 29);
+    --color-sidebar: rgb(30 31 34);
     --color-input: rgb(31 32 35);
     --color-border: rgb(52 54 59);
     --color-foreground: rgb(240 240 243);
     --color-muted: rgb(160 161 167);
     --color-faint: rgb(115 117 124);
-    --color-destructive: rgb(202 73 78);
+    --color-destructive: rgb(159 58 62);
     --color-destructive-foreground: rgb(255 255 255);
-    --color-success: rgb(100 170 125);
-    --color-success-foreground: rgb(15 15 17);
-    --color-warning: rgb(214 162 76);
-    --color-warning-foreground: rgb(15 15 17);
+    --color-success: rgb(79 135 99);
+    --color-success-foreground: rgb(255 255 255);
+    --color-warning: rgb(177 134 63);
+    --color-warning-foreground: rgb(255 255 255);
     --color-overlay: rgb(0 0 0);
 
     /* Radius */
@@ -43,13 +43,29 @@
     --shadow-divider: inset 0 -1px 0 var(--color-border);
 
     /* Spacing — control rhythm + icon scale */
-    --spacing-control: 2rem;
     --spacing-control-small: 1.5rem;
+    --spacing-control: 2rem;
     --spacing-control-large: 2.5rem;
+
+    --spacing-control-x-small: 0.5rem;
+    --spacing-control-x: 0.75rem;
+    --spacing-control-x-large: 1rem;
+
+    --spacing-control-y-small: 0.5rem;
+    --spacing-control-y: 0.75rem;
+    --spacing-control-y-large: 1rem;
+
     --spacing-chrome-bar: 3.5rem;
 
-    --spacing-control-x: 0.75rem;
     --spacing-control-indicator: 1rem;
+
+    /* Spacing — tag/label rhythm (one tier below control, shared by Badge + Chip) */
+    --spacing-tag-small: 1.15rem;
+    --spacing-tag: 1.5rem;
+    --spacing-tag-large: 1.75rem;
+    --spacing-tag-x: 0.625rem;
+
+    --spacing-container: 1rem;
     --spacing-card: 1rem;
     --spacing-icon-extra-small: 0.75rem;
     --spacing-icon-small: 0.875rem;
@@ -60,10 +76,6 @@
 
 :root {
     color-scheme: dark;
-
-    --duration-100: 100ms;
-    --duration-200: 200ms;
-    --duration-300: 300ms;
 }
 
 @media (prefers-color-scheme: light) {
@@ -135,17 +147,6 @@ textarea:disabled,
     cursor: progress;
 }
 
-/* Duration utilities */
-@utility duration-100 {
-    transition-duration: var(--duration-100);
-}
-@utility duration-200 {
-    transition-duration: var(--duration-200);
-}
-@utility duration-300 {
-    transition-duration: var(--duration-300);
-}
-
 /* Z-index utilities */
 @utility z-sticky {
     z-index: 20;
@@ -163,22 +164,19 @@ textarea:disabled,
     z-index: 60;
 }
 
-/* Layered above modals so menus/popovers opened from inside a Dialog/Sheet stack correctly. */
 @utility z-popover {
     z-index: 70;
 }
 
-/* Topmost — transient hints always above everything. */
 @utility z-tooltip {
     z-index: 80;
 }
 
-/* Toasts sit above even tooltips — a notification must never be hidden by a hover hint. */
 @utility z-toast {
     z-index: 90;
 }
 
-/* Animations — reka-ui content transitions, keyed off data-state */
+/* Animations: content transitions, keyed off data-state */
 
 /* Menu / popover */
 @keyframes strata-pop-in {
@@ -200,11 +198,11 @@ textarea:disabled,
 }
 
 .strata-menu-pop[data-state='open'] {
-    animation: strata-pop-in var(--duration-100) ease-out;
+    animation: strata-pop-in 100ms ease-out;
 }
 
 .strata-menu-pop[data-state='closed'] {
-    animation: strata-pop-out var(--duration-100) ease-in forwards;
+    animation: strata-pop-out 100ms ease-in forwards;
 }
 
 /* Overlay */
@@ -224,27 +222,77 @@ textarea:disabled,
 }
 
 .strata-overlay-fade[data-state='open'] {
-    animation: strata-fade-in var(--duration-100) ease-out;
+    animation: strata-fade-in 100ms ease-out;
 }
 
 .strata-overlay-fade[data-state='closed'] {
-    animation: strata-fade-out var(--duration-100) ease-in forwards;
+    animation: strata-fade-out 100ms ease-in forwards;
 }
 
+/* Tooltip */
+@keyframes strata-tooltip-in {
+    from {
+        opacity: 0;
+        transform: scale(0.98) translateY(2px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes strata-tooltip-out {
+    to {
+        opacity: 0;
+        transform: scale(0.98) translateY(1px);
+    }
+}
+
+.strata-tooltip-fade {
+    transform-origin: var(--reka-tooltip-content-transform-origin);
+    will-change: opacity, transform;
+}
+
+.strata-tooltip-fade[data-state='open'] {
+    animation: strata-tooltip-in 120ms ease-out;
+}
+
+.strata-tooltip-fade[data-state='closed'] {
+    animation: strata-tooltip-out 90ms ease-in forwards;
+}
+
+/* Tabs panel */
+.strata-tabs-fade[data-state='active'] {
+    animation: strata-fade-in 100ms ease-out;
+}
+
+/* Scroll area bar */
+.strata-scrollbar-fade[data-state='visible'] {
+    animation: strata-fade-in 200ms ease-out;
+}
+
+.strata-scrollbar-fade[data-state='hidden'] {
+    animation: strata-fade-out 200ms ease-in forwards;
+}
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
     .strata-menu-pop[data-state='open'],
     .strata-menu-pop[data-state='closed'],
     .strata-overlay-fade[data-state='open'],
-    .strata-overlay-fade[data-state='closed'] {
+    .strata-overlay-fade[data-state='closed'],
+    .strata-tooltip-fade[data-state='open'],
+    .strata-tooltip-fade[data-state='closed'],
+    .strata-tabs-fade[data-state='active'],
+    .strata-scrollbar-fade[data-state='visible'],
+    .strata-scrollbar-fade[data-state='hidden'] {
         animation: none;
     }
 }
 
 /* Scrollbar */
 * {
-    scrollbar-width: thin;
+    scrollbar-width: none;
     scrollbar-color: color-mix(in oklab, var(--color-foreground) 25%, transparent) transparent;
 }
 

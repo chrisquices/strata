@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { CalendarDays, ChevronDown, Check, AlertCircle, CornerDownLeft, Clock, ChevronsRight, Settings2, Calculator } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -163,15 +163,15 @@ function onMode(v) { if (v) mode.value = v; }
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>DateTime Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>DateTime Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A consumer of the headless date-picker engine. One instance owns the grid geometry
       (spillover days, fixed weeks, any week-start), selection / range progression with hover
       preview, bounds and blocked days, range limits, month/year jumping and time-of-day — and
       emits that whole state. The page drives it and formats the output. Configure it live below.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-1 flex flex-col gap-10">

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
+import ComponentContent from '@app/component/ComponentContent.vue';
 import { ref } from 'vue';
 import DatePicker from '@ui/DatePicker/DatePicker.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
+import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
 
@@ -15,33 +16,56 @@ const bounded = ref('');
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Date Picker</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>A segmented date field with a popover calendar. Type into the segments or pick a day. <code class="rounded-small bg-surface px-1 py-0.5 font-mono text-xs">v-model</code> is an ISO date string.</ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Date Picker</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>
+      A segmented date field with a popover calendar. Type into the segments or pick a day. <code class="rounded-small bg-surface px-1 py-0.5 font-mono text-xs">v-model</code> is an ISO date string.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Default -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Pick a date. Selected: <strong class="text-foreground">{{ date || 'none' }}</strong></ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Default</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Pick a date. Selected: <strong class="text-foreground">{{ date || 'none' }}</strong>
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-60" data-demo="basic"><DatePicker v-model="date" /></div>
+        <DatePicker v-model="date" class="w-60" />
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Bounded -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Bounded to June 2026. Selected: <strong class="text-foreground">{{ bounded || 'none' }}</strong></ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Bounded</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Bounded to June 2026. Selected: <strong class="text-foreground">{{ bounded || 'none' }}</strong>
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-60" data-demo="bounded"><DatePicker v-model="bounded" min-value="2026-06-01" max-value="2026-06-30" /></div>
+        <DatePicker
+            v-model="bounded"
+            min-value="2026-06-01"
+            max-value="2026-06-30"
+            class="w-60"
+        />
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Disabled -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Disabled.</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Disabled</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Disabled.
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-60" data-demo="disabled"><DatePicker v-model="date" disabled /></div>
+        <DatePicker v-model="date" disabled class="w-60" />
       </ComponentItemSectionExample>
     </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

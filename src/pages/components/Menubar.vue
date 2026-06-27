@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
+import ComponentContent from "@app/component/ComponentContent.vue";
 import { ref } from 'vue';
 
 import Menubar from '@ui/Menubar/Menubar.vue';
@@ -13,9 +13,9 @@ import MenubarRadioItem from '@ui/Menubar/MenubarRadioItem.vue';
 import MenubarLabel from '@ui/Menubar/MenubarLabel.vue';
 import MenubarSeparator from '@ui/Menubar/MenubarSeparator.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
@@ -27,20 +27,27 @@ const lastAction = ref('—');
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Menubar</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
-      A desktop-style menu bar built on reka — a row of menus, each with items, checkbox/radio items, labels and separators.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Menubar</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>
+      A desktop-style menu bar built on reka — a row of menus, each with items, checkbox/radio items, labels and separators.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Default -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Default</ComponentItemSectionTitle>
-      <ComponentItemSectionDescription>Last action: {{ lastAction }} · Wrap: {{ wordWrap }} · Zoom: {{ zoom }}%</ComponentItemSectionDescription>
+      <ComponentItemSectionDescription>Items, checkbox items, radio items, labels, and separators within a menubar.</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="inline-block rounded-large border border-border bg-surface" data-demo="menubar">
+        <div class="flex flex-col gap-3">
+        <div class="inline-block rounded-large border border-border bg-surface">
           <Menubar>
             <MenubarMenu>
               <MenubarTrigger>File</MenubarTrigger>
@@ -65,8 +72,10 @@ const lastAction = ref('—');
             </MenubarMenu>
           </Menubar>
         </div>
+        <p class="text-xs text-muted">Last action: {{ lastAction }} · Wrap: {{ wordWrap }} · Zoom: {{ zoom }}%</p>
+        </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+
+  </ComponentContent>
 </template>

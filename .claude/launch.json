@@ -7,6 +7,12 @@
       "runtimeArgs": ["-c", "PORT=3320 exec ./deps/build/cli-bun deps/build/runner-dev.ts"],
       "port": 3320,
       "env": { "PORT": "3320" }
+    },
+    {
+      "name": "strata-verify",
+      "runtimeExecutable": "./deps/build/cli-bun",
+      "runtimeArgs": ["-e", "Bun.serve({port:Number(Bun.env.PORT)||0,fetch(){return new Response(Bun.file('docs/index.html'),{headers:{'content-type':'text/html'}})}})"],
+      "autoPort": true
     }
   ]
 }

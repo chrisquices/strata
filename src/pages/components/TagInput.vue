@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
-import { ref } from 'vue';
+import ComponentContent from "@app/component/ComponentContent.vue";
+import {ref} from 'vue';
 import TagInput from '@ui/TagInput/TagInput.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
+import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
 
@@ -15,30 +16,44 @@ const tags = ref(['vue', 'tailwind']);
 </script>
 
 <template>
-  <ComponentLayout>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Tag Input</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>Enter a list of tags — type and press Enter or comma to add; Backspace or the × removes.</ComponentItemHeaderDescription>
-  </ComponentItemHeader>
 
-  <div class="flex flex-col gap-14">
+  <!-- Header -->
+  <ComponentHeader>
+
+    <!-- Title -->
+    <ComponentHeaderTitle>Tag Input</ComponentHeaderTitle>
+
+    <!-- Description -->
+    <ComponentHeaderDescription>Enter a list of tags — type and press Enter or comma to add; Backspace or the ×
+      removes.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
+    <!-- Empty -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Empty. Tags: {{ emptyTags.join(', ') || '—' }}</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Empty</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>Starts with no tags — type and press Enter or comma to add. Tags:
+        {{ emptyTags.join(', ') || '—' }}
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-80" data-demo="empty">
-          <TagInput v-model="emptyTags" placeholder="Add a tag…" />
+        <div class="w-80">
+          <TagInput v-model="emptyTags" placeholder="Add a tag…"/>
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Populated -->
     <ComponentItemSection>
-      <ComponentItemSectionDescription>Populated. Tags: {{ tags.join(', ') || '—' }}</ComponentItemSectionDescription>
+      <ComponentItemSectionTitle>Populated</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>Seeded through v-model; Backspace or the × removes a tag. Tags:
+        {{ tags.join(', ') || '—' }}
+      </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="w-80" data-demo="populated">
-          <TagInput v-model="tags" placeholder="Add a tag…" />
+        <div class="w-80">
+          <TagInput v-model="tags" placeholder="Add a tag…"/>
         </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
-  </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

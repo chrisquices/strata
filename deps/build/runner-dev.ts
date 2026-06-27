@@ -65,7 +65,6 @@ function watchPath(path: string, recursive = false) {
 }
 
 watchPath(root + "src", true);
-watchPath(root + "deps/strata/ui", true);
 
 await build();
 

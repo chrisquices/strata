@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ComponentLayout from "@app/component/ComponentLayout.vue";
+import ComponentContent from "@app/component/ComponentContent.vue";
 import {ref} from 'vue';
 import {
   LayoutDashboard, Inbox, Users, Settings, FileText, Star, Folder, Archive,
@@ -20,9 +20,9 @@ import SidebarMenuSub from '@ui/Sidebar/SidebarMenuSub.vue';
 import SidebarFooter from '@ui/Sidebar/SidebarFooter.vue';
 import Button from '@ui/Button/Button.vue';
 
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionDescription from '@app/component/ComponentItemSectionDescription.vue';
@@ -38,14 +38,15 @@ const collapsed = ref(false);
 </script>
 
 <template>
-  <ComponentLayout>
-    <ComponentItemHeader>
-      <ComponentItemHeaderTitle>Sidebar</ComponentItemHeaderTitle>
-      <ComponentItemHeaderDescription>
-        A vertical navigation shell — brand/actions header, scrollable sections of menu items, and a footer.
-      </ComponentItemHeaderDescription>
-    </ComponentItemHeader>
 
+  <ComponentHeader>
+    <ComponentHeaderTitle>Sidebar</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
+      A vertical navigation shell — brand/actions header, scrollable sections of menu items, and a footer.
+    </ComponentHeaderDescription>
+  </ComponentHeader>
+
+  <ComponentContent>
     <div class="flex flex-col gap-14">
 
       <!-- Brand header -->
@@ -608,5 +609,5 @@ const collapsed = ref(false);
       </ComponentItemSection>
 
     </div>
-  </ComponentLayout>
+  </ComponentContent>
 </template>

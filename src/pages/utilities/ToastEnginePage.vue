@@ -3,9 +3,9 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import {
   Bell, Info, CheckCircle2, AlertCircle, ShieldAlert, Loader2, X, Undo2, Trash2, RefreshCw,
 } from '@lucide/vue';
-import ComponentItemHeader from '@app/component/ComponentItemHeader.vue';
-import ComponentItemHeaderTitle from '@app/component/ComponentItemHeaderTitle.vue';
-import ComponentItemHeaderDescription from '@app/component/ComponentItemHeaderDescription.vue';
+import ComponentHeader from '@app/component/ComponentHeader.vue';
+import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
+import ComponentHeaderDescription from '@app/component/ComponentHeaderDescription.vue';
 import ComponentItemSection from '@app/component/ComponentItemSection.vue';
 import ComponentItemSectionTitle from '@app/component/ComponentItemSectionTitle.vue';
 import ComponentItemSectionExample from '@app/component/ComponentItemSectionExample.vue';
@@ -152,15 +152,15 @@ const EXITING = ToastPhase.EXITING;
 </script>
 
 <template>
-  <ComponentItemHeader>
-    <ComponentItemHeaderTitle>Toast Engine</ComponentItemHeaderTitle>
-    <ComponentItemHeaderDescription>
+  <ComponentHeader>
+    <ComponentHeaderTitle>Toast Engine</ComponentHeaderTitle>
+    <ComponentHeaderDescription>
       A thin consumer of the headless toast engine. Fire toasts imperatively; the engine
       owns the queue, lifecycle phases, timers (paused on hover and when the tab is hidden),
       stacking order, position groups, overflow, de-duplication and promise wiring, and emits
       state — this page only paints it. Tune the engine below and fire any variant.
-    </ComponentItemHeaderDescription>
-  </ComponentItemHeader>
+    </ComponentHeaderDescription>
+  </ComponentHeader>
 
   <div class="flex flex-col gap-16">
     <section class="order-1 flex flex-col gap-10">
