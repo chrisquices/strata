@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, useSlots, watch } from 'vue';
-import { codeBlockContextKey } from './context';
+import {computed, inject, onBeforeUnmount, useSlots, watch} from 'vue';
+import {cn} from '../utils';
+import {codeBlockContextKey} from './context';
+
+defineOptions({inheritAttrs: false});
 
 const slots = useSlots();
+
 const codeBlock = inject(codeBlockContextKey);
 
 if (!codeBlock) {
@@ -76,17 +80,13 @@ function normalizeCode(value: string): string {
   return normalized;
 }
 
-const rawCode = computed(function () {
-  return normalizeCode(slots.default ? textFromNodes(slots.default()) : '');
-});
+const rawCode = computed(() => normalizeCode(slots.default ? textFromNodes(slots.default()) : ''));
 
-const lines = computed(function () {
-  return rawCode.value.split('\n');
-});
+const lines = computed(() => rawCode.value.split('\n'));
 
 watch(rawCode, function (value) {
   codeBlock.setCode(value);
-}, { immediate: true });
+}, {immediate: true});
 
 onBeforeUnmount(function () {
   codeBlock.setCode('');
@@ -94,14 +94,14 @@ onBeforeUnmount(function () {
 </script>
 
 <template>
-  <pre class="overflow-x-auto p-container whitespace-normal [counter-reset:line]">
+  <pre v-bind="$attrs" :class="cn('overflow-x-auto p-surface whitespace-normal [counter-reset:line]', $attrs.class)">
     <code class="block">
       <span
           v-for="(line, index) in lines"
           :key="index"
           :class="[
             'block whitespace-pre leading-relaxed text-foreground [counter-increment:line]',
-            codeBlock.lineNumbers.value ? 'before:mr-4 before:inline-block before:select-none before:text-right before:tabular-nums before:text-faint before:content-[counter(line)]' : '',
+            codeBlock.lineNumbers.value ? 'before:mr-cluster-large before:inline-block before:select-none before:text-right before:tabular-nums before:text-faint before:content-[counter(line)]' : '',
           ]"
           v-text="line || ' '"
       />

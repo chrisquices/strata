@@ -18,7 +18,7 @@ const value = defineModel<string[]>({
   }
 });
 
-const rootClass = 'group py-1.5 flex w-full items-center gap-2 rounded-medium border border-border bg-input px-control-x text-sm transition-colors hover:border-foreground/30 focus-within:border-foreground focus-within:ring-2 focus-within:ring-foreground/30 focus-within:ring-offset-2 focus-within:ring-offset-background min-h-control flex-wrap gap-1.5';
+const baseClass = 'group py-1.5 flex w-full items-center gap-2 rounded-medium border border-border bg-input px-control-x text-sm transition-colors hover:border-foreground/30 focus-within:border-foreground focus-within:ring-2 focus-within:ring-foreground/30 focus-within:ring-offset-2 focus-within:ring-offset-background min-h-control flex-wrap gap-1.5';
 
 function removeTag(tag: string) {
   value.value = value.value.filter(function (item) {
@@ -41,7 +41,7 @@ function keepFocus(event: MouseEvent) {
       :required="required"
       delimiter=","
       :class="[
-      rootClass,
+      baseClass,
       disabled ? 'opacity-50 pointer-events-none' : 'cursor-text',
     ]"
   >

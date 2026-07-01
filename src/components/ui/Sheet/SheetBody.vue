@@ -1,7 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div class="flex-1 overflow-y-auto px-6 py-4">
+  <div class="flex-1 overflow-y-auto px-overlay py-cluster-small">
     <slot/>
   </div>
 </template>

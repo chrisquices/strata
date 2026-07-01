@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {PropType} from 'vue';
-import {computed, provide, ref, useAttrs} from 'vue';
+import {computed, provide, ref} from 'vue';
 import {X} from '@lucide/vue';
 import {cn} from '../utils';
 
@@ -10,16 +10,12 @@ const props = defineProps({
   variant: {
     type: String as PropType<'secondary' | 'success' | 'warning' | 'destructive'>,
     default: 'secondary',
-    validator: function (value: string) {
-      return ['secondary', 'success', 'warning', 'destructive'].includes(value);
-    },
+    validator: (value: string) => ['secondary', 'success', 'warning', 'destructive'].includes(value),
   },
   role: {
     type: String as PropType<'status' | 'alert' | 'none'>,
     default: 'status',
-    validator: function (value: string) {
-      return ['status', 'alert', 'none'].includes(value);
-    },
+    validator: (value: string) => ['status', 'alert', 'none'].includes(value),
   },
   dismissible: {type: Boolean, default: false},
   dismissLabel: {type: String, default: 'Dismiss'},
@@ -36,37 +32,26 @@ const variantClass = {
   destructive: 'border-destructive/30 bg-destructive/5 text-destructive',
 };
 
-const cls = computed(function () {
-  return variantClass[props.variant] ?? variantClass.secondary;
-});
+const activeVariantClass = computed(() => variantClass[props.variant] ?? variantClass.secondary);
 
-const attrs = useAttrs();
-
-const forwardedAttrs = computed(function () {
-  const attributes = {...attrs};
-  delete attributes.class;
-  return attributes;
-});
-
-provide('bannerVariant', computed(function () {
-  return props.variant;
-}));
+provide('bannerVariant', computed(() => props.variant));
 
 function dismiss() {
   if (!visible.value) return;
+
   visible.value = false;
 }
 </script>
 
 <template>
   <Transition name="strata-banner" appear @after-leave="emit('dismiss')">
-    <div v-if="visible" v-bind="forwardedAttrs" :role="role === 'none' ? undefined : role"
-         :class="cn('flex gap-cluster rounded-medium border p-surface', cls, $attrs.class)">
+    <div v-if="visible" v-bind="$attrs" :role="props.role === 'none' ? undefined : props.role"
+         :class="cn('flex gap-cluster rounded-medium border p-surface', activeVariantClass, $attrs.class)">
       <slot/>
       <button
-          v-if="dismissible"
+          v-if="props.dismissible"
           type="button"
-          :aria-label="dismissLabel"
+          :aria-label="props.dismissLabel"
           class="-m-1.5 grid size-8 shrink-0 place-items-center self-start rounded-small opacity-70 transition-opacity duration-100 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
           @click="dismiss"
       >

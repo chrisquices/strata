@@ -32,9 +32,9 @@ const values = computed({
 // Thumb lives inside the (thin) track; reka only sets horizontal position, so center it on the
 // track vertically with top-1/2 + a negative half-thumb margin.
 const sizeClasses = {
-  sm: { track: 'h-1', thumb: 'size-3 top-1/2 -mt-1.5' },
-  md: { track: 'h-1.5', thumb: 'size-4 top-1/2 -mt-2' },
-  lg: { track: 'h-2', thumb: 'size-5 top-1/2 -mt-2.5' },
+  sm: { track: 'h-1', thumb: 'size-indicator-small top-1/2 -mt-[calc(var(--spacing-indicator-small)/2)]' },
+  md: { track: 'h-1.5', thumb: 'size-indicator top-1/2 -mt-[calc(var(--spacing-indicator)/2)]' },
+  lg: { track: 'h-2', thumb: 'size-indicator-large top-1/2 -mt-[calc(var(--spacing-indicator-large)/2)]' },
 };
 const sizing = computed(function () {
   return sizeClasses[props.size] ?? sizeClasses.md;
@@ -53,13 +53,13 @@ provide('sliderStyle', reactive({
 <template>
   <SliderRoot
     v-model="values"
-    :min="min"
-    :max="max"
-    :step="step"
-    :disabled="disabled"
-    :name="name"
-    :required="required"
-    :class="['relative flex h-4 w-full touch-none items-center', disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer']"
+    :min="props.min"
+    :max="props.max"
+    :step="props.step"
+    :disabled="props.disabled"
+    :name="props.name"
+    :required="props.required"
+    :class="['relative flex h-4 w-full touch-none items-center', props.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer']"
   >
     <SliderTrack :class="['relative w-full grow rounded-full bg-border', sizing.track]">
       <slot>

@@ -4,7 +4,7 @@
 // owns value/max/state and provides them to ProgressIndicator, so no extra context is needed here.
 import {ProgressRoot} from 'reka-ui';
 
-defineProps({
+const props = defineProps({
   value: {type: Number, default: undefined},
   max: {type: Number, default: 100},
 });
@@ -12,8 +12,8 @@ defineProps({
 
 <template>
   <ProgressRoot
-      :model-value="value === undefined ? null : value"
-      :max="max"
+      :model-value="props.value === undefined ? null : props.value"
+      :max="props.max"
       class="relative h-2 w-full overflow-hidden rounded-full bg-border"
   >
     <slot/>

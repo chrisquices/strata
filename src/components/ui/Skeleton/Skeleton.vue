@@ -7,7 +7,7 @@ import type { PropType } from 'vue';
 
 type Rounded = 'none' | 'small' | 'medium' | 'large' | 'full';
 
-defineProps({
+const props = defineProps({
   rounded: {
     type: String as PropType<Rounded>,
     default: 'medium',
@@ -18,5 +18,5 @@ const radiusClass: Record<Rounded, string> = { none: '', small: 'rounded-small',
 </script>
 
 <template>
-  <div :class="['animate-pulse bg-border/50 motion-reduce:animate-none', radiusClass[rounded]]" aria-hidden="true"></div>
+  <div :class="['animate-pulse bg-border/50 motion-reduce:animate-none', radiusClass[props.rounded]]" aria-hidden="true"></div>
 </template>

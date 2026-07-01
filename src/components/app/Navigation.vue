@@ -38,7 +38,6 @@ import {
   LoaderCircle,
   Megaphone,
   Menu,
-  MenuSquare,
   MessageSquare,
   Minus,
   MousePointer,
@@ -63,6 +62,7 @@ import {
   ToggleRight,
   Type,
   UploadCloud,
+  Video,
   Wrench,
 } from '@lucide/vue';
 import Sidebar from '@ui/Sidebar/Sidebar.vue';
@@ -120,7 +120,6 @@ const componentItems = [
   {id: 'kbd', label: 'Kbd', icon: Keyboard, path: '/components/kbd'},
   {id: 'label', label: 'Label', icon: Type, path: '/components/label'},
   {id: 'legend', label: 'Legend', icon: Type, path: '/components/legend'},
-  {id: 'menubar', label: 'Menubar', icon: MenuSquare, path: '/components/menubar'},
   {id: 'month-picker', label: 'Month Picker', icon: CalendarDays, path: '/components/month-picker'},
   {id: 'month-range-picker', label: 'Month Range Picker', icon: CalendarRange, path: '/components/month-range-picker'},
   {id: 'number-field', label: 'Number Field', icon: Calculator, path: '/components/number-field'},
@@ -170,6 +169,7 @@ const menuSections: NavigationSection[] = [
     label: 'Engines',
     items: [
       {id: 'drop-zone', label: 'Dropzone', icon: UploadCloud, path: '/components/drop-zone'},
+      {id: 'video', label: 'Video', icon: Video, path: '/components/video'},
     ],
   },
   {

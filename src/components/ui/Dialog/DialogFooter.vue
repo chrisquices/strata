@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <div class="flex flex-col-reverse gap-2 px-6 pb-6 pt-4 sm:flex-row sm:justify-end">
+  <div class="flex flex-col-reverse gap-cluster-small px-overlay pb-overlay pt-stack-small sm:flex-row sm:justify-end">
     <slot/>
   </div>
 </template>

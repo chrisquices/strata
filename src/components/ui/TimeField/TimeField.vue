@@ -33,7 +33,7 @@ watch(model, function (iso) { const time = timeFromIso(iso); if (time) placehold
 const min = computed(function () { return timeFromIso(props.minValue); });
 const max = computed(function () { return timeFromIso(props.maxValue); });
 
-const ROOT_HEIGHT = { sm: 'h-control-small text-xs', md: 'h-control text-sm', lg: 'h-control-large text-base' };
+const rootHeightClasses = { sm: 'h-control-small text-xs', md: 'h-control text-sm', lg: 'h-control-large text-base' };
 const stateClass = computed(function () {
   return props.invalid ? 'border-destructive focus-within:ring-destructive/40' : 'border-border hover:border-foreground/40 focus-within:border-foreground focus-within:ring-foreground/30';
 });
@@ -59,7 +59,7 @@ const stateClass = computed(function () {
     :class="[
       'inline-flex items-center rounded-medium border bg-input px-3 text-foreground transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-background data-[disabled]:opacity-50 data-[disabled]:pointer-events-none',
       fullWidth ? 'w-full' : 'w-fit',
-      ROOT_HEIGHT[size],
+      rootHeightClasses[size],
       stateClass,
     ]"
   >

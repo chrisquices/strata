@@ -6,7 +6,7 @@
 import type {PropType} from 'vue';
 import {ScrollAreaRoot} from 'reka-ui';
 
-defineProps({
+const props = defineProps({
   type: {
     type: String as PropType<'hover' | 'scroll' | 'auto' | 'always'>,
     default: 'hover',
@@ -19,7 +19,7 @@ defineProps({
 </script>
 
 <template>
-  <ScrollAreaRoot :type="type" :scroll-hide-delay="hideDelay" class="relative overflow-hidden">
+  <ScrollAreaRoot :type="props.type" :scroll-hide-delay="props.hideDelay" class="relative overflow-hidden">
     <slot/>
   </ScrollAreaRoot>
 </template>

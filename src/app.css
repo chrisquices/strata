@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @source "./components/ui";
 
 @font-face {
@@ -56,7 +57,6 @@
 
     --color-topbar: rgb(24 24 24); /* */
     --color-sidebar: rgb(24 24 24); /* */
-
     --color-surface: rgb(27 26 26); /* */
     --color-border: rgb(31, 34, 40);
     --color-hover: rgb(249 249 249);
@@ -79,9 +79,9 @@
     --color-overlay: rgba(6, 6, 7, 0.7);
 
     /* Radius */
-    --radius-small: 0.5rem;
-    --radius-medium: 0.75rem;
-    --radius-large: 1rem;
+    --radius-small: 0.375rem;
+    --radius-medium: 0.5rem;
+    --radius-large: 0.625rem;
 
     /* Border width */
     --border-width-small: 2px;
@@ -136,13 +136,13 @@
 
     /* For interactive control height. */
     --spacing-control-small: 1.75rem;
-    --spacing-control: 2.25rem;
+    --spacing-control: 2rem;
     --spacing-control-large: 2.5rem;
 
     /* For interactive control horizontal padding. */
     --spacing-control-x-small: 0.5rem;
     --spacing-control-x: 0.75rem;
-    --spacing-control-x-large: 1rem;
+    --spacing-control-x-large: 0.75rem;
 
     /* For tag and label height. */
     --spacing-tag-small: 1.15rem;
@@ -155,9 +155,9 @@
     --spacing-tag-x-large: 0.75rem;
 
     /* For indicator element size and selection affordances. */
-    --spacing-indicator-small: 0.75rem;
-    --spacing-indicator: 1rem;
-    --spacing-indicator-large: 1.25rem;
+    --spacing-indicator-small: 1rem;
+    --spacing-indicator: 1.25rem;
+    --spacing-indicator-large: 1.5rem;
 
     /* For icon sizing scale. */
     --spacing-icon-extra-small: 0.75rem;

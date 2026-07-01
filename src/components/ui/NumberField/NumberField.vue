@@ -6,7 +6,7 @@ import {NumberFieldRoot, NumberFieldInput, NumberFieldIncrement, NumberFieldDecr
 
 defineOptions({inheritAttrs: false});
 
-defineProps({
+const props = defineProps({
   min: {type: Number, default: undefined},
   max: {type: Number, default: undefined},
   step: {type: Number, default: 1},
@@ -40,9 +40,9 @@ const inputAttributes = computed(function () {
   return rest;
 });
 
-const ROOT_HEIGHT = {sm: 'h-control-small', md: 'h-control', lg: 'h-control-large'};
-const TEXT = {sm: 'text-xs', md: 'text-sm', lg: 'text-base'};
-const BUTTON_WIDTH = {sm: 'w-6', md: 'w-8', lg: 'w-10'};
+const rootHeightClasses = {sm: 'h-control-small', md: 'h-control', lg: 'h-control-large'};
+const textClasses = {sm: 'text-xs', md: 'text-sm', lg: 'text-base'};
+const buttonWidthClasses = {sm: 'w-control-small', md: 'w-control', lg: 'w-control-large'};
 
 const stepButton = 'grid h-full place-items-center text-muted transition-colors duration-100 hover:bg-border hover:text-foreground focus-visible:outline-none data-[disabled]:pointer-events-none data-[disabled]:text-faint data-[disabled]:opacity-50 data-[disabled]:hover:bg-transparent';
 </script>
@@ -50,31 +50,31 @@ const stepButton = 'grid h-full place-items-center text-muted transition-colors 
 <template>
   <NumberFieldRoot
       v-model="model"
-      :class="['flex w-full items-stretch overflow-hidden rounded-medium border bg-input transition-colors border-border hover:border-foreground/40 focus-within:border-foreground focus-within:outline-none focus-within:ring-2 focus-within:ring-foreground/30 focus-within:ring-offset-2 focus-within:ring-offset-background data-[disabled]:opacity-50 data-[disabled]:pointer-events-none', ROOT_HEIGHT[size], attributes.class]"
+      :class="['flex w-full items-stretch overflow-hidden rounded-medium border bg-input transition-colors border-border hover:border-foreground/40 focus-within:border-foreground focus-within:outline-none focus-within:ring-2 focus-within:ring-foreground/30 focus-within:ring-offset-2 focus-within:ring-offset-background data-[disabled]:opacity-50 data-[disabled]:pointer-events-none', rootHeightClasses[props.size], attributes.class]"
       :style="attributes.style"
-      :min="min"
-      :max="max"
-      :step="step"
-      :disabled="disabled"
-      :readonly="readonly"
-      :name="name"
-      :required="required"
-      :id="id"
-      :format-options="formatOptions"
-      :locale="locale"
-      :step-snapping="stepSnapping"
-      :focus-on-change="focusOnChange"
-      :disable-wheel-change="disableWheelChange"
-      :invert-wheel-change="invertWheelChange"
+      :min="props.min"
+      :max="props.max"
+      :step="props.step"
+      :disabled="props.disabled"
+      :readonly="props.readonly"
+      :name="props.name"
+      :required="props.required"
+      :id="props.id"
+      :format-options="props.formatOptions"
+      :locale="props.locale"
+      :step-snapping="props.stepSnapping"
+      :focus-on-change="props.focusOnChange"
+      :disable-wheel-change="props.disableWheelChange"
+      :invert-wheel-change="props.invertWheelChange"
   >
-    <NumberFieldDecrement :aria-label="decrementLabel" :class="[stepButton, BUTTON_WIDTH[size], 'border-r border-border']">
+    <NumberFieldDecrement :aria-label="props.decrementLabel" :class="[stepButton, buttonWidthClasses[props.size], 'border-r border-border']">
       <Minus class="size-icon-small" aria-hidden="true"/>
     </NumberFieldDecrement>
     <NumberFieldInput
         v-bind="inputAttributes"
-        :class="['min-w-0 flex-1 bg-transparent px-2 text-center tabular-nums text-foreground placeholder:text-faint read-only:text-muted focus-visible:outline-none', TEXT[size]]"
+        :class="['min-w-0 flex-1 bg-transparent px-control-x-small text-center tabular-nums text-foreground placeholder:text-faint read-only:text-muted focus-visible:outline-none', textClasses[props.size]]"
     />
-    <NumberFieldIncrement :aria-label="incrementLabel" :class="[stepButton, BUTTON_WIDTH[size], 'border-l border-border']">
+    <NumberFieldIncrement :aria-label="props.incrementLabel" :class="[stepButton, buttonWidthClasses[props.size], 'border-l border-border']">
       <Plus class="size-icon-small" aria-hidden="true"/>
     </NumberFieldIncrement>
   </NumberFieldRoot>

@@ -3,11 +3,11 @@
 // (e.g. a Button) to make that element the trigger instead — avoids a nested button.
 import {PopoverTrigger} from 'reka-ui';
 
-defineProps({asChild: {type: Boolean, default: false}});
+const props = defineProps({asChild: {type: Boolean, default: false}});
 </script>
 
 <template>
-  <PopoverTrigger :as-child="asChild">
+  <PopoverTrigger :as-child="props.asChild">
     <slot/>
   </PopoverTrigger>
 </template>

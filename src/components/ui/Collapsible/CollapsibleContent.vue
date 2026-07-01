@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import {inject} from 'vue';
 import {CollapsibleContent} from 'reka-ui';
+import {cn} from '../utils';
+
+defineOptions({inheritAttrs: false});
 
 const contentId = inject('collapsibleContentId', undefined);
 </script>
 
 <template>
-  <CollapsibleContent class="strata-collapsible">
+  <CollapsibleContent v-bind="$attrs" :class="cn('strata-collapsible', $attrs.class)">
     <div :id="contentId">
       <slot/>
     </div>

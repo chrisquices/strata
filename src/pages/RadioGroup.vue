@@ -15,6 +15,9 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
 const plan = ref('pro');
 const size = ref('medium');
 const billing = ref('annual');
+const radioSmall = ref('a');
+const radioMedium = ref('a');
+const radioLarge = ref('a');
 </script>
 
 <template>
@@ -72,6 +75,37 @@ const billing = ref('annual');
             Large
           </RadioGroupItem>
         </RadioGroup>
+      </ComponentItemSectionExample>
+    </ComponentItemSection>
+
+    <!-- Sizes -->
+    <ComponentItemSection>
+      <ComponentItemSectionTitle>Sizes</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>Set <code class="rounded-small bg-surface px-1 py-0.5 font-mono text-xs">size</code> per item to scale the control and its dot.</ComponentItemSectionDescription>
+      <ComponentItemSectionExample>
+        <div class="flex flex-wrap items-start gap-10">
+          <div class="flex flex-col gap-2">
+            <span class="text-xs uppercase tracking-widest text-muted">Small</span>
+            <RadioGroup v-model="radioSmall">
+              <RadioGroupItem value="a" size="sm">Option A</RadioGroupItem>
+              <RadioGroupItem value="b" size="sm">Option B</RadioGroupItem>
+            </RadioGroup>
+          </div>
+          <div class="flex flex-col gap-2">
+            <span class="text-xs uppercase tracking-widest text-muted">Medium</span>
+            <RadioGroup v-model="radioMedium">
+              <RadioGroupItem value="a" size="md">Option A</RadioGroupItem>
+              <RadioGroupItem value="b" size="md">Option B</RadioGroupItem>
+            </RadioGroup>
+          </div>
+          <div class="flex flex-col gap-2">
+            <span class="text-xs uppercase tracking-widest text-muted">Large</span>
+            <RadioGroup v-model="radioLarge">
+              <RadioGroupItem value="a" size="lg">Option A</RadioGroupItem>
+              <RadioGroupItem value="b" size="lg">Option B</RadioGroupItem>
+            </RadioGroup>
+          </div>
+        </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 

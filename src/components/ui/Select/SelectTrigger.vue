@@ -5,7 +5,7 @@ import { SelectTrigger, SelectValue } from 'reka-ui';
 
 <template>
   <SelectTrigger
-    class="group flex h-control w-full items-center justify-between gap-2 rounded-medium border border-border bg-input py-1.5 px-control-x text-sm transition-colors hover:border-foreground/30 focus-visible:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+    class="group flex h-control w-full items-center justify-between gap-cluster-small rounded-medium border border-border bg-input px-control-x text-sm transition-colors duration-100 hover:border-foreground/30 focus-visible:border-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
   >
     <SelectValue v-slot="{ selectedLabel }" class="flex-1 truncate text-left text-foreground">
       <span v-if="selectedLabel.length" class="truncate">

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// Rich card shown on hover/focus. Compose: HoverCard > HoverCardTrigger + HoverCardContent.
-// `delay` is the open delay (ms).
 import {HoverCardRoot} from 'reka-ui';
 
 defineProps({delay: {type: Number, default: 300}});

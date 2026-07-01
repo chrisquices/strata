@@ -7,7 +7,7 @@ import {computed, ref} from 'vue';
 import type {PropType} from 'vue';
 import {SplitterPanel} from 'reka-ui';
 
-defineProps({
+const props = defineProps({
   id: {type: String, default: undefined},
   defaultSize: {type: Number, default: undefined},
   minSize: {type: Number, default: undefined},
@@ -17,7 +17,9 @@ defineProps({
   sizeUnit: {
     type: String as PropType<'%' | 'px'>,
     default: undefined,
-    validator: (value: string) => ['%', 'px'].includes(value)
+    validator: function (value: string) {
+      return ['%', 'px'].includes(value);
+    }
   },
   order: {type: Number, default: undefined},
 });
@@ -26,38 +28,67 @@ const emit = defineEmits<{ resize: [size: number, prevSize: number | undefined];
 
 // reka's panel instance exposes the imperative + reactive collapse API; forward it through this wrapper.
 type RekaPanel = {
-  collapse: () => void;
-  expand: () => void;
-  resize: (size: number) => void;
-  getSize: () => number;
+  collapse(): void;
+  expand(): void;
+  resize(size: number): void;
+  getSize(): number;
   isCollapsed: boolean;
   isExpanded: boolean;
 };
 const panel = ref<RekaPanel | null>(null);
-defineExpose({
-  collapse: () => panel.value?.collapse(),
-  expand: () => panel.value?.expand(),
-  resize: (size: number) => panel.value?.resize(size),
-  getSize: () => panel.value?.getSize(),
-  isCollapsed: computed(() => panel.value?.isCollapsed ?? false),
-  isExpanded: computed(() => panel.value?.isExpanded ?? true),
+
+function collapsePanel() {
+  return panel.value?.collapse();
+}
+
+function expandPanel() {
+  return panel.value?.expand();
+}
+
+function resizePanel(size: number) {
+  return panel.value?.resize(size);
+}
+
+function getPanelSize() {
+  return panel.value?.getSize();
+}
+
+const isCollapsed = computed(function () {
+  return panel.value?.isCollapsed ?? false;
 });
+
+const isExpanded = computed(function () {
+  return panel.value?.isExpanded ?? true;
+});
+
+defineExpose({
+  collapse: collapsePanel,
+  expand: expandPanel,
+  resize: resizePanel,
+  getSize: getPanelSize,
+  isCollapsed: isCollapsed,
+  isExpanded: isExpanded,
+});
+
+function onResize(size: number, prevSize: number | undefined) {
+  emit('resize', size, prevSize);
+}
 </script>
 
 <template>
   <SplitterPanel
       ref="panel"
       v-slot="slotProps"
-      :id="id"
-      :default-size="defaultSize"
-      :min-size="minSize"
-      :max-size="maxSize"
-      :collapsible="collapsible"
-      :collapsed-size="collapsedSize"
-      :size-unit="sizeUnit"
-      :order="order"
+      :id="props.id"
+      :default-size="props.defaultSize"
+      :min-size="props.minSize"
+      :max-size="props.maxSize"
+      :collapsible="props.collapsible"
+      :collapsed-size="props.collapsedSize"
+      :size-unit="props.sizeUnit"
+      :order="props.order"
       class="min-h-0 min-w-0 overflow-hidden"
-      @resize="(size, prevSize) => emit('resize', size, prevSize)"
+      @resize="onResize"
       @collapse="emit('collapse')"
       @expand="emit('expand')"
   >

@@ -8,7 +8,7 @@ import PreviousButton from './PaginationPreviousButton.vue';
 </script>
 
 <template>
-  <PaginationList v-slot="{ items }" class="flex flex-row items-center gap-1" as="ul">
+  <PaginationList v-slot="{ items }" class="flex flex-row items-center gap-cluster-small" as="ul">
     <Item><PreviousButton /></Item>
     <Item v-for="(item, index) in items" :key="item.type + (item.value ?? index)">
       <Ellipsis v-if="item.type === 'ellipsis'" />

@@ -46,7 +46,7 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
       <ComponentItemSectionTitle>Combinations</ComponentItemSectionTitle>
       <ComponentItemSectionDescription>Wrap multiple Kbd keys in a KbdGroup.</ComponentItemSectionDescription>
       <ComponentItemSectionExample>
-        <div class="flex flex-wrap items-center gap-4">
+        <div class="flex flex-col gap-4">
           <KbdGroup><Kbd>Ctrl</Kbd><Kbd>K</Kbd></KbdGroup>
           <KbdGroup><Kbd label="Command">⌘</Kbd><Kbd>S</Kbd></KbdGroup>
           <KbdGroup><Kbd label="Shift">⇧</Kbd><Kbd label="Command">⌘</Kbd><Kbd>P</Kbd></KbdGroup>

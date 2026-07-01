@@ -6,20 +6,28 @@ const props = defineProps({
   variant: {
     type: String as PropType<'transparent' | 'scrim'>,
     default: 'transparent',
-    validator: (value: string) => ['transparent', 'scrim'].includes(value),
+    validator: function (value: string) {
+      return ['transparent', 'scrim'].includes(value);
+    },
   },
   visibility: {
     type: String as PropType<'always' | 'hover'>,
     default: 'always',
-    validator: (value: string) => ['always', 'hover'].includes(value),
+    validator: function (value: string) {
+      return ['always', 'hover'].includes(value);
+    },
   },
 });
 
 const element = ref<HTMLElement>();
-const variantClass = computed(() => props.variant === 'scrim' ? 'bg-overlay/25' : '');
-const visibilityClass = computed(() => props.visibility === 'hover'
-    ? 'opacity-0 transition-opacity duration-100 group-hover/grid-item:opacity-100 group-focus-within/grid-item:opacity-100'
-    : '');
+const variantClass = computed(function () {
+  return props.variant === 'scrim' ? 'bg-overlay/25' : '';
+});
+const visibilityClass = computed(function () {
+  return props.visibility === 'hover'
+      ? 'opacity-0 transition-opacity duration-100 group-hover/grid-item:opacity-100 group-focus-within/grid-item:opacity-100'
+      : '';
+});
 
 defineExpose({element});
 </script>

@@ -4,68 +4,58 @@ import {computed} from 'vue';
 import Root from './Avatar.vue';
 import Fallback from './AvatarFallback.vue';
 import Image from './AvatarImage.vue';
+import {cn} from '../utils';
+
+defineOptions({inheritAttrs: false});
 
 const props = defineProps({
   items: {
-    type: Array as PropType<{ name?: string; src?: string }[]>, default: function () {
-      return [];
-    }
+    type: Array as PropType<{ name?: string; src?: string }[]>, default: () => []
   },
-
-  // A max of 0 or less disables the cap and renders every item. max is the total
-  // tile budget: when items overflow it, the last slot becomes the +N tile.
-  max: {type: Number, default: 4},
+  max: {type: Number, default: 4}, // A max of 0 or less disables the cap and renders every item. max is the total tile budget: when items overflow it, the last slot becomes the +N tile.
   size: {
     type: String as PropType<'sm' | 'md' | 'lg'>,
-    default: 'sm',
-    validator: function (value: string) {
-      return ['sm', 'md', 'lg'].includes(value);
-    }
+    default: 'md',
+    validator: (value: string) => ['sm', 'md', 'lg'].includes(value)
   },
   delayMs: {type: Number, default: undefined},
 });
 
-const visibleCount = computed(function () {
-  return props.max > 0 && props.items.length > props.max
+const visibleItems = computed(function () {
+  const count = props.max > 0 && props.items.length > props.max
       ? props.max - 1
       : props.items.length;
+
+  return props.items.slice(0, count);
 });
 
-const visibleItems = computed(function () {
-  return props.items.slice(0, visibleCount.value);
-});
+const spacingClass = {sm: '-space-x-1', md: '-space-x-2', lg: '-space-x-3'};
 
-const overflow = computed(function () {
-  return props.items.length - visibleCount.value;
-});
-
-const spacingClass = computed(function () {
-  return {sm: '-space-x-1', md: '-space-x-2', lg: '-space-x-3'}[props.size];
-});
+const overflow = computed(() => props.items.length - visibleItems.value.length);
 
 function initials(name = '') {
-  const value = name
+  return name
       .trim()
       .split(/\s+/)
       .slice(0, 2)
-      .map(function (part) {
-        return [...part][0];
-      })
+      .map((part) => [...part][0])
       .join('')
-      .toUpperCase();
-
-  return value || '?';
+      .toUpperCase() || '?';
 }
 </script>
 
 <template>
-  <div class="flex" :class="spacingClass">
-    <Root v-for="(item, index) in visibleItems" :key="`${item.name}-${index}`" :size="size"
+  <div v-bind="$attrs" :class="cn('flex', spacingClass[props.size], $attrs.class)">
+    <Root v-for="(item, index) in visibleItems" :key="`${item.name}-${index}`" :size="props.size"
           class="ring-2 ring-border">
+
       <Image v-if="item.src" :src="item.src" :alt="item.name"/>
-      <Fallback :delay-ms="delayMs">{{ initials(item.name) }}</Fallback>
+
+      <Fallback :delay-ms="props.delayMs">{{ initials(item.name) }}</Fallback>
+
     </Root>
-    <Root v-if="overflow > 0" :size="size" class="ring-2 ring-border">
+
+    <Root v-if="overflow > 0" :size="props.size" class="ring-2 ring-border">
       <Fallback>+{{ overflow }}</Fallback>
     </Root>
   </div>

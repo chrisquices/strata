@@ -3,7 +3,7 @@ import type { PropType } from 'vue';
 import { ref, watch } from 'vue';
 import { PinInputRoot } from 'reka-ui';
 
-defineProps({
+const props = defineProps({
   mask: { type: Boolean, default: false },
   otp: { type: Boolean, default: true },
   type: {
@@ -38,15 +38,15 @@ function onComplete(value) {
 <template>
   <PinInputRoot
     v-model="cells"
-    :mask="mask"
-    :otp="otp"
-    :type="type"
-    :disabled="disabled"
-    :name="name"
-    :required="required"
-    :placeholder="placeholder"
-    :id="id"
-    :class="['flex gap-2', disabled ? 'cursor-not-allowed opacity-50' : '']"
+    :mask="props.mask"
+    :otp="props.otp"
+    :type="props.type"
+    :disabled="props.disabled"
+    :name="props.name"
+    :required="props.required"
+    :placeholder="props.placeholder"
+    :id="props.id"
+    :class="['flex gap-cluster-small', props.disabled ? 'cursor-not-allowed opacity-50' : '']"
     @complete="onComplete"
   >
     <slot />

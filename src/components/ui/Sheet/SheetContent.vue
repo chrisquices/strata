@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type {PropType} from 'vue';
 import {DialogPortal, DialogOverlay, DialogContent} from 'reka-ui';
+import {cn} from '../utils';
 
 defineOptions({inheritAttrs: false});
-defineProps({
+
+const props = defineProps({
   side: {
     type: String as PropType<'right' | 'left' | 'bottom' | 'top'>,
     default: 'right',
@@ -20,6 +22,7 @@ const positionClass = {
   bottom: 'inset-x-0 bottom-0 w-full rounded-t-large border-t',
   top: 'inset-x-0 top-0 w-full rounded-b-large border-b',
 };
+
 </script>
 
 <template>
@@ -27,11 +30,11 @@ const positionClass = {
     <DialogOverlay class="strata-overlay-fade fixed inset-0 z-modal bg-overlay/60"/>
     <DialogContent
         v-bind="$attrs"
-        :class="[
+        :class="cn([
         'fixed z-modal overflow-y-auto bg-surface border-border focus-visible:outline-none',
-        `strata-sheet-${side in positionClass ? side : 'right'}`,
-        positionClass[side] ?? positionClass.right,
-      ]"
+        `strata-sheet-${props.side in positionClass ? props.side : 'right'}`,
+        positionClass[props.side] ?? positionClass.right,
+      ], $attrs.class)"
     >
       <slot/>
     </DialogContent>

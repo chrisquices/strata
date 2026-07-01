@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type {PropType} from 'vue';
-import {computed, useAttrs} from 'vue';
 import {cn} from '../utils';
 
 defineOptions({inheritAttrs: false});
@@ -10,17 +9,11 @@ const props = defineProps({
   collapsed: { type: Boolean, default: false },
 });
 
-const attrs = useAttrs();
-const forwardedAttrs = computed(function () {
-  const attributes = {...attrs};
-  delete attributes.class;
-  return attributes;
-});
 </script>
 
 <template>
   <aside
-    v-bind="forwardedAttrs"
+    v-bind="$attrs"
     :data-collapsed="props.collapsed || undefined"
     :class="cn(
       'group/sidebar flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden bg-sidebar transition-[width] duration-300 md:max-h-none z-sidebar',

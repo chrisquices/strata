@@ -6,9 +6,7 @@ const props = defineProps({
   type: {
     type: String as PropType<'single' | 'multiple'>,
     default: 'single',
-    validator: function (value: string) {
-      return ['single', 'multiple'].includes(value);
-    }
+    validator: (value: string) => ['single', 'multiple'].includes(value)
   },
   collapsible: {type: Boolean, default: false},
   defaultValue: {type: [String, Array], default: undefined},

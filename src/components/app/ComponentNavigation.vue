@@ -38,7 +38,6 @@ import {
   LoaderCircle,
   Megaphone,
   Menu,
-  MenuSquare,
   MessageSquare,
   Minus,
   MousePointer,
@@ -63,6 +62,7 @@ import {
   ToggleRight,
   Type,
   UploadCloud,
+  Video,
   Wrench,
 } from '@lucide/vue';
 import Sidebar from '@ui/Sidebar/Sidebar.vue';
@@ -77,6 +77,7 @@ const router = useRouter();
 
 const engineItems = [
   {id: 'drop-zone', label: 'Drop Zone', icon: UploadCloud},
+  {id: 'video', label: 'Video', icon: Video},
 ];
 
 const primitiveItems = [
@@ -126,7 +127,6 @@ const compositeItems = [
   {id: 'empty', label: 'Empty', icon: Package},
   {id: 'form', label: 'Form', icon: FormInput},
   {id: 'hover-card', label: 'Hover Card', icon: IdCard},
-  {id: 'menubar', label: 'Menubar', icon: MenuSquare},
   {id: 'month-picker', label: 'Month Picker', icon: CalendarDays},
   {id: 'month-range-picker', label: 'Month Range Picker', icon: CalendarRange},
   {id: 'pagination', label: 'Pagination', icon: ListOrdered},

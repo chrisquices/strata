@@ -7,7 +7,9 @@ const props = defineProps({
   type: {
     type: String as PropType<'generic' | 'image' | 'video'>,
     default: 'generic',
-    validator: (value: string) => ['generic', 'image', 'video'].includes(value),
+    validator: function (value: string) {
+      return ['generic', 'image', 'video'].includes(value);
+    },
   },
   src: {type: String, default: ''},
   alt: {type: String, default: ''},
@@ -15,17 +17,23 @@ const props = defineProps({
   aspect: {
     type: String as PropType<'square' | 'portrait' | 'landscape' | 'wide'>,
     default: 'square',
-    validator: (value: string) => ['square', 'portrait', 'landscape', 'wide'].includes(value),
+    validator: function (value: string) {
+      return ['square', 'portrait', 'landscape', 'wide'].includes(value);
+    },
   },
   fit: {
     type: String as PropType<'cover' | 'contain'>,
     default: 'cover',
-    validator: (value: string) => ['cover', 'contain'].includes(value),
+    validator: function (value: string) {
+      return ['cover', 'contain'].includes(value);
+    },
   },
   loading: {
     type: String as PropType<'lazy' | 'eager'>,
     default: 'lazy',
-    validator: (value: string) => ['lazy', 'eager'].includes(value),
+    validator: function (value: string) {
+      return ['lazy', 'eager'].includes(value);
+    },
   },
   zoomOnHover: {type: Boolean, default: false},
 });
@@ -39,13 +47,21 @@ const aspectClass = {
 
 const element = ref<HTMLElement>();
 const mediaFailed = ref(false);
-const hasMedia = computed(() => props.type !== 'generic' && !!props.src && !mediaFailed.value);
-const fitClass = computed(() => props.fit === 'contain' ? 'object-contain' : 'object-cover');
-const motionClass = computed(() => props.zoomOnHover
-    ? 'transition-transform duration-200 ease-out group-hover/grid-item:scale-[1.03] group-focus-within/grid-item:scale-[1.03]'
-    : '');
+const hasMedia = computed(function () {
+  return props.type !== 'generic' && !!props.src && !mediaFailed.value;
+});
+const fitClass = computed(function () {
+  return props.fit === 'contain' ? 'object-contain' : 'object-cover';
+});
+const motionClass = computed(function () {
+  return props.zoomOnHover
+      ? 'transition-transform duration-200 ease-out group-hover/grid-item:scale-[1.03] group-focus-within/grid-item:scale-[1.03]'
+      : '';
+});
 
-watch(() => [props.type, props.src], () => {
+watch(function () {
+  return [props.type, props.src];
+}, function () {
   mediaFailed.value = false;
 });
 

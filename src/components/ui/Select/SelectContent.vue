@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import { SelectPortal, SelectContent, SelectViewport } from 'reka-ui';
+import {cn} from '../utils';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps({
+const props = defineProps({
   side: {
     type: String as PropType<'top' | 'right' | 'bottom' | 'left'>,
     default: 'bottom',
@@ -14,16 +15,17 @@ defineProps({
   },
   sideOffset: { type: Number, default: 4 },
 });
+
 </script>
 
 <template>
   <SelectPortal>
     <SelectContent
       v-bind="$attrs"
-      :side="side"
-      :side-offset="sideOffset"
+      :side="props.side"
+      :side-offset="props.sideOffset"
       position="popper"
-      class="strata-menu-pop z-popover max-h-96 min-w-[var(--reka-select-trigger-width,8rem)] overflow-hidden rounded-large border border-border bg-surface shadow-panel focus-visible:outline-none"
+      :class="cn('strata-menu-pop z-popover max-h-96 min-w-[var(--reka-select-trigger-width,8rem)] overflow-hidden rounded-large border border-border bg-surface shadow-panel focus-visible:outline-none', $attrs.class)"
     >
       <SelectViewport class="max-h-52 overflow-y-auto p-1">
         <slot />

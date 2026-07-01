@@ -5,10 +5,11 @@ defineProps({icon: {default: undefined}});
 </script>
 
 <template>
-  <DropdownMenuLabel class="-mx-1 -mt-1 mb-1 flex items-center gap-2.5 border-b border-border px-3 py-3">
-    <span v-if="icon" class="grid size-icon shrink-0 place-items-center text-faint" aria-hidden="true">
+  <DropdownMenuLabel
+      class="flex h-control items-center gap-cluster-small rounded-medium px-control-x text-sm text-faint">
+    <span v-if="icon" class="grid size-icon shrink-0 place-items-center text-current" aria-hidden="true">
       <component :is="icon" class="size-icon"/>
     </span>
-    <span class="min-w-0 flex-1 truncate text-xs font-medium text-foreground"><slot/></span>
+    <span class="min-w-0 flex-1 truncate"><slot/></span>
   </DropdownMenuLabel>
 </template>

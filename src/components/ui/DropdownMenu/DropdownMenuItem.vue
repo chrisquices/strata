@@ -10,15 +10,15 @@ const props = defineProps({
 });
 const emit = defineEmits<{ select: [event: Event] }>();
 
-const base =
-    'group flex w-full cursor-default select-none items-center gap-2.5 rounded-medium px-2 py-1.5 text-xs transition-colors duration-100 focus-visible:outline-none';
-const stateClass = computed(() =>
-    props.disabled
-        ? 'text-faint cursor-not-allowed'
-        : props.destructive
-            ? 'text-destructive hover:bg-destructive hover:text-destructive-foreground data-[highlighted]:bg-destructive data-[highlighted]:text-destructive-foreground'
-            : 'text-foreground hover:bg-border data-[highlighted]:bg-border',
-);
+const baseClass =
+    'group flex h-control w-full cursor-default select-none items-center gap-cluster-small rounded-medium px-control-x text-sm transition-colors duration-100 focus-visible:outline-none';
+const stateClass = computed(function () {
+  return props.disabled
+      ? 'text-faint cursor-not-allowed'
+      : props.destructive
+          ? 'text-destructive hover:bg-destructive hover:text-destructive-foreground data-[highlighted]:bg-destructive data-[highlighted]:text-destructive-foreground'
+          : 'text-foreground hover:bg-border data-[highlighted]:bg-border';
+});
 
 // reka's select event is cancelable; preventDefault keeps the menu open when closeOnSelect is false.
 function onSelect(event) {
@@ -28,7 +28,7 @@ function onSelect(event) {
 </script>
 
 <template>
-  <DropdownMenuItem :disabled="disabled" :class="[base, stateClass]" @select="onSelect">
+  <DropdownMenuItem :disabled="disabled" :class="[baseClass, stateClass]" @select="onSelect">
     <component
         :is="icon"
         v-if="icon"

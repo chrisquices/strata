@@ -30,49 +30,49 @@ const props = defineProps({
 });
 const pressed = defineModel<boolean>('pressed');
 
-const base =
+const baseClass =
     'relative inline-flex items-center justify-center overflow-hidden font-medium whitespace-nowrap select-none ' +
     'transition-colors duration-100 active:translate-y-px ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background ' +
     'disabled:pointer-events-none';
 
 const radiusClasses = {sm: 'rounded-small', md: 'rounded-medium', lg: 'rounded-large', full: 'rounded-full'};
-const sizeText = {
+const sizeTextClasses = {
   sm: 'h-control-small px-control-x-small text-xs',
   md: 'h-control px-control-x text-sm',
   lg: 'h-control-large px-control-large text-base',
 };
-const sizeIcon = {
+const sizeIconClasses = {
   sm: 'h-control-small aspect-square',
   md: 'h-control aspect-square',
   lg: 'h-control-large aspect-square',
 };
-const filled = {
+const filledClasses = {
   primary: 'data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:hover:bg-foreground/90',
   secondary: 'data-[state=on]:bg-surface data-[state=on]:text-foreground data-[state=on]:border data-[state=on]:border-border data-[state=on]:hover:bg-background',
   ghost: 'data-[state=on]:bg-foreground/10 data-[state=on]:text-foreground data-[state=on]:hover:bg-foreground/15',
 };
-const outlined = {
+const outlinedClasses = {
   primary: 'bg-transparent text-foreground border border-foreground hover:bg-foreground hover:text-background',
   secondary: 'bg-transparent text-foreground border border-border hover:bg-surface',
 
   // Ghost has no chrome to outline, so its outline form mirrors the filled ghost.
   ghost: 'bg-transparent text-foreground hover:bg-foreground/10',
 };
-const unpressed = {
+const unpressedClasses = {
   primary: 'bg-transparent text-foreground hover:bg-foreground/10',
   secondary: 'bg-transparent text-foreground border border-border hover:bg-surface',
   ghost: 'bg-transparent text-foreground hover:bg-foreground/10',
 };
 
 const stateClass = computed(function () {
-  return filled[props.variant];
+  return filledClasses[props.variant];
 });
 const unpressedClass = computed(function () {
-  return props.outline ? outlined[props.variant] : unpressed[props.variant];
+  return props.outline ? outlinedClasses[props.variant] : unpressedClasses[props.variant];
 });
 const sizeClass = computed(function () {
-  return props.icon ? sizeIcon[props.size] : sizeText[props.size];
+  return props.icon ? sizeIconClasses[props.size] : sizeTextClasses[props.size];
 });
 const radiusClass = computed(function () {
   return radiusClasses[props.radius];
@@ -87,7 +87,7 @@ const dimmedClass = computed(function () {
       v-model="pressed"
       :disabled="disabled"
       :class="[
-        base,
+        baseClass,
         sizeClass,
         radiusClass,
         unpressedClass,

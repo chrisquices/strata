@@ -3,6 +3,7 @@ import type {PropType} from 'vue';
 import type {DropzoneInstance, DropzoneMessage, DropzoneState} from './types';
 import {ref, watch} from 'vue';
 import {createDropzone} from '../../../assets/js/dropzone.js';
+import {cn} from '../utils';
 
 const props = defineProps({
   accept: {type: Array as PropType<string[]>, default: undefined},
@@ -106,7 +107,7 @@ watch(props, dropzoneAdapter.mount, {deep: true});
       role="button"
       tabindex="0"
       aria-label="Drop files or browse"
-      :class="['flex cursor-pointer flex-col items-center justify-center gap-3 rounded-large border-medium border-dashed p-8 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background', dropzoneAdapter.getZoneClass()]"
+      :class="cn('flex cursor-pointer flex-col items-center justify-center gap-cluster rounded-large border-medium border-dashed p-container-large transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background', dropzoneAdapter.getZoneClass(), $attrs.class)"
   >
     <slot/>
   </div>

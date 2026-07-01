@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { onBeforeUnmount, provide, ref, toRef } from 'vue';
-import { codeBlockContextKey } from './context';
+import {onBeforeUnmount, provide, ref, toRef} from 'vue';
+import {cn} from '../utils';
+import {codeBlockContextKey} from './context';
+
+defineOptions({inheritAttrs: false});
 
 const props = defineProps({
-  lineNumbers: { type: Boolean, default: false },
+  lineNumbers: {type: Boolean, default: false},
 });
 
 const code = ref('');
+
 const copied = ref(false);
+
 let copyTimer: ReturnType<typeof setTimeout> | null = null;
 
 function setCode(value: string) {
@@ -45,7 +50,8 @@ provide(codeBlockContextKey, {
 </script>
 
 <template>
-  <div class="overflow-hidden rounded-large border border-border bg-surface font-mono text-xs">
-    <slot />
+  <div v-bind="$attrs"
+       :class="cn('overflow-hidden rounded-large border border-border bg-surface font-mono text-xs', $attrs.class)">
+    <slot/>
   </div>
 </template>

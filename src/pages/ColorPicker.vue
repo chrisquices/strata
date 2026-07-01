@@ -2,6 +2,9 @@
 import ComponentContent from '@app/component/ComponentContent.vue';
 import { ref } from 'vue';
 import ColorPicker from '@ui/ColorPicker/ColorPicker.vue';
+import Popover from '@ui/Popover/Popover.vue';
+import PopoverTrigger from '@ui/Popover/PopoverTrigger.vue';
+import PopoverContent from '@ui/Popover/PopoverContent.vue';
 
 import ComponentHeader from '@app/component/ComponentHeader.vue';
 import ComponentHeaderTitle from '@app/component/ComponentHeaderTitle.vue';
@@ -47,6 +50,28 @@ const color = ref('#3b82f6');
               aria-hidden="true"
           ></div>
         </div>
+      </ComponentItemSectionExample>
+    </ComponentItemSection>
+
+    <!-- With a trigger -->
+    <ComponentItemSection>
+      <ComponentItemSectionTitle>With a trigger</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Compose with Popover for the swatch-button trigger pattern — the picker opens in a floating panel instead of sitting inline.
+      </ComponentItemSectionDescription>
+      <ComponentItemSectionExample>
+        <Popover>
+          <PopoverTrigger as-child>
+            <button
+                class="size-control rounded-medium border border-border"
+                :style="{ backgroundColor: color }"
+                aria-label="Pick a color"
+            ></button>
+          </PopoverTrigger>
+          <PopoverContent class="p-overlay-small">
+            <ColorPicker v-model="color" />
+          </PopoverContent>
+        </Popover>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 

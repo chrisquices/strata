@@ -4,5 +4,5 @@ import {ScrollAreaThumb} from 'reka-ui';
 
 <template>
   <ScrollAreaThumb
-      class="flex-1 rounded-full bg-foreground/20 transition-colors hover:bg-foreground/30 transition duration-200"/>
+      class="flex-1 rounded-full bg-foreground/20 transition-colors duration-200 hover:bg-foreground/30"/>
 </template>

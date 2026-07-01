@@ -2,7 +2,7 @@
 import type {PropType} from 'vue';
 import {Separator} from 'reka-ui';
 
-defineProps({
+const props = defineProps({
   orientation: {
     type: String as PropType<'horizontal' | 'vertical'>,
     default: 'horizontal',
@@ -16,8 +16,8 @@ defineProps({
 
 <template>
   <Separator
-      :orientation="orientation"
-      :decorative="decorative"
-      :class="['shrink-0 bg-border', orientation === 'vertical' ? 'h-full w-px' : 'h-px w-full']"
+      :orientation="props.orientation"
+      :decorative="props.decorative"
+      :class="['shrink-0 bg-border', props.orientation === 'vertical' ? 'h-full w-px' : 'h-px w-full']"
   />
 </template>

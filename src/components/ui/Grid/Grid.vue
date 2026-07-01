@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type {PropType} from 'vue';
 import {computed, provide, ref, toRef} from 'vue';
+import {cn} from '../utils';
 
 type ItemSize = 'sm' | 'md' | 'lg' | `${number}rem`;
 
@@ -9,12 +10,16 @@ const props = defineProps({
   itemSize: {
     type: String as PropType<ItemSize>,
     default: 'md',
-    validator: (value: string) => ['sm', 'md', 'lg'].includes(value) || /^\d+(?:\.\d+)?rem$/.test(value),
+    validator: function (value: string) {
+      return ['sm', 'md', 'lg'].includes(value) || /^\d+(?:\.\d+)?rem$/.test(value);
+    },
   },
   gap: {
     type: String as PropType<'sm' | 'md' | 'lg'>,
     default: 'md',
-    validator: (value: string) => ['sm', 'md', 'lg'].includes(value),
+    validator: function (value: string) {
+      return ['sm', 'md', 'lg'].includes(value);
+    },
   },
 });
 
@@ -25,20 +30,20 @@ const sizeMap = {
 };
 
 const gapClass = {
-  sm: 'gap-2',
-  md: 'gap-4',
-  lg: 'gap-6',
+  sm: 'gap-cluster-small',
+  md: 'gap-cluster',
+  lg: 'gap-cluster-large',
 };
 
-const resolvedItemSize = computed(() =>
-    props.itemSize in sizeMap ? sizeMap[props.itemSize] : props.itemSize,
-);
-const layoutClass = computed(() => props.virtualized
-    ? 'relative min-w-0'
-    : `grid min-w-0 ${gapClass[props.gap]}`);
-const layoutStyle = computed(() => props.virtualized
-    ? undefined
-    : {gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${resolvedItemSize.value}), 1fr))`});
+const resolvedItemSize = computed(function () {
+  return props.itemSize in sizeMap ? sizeMap[props.itemSize] : props.itemSize;
+});
+const layoutClass = computed(function () {
+  return props.virtualized ? 'relative min-w-0' : `grid min-w-0 ${gapClass[props.gap]}`;
+});
+const layoutStyle = computed(function () {
+  return props.virtualized ? undefined : {gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${resolvedItemSize.value}), 1fr))`};
+});
 
 provide('strataGridVirtualized', toRef(props, 'virtualized'));
 
@@ -52,7 +57,7 @@ defineExpose({element});
       ref="element"
       data-grid
       :data-virtualized="virtualized || undefined"
-      :class="layoutClass"
+      :class="cn(layoutClass, $attrs.class)"
       :style="layoutStyle"
   >
     <slot/>

@@ -6,11 +6,13 @@
 import type {PropType} from 'vue';
 import {SplitterGroup} from 'reka-ui';
 
-defineProps({
+const props = defineProps({
   direction: {
     type: String as PropType<'horizontal' | 'vertical'>,
     default: 'horizontal',
-    validator: (value: string) => ['horizontal', 'vertical'].includes(value)
+    validator: function (value: string) {
+      return ['horizontal', 'vertical'].includes(value);
+    }
   },
   // Stable group id (auto-generated if omitted) — useful for nested/multi-tab layouts and persistence.
   id: {type: String, default: undefined},
@@ -21,23 +23,27 @@ defineProps({
   // Custom persistence adapter (defaults to localStorage) — e.g. sessionStorage or a mock.
   storage: {
     type: Object as PropType<{
-      getItem: (name: string) => string | null;
-      setItem: (name: string, value: string) => void
+      getItem(name: string): string | null;
+      setItem(name: string, value: string): void
     }>, default: undefined
   },
 });
 const emit = defineEmits<{ layout: [sizes: number[]] }>();
+
+function onLayout(sizes: number[]) {
+  emit('layout', sizes);
+}
 </script>
 
 <template>
   <SplitterGroup
-      :direction="direction"
-      :id="id"
-      :auto-save-id="autoSaveId"
-      :keyboard-resize-by="keyboardResizeBy"
-      :storage="storage"
+      :direction="props.direction"
+      :id="props.id"
+      :auto-save-id="props.autoSaveId"
+      :keyboard-resize-by="props.keyboardResizeBy"
+      :storage="props.storage"
       class="flex h-full w-full data-[orientation=vertical]:flex-col"
-      @layout="(sizes) => emit('layout', sizes)"
+      @layout="onLayout"
   >
     <slot/>
   </SplitterGroup>

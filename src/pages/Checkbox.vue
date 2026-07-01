@@ -55,6 +55,28 @@ const indeterminate = ref('indeterminate');
       </ComponentItemSectionExample>
     </ComponentItemSection>
 
+    <!-- Sizes -->
+    <ComponentItemSection>
+      <ComponentItemSectionTitle>Sizes</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>Small, medium, and large scale the box and the check glyph using the indicator token scale.</ComponentItemSectionDescription>
+      <ComponentItemSectionExample>
+        <div class="flex items-center gap-6">
+          <label class="inline-flex items-center gap-2 text-sm text-foreground">
+            <Checkbox size="sm" :default-checked="true" />
+            Small
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm text-foreground">
+            <Checkbox size="md" :default-checked="true" />
+            Medium
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm text-foreground">
+            <Checkbox size="lg" :default-checked="true" />
+            Large
+          </label>
+        </div>
+      </ComponentItemSectionExample>
+    </ComponentItemSection>
+
     <!-- Disabled -->
     <ComponentItemSection>
       <ComponentItemSectionTitle>Disabled</ComponentItemSectionTitle>

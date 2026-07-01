@@ -50,7 +50,7 @@ Development mode performs full-page live reloads rather than state-preserving Vu
 6. Testing happens only on the user's explicit instruction — their instruction is the sole trigger. Unprompted, never write tests or verification code: no test files, no one-off test or verification scripts, no debug harnesses or temporary scaffolds, not even to check your own work with the intent to delete afterward. If a check seems needed and none was requested, note it in your report and stop. When the user explicitly instructs testing (e.g., "test it"), run any tests that already exist, and create temporary tests where none exist — run them, report the results, then delete the temporary ones so they leave no trace in the project. (Running the documented build remains normal operation at any time and needs no test instruction.)
 7. A comment should always have an empty line above it unless the line above is a continuation of the same comment, another comment, or the comment is the first thing in the file on line 1.
 8. Comments that explain a single line of code should be inline comments on that same line, never comments above the line of code.
-9. Do not use arrow functions. Use function declarations or regular function expressions instead.
+
 10. Put the actual content of a component, tag, function call, expression, or statement on its own line when it is not empty. Do not hand-wrap continuous content across multiple lines; write it continuously on that line and let the user's editor wrap it.
 
 ## When working with components in general
@@ -80,36 +80,3 @@ Development mode performs full-page live reloads rather than state-preserving Vu
 9. If a proposed streamlining depends on string props for visible display text, do not present it as a streamlining option.
 10. Do not use abbreviated names for example data, props, variables, or fields when a clear full word is available (for example, use `question` and `answer`, not `q` and `a`).
 11. Be decisive when recommending changes. Do not suggest an option and then undercut it with language like "but honestly I wouldn't."
-
-## Review component flow
-
-Trigger this isolated flow only when the user says `review component <component-name>` (for example, `review component banner`). Do not run this whole flow for casual questions, implementation requests, or ordinary code reviews unless the user uses that phrase. These are absolute rules, they are not guidelines or optional, they are REQUIRED and NON-OPTIONAL.
-
-1. Once the trigger is confirmed, first open `src/components/app/App.vue` and uncomment the line for the component being reviewed.
-2. Read the component implementation files, the matching `src/pages/components/<ComponentName>.vue` page, exports, and any usage sites.
-3. Automatically clean only the matching component page for the page conventions above: add the required header and section comments, ensure every `ComponentItemSection` has a title, description, and example, remove any section wrapper div, remove `data-demo`, remove abbreviated names, and keep `ComponentItemSection` blocks directly under `ComponentLayout`.
-4. After automatic page cleanup, run the documented build and report whether it passed.
-5. No abbreviations in components or pages. The only abbreviations allowed are universally understood abbreviations like x/y for vertical/horizontal or tmp/temp and stuff like that, everything else should be written in full words.
-5. Do not edit component implementation files, exports, shared utilities, routes, or other usage sites unless the user explicitly asks for fixes.
-6. Review whether the component implementation and page are incomplete, too verbose, redundant, buggy, or worth streamlining.
-7. Audit the existing component and page against every rule in this guide. Do not only avoid introducing new violations; actively flag violations that are already present.
-8. Output only a bullet list of problems: errors, bugs, missing expected behavior, streamlinable pieces, or convention issues that could not be fixed automatically. Do not mention things that are already correct or good.
-9. Check API streamlining without suggesting named slots such as `<template #icon>` and without suggesting string props for visible display text. Flag existing string props such as `language="javascript"` when that value is rendered as UI copy. If a possible streamline depends on either banned pattern, do not present it as streamlinable.
-10. Be decisive. Recommend only changes that should actually be made; do not suggest an option and then walk it back.
-11. If implementation fixes are requested after the review, apply the agreed changes, run the documented build, and report the result.
-12. After finishing a scan/sweep/fix, read this section AGAIN from new (not from memory) and go through all your changes and verify whether you followed through all these rules.
-
-## Review component class flow
-
-Trigger this isolated flow only when the user says exactly `review component class`. If this flow is already active in the current chat context and the user says exactly `next`, treat `next` as another trigger for this same flow and continue with the next unreviewed component. Do not run this whole flow for casual questions, implementation requests, ordinary code reviews, a named component request such as `review component class accordion`, or the separate `review component <component-name>` flow unless the user uses one of those exact trigger phrases. These are absolute rules, they are not guidelines or optional, they are REQUIRED and NON-OPTIONAL.
-
-1. Determine the component to review by listing the direct child component folders in `src/components/ui` alphabetically and selecting the first component that is not already listed in `Reviewed component classes`.
-2. Review the component implementation itself, not the component page, to find every practical opportunity to apply the design token system completely and consistently with all applicable tokens.
-3. Review whether `cn` belongs in the component at all before suggesting it. Think through the component's public styling surface and ask, in effect, "Does this component need parent class merging? Does this specific element need `cn`?" Recommend the best yes/no answer and wait for user confirmation before adding or changing `cn`. If the answer is yes, suggest exactly one thoughtful parent-facing class merge point with `cn(defaultClasses, $attrs.class)` or the local equivalent. Put that `cn` on the most relevant painted/rendered element that a parent user would reasonably expect `class` to customize. Do not plaster `cn` onto every element or every static class string. Do not put `cn` on wrapper primitives that do not style or paint the actual HTML output, such as reka providers, roots, or `as-child` pass-through primitives where another inner element is the real styling surface. If the correct target is not the root element, suggest `defineOptions({inheritAttrs: false})`, intentional non-class attr forwarding with `v-bind="$attrs"` where appropriate, and merging `$attrs.class` only into the chosen element. If a component has no meaningful class surface or should rely on normal Vue class fallthrough, recommend no `cn` and explain why in the finding.
-4. Review every existing comment in the component being reviewed. Delete dead, unnecessary, obvious, or redundant comments immediately without waiting for confirmation. Keep comments that explain non-obvious behavior, browser/framework constraints, accessibility reasoning, or other useful implementation context.
-5. After this review flow is triggered, do not edit any files, run automatic cleanup, or make implementation changes except for the comment deletion allowed above. Report design-token and `cn` findings first, wait for the user to confirm what to edit, and only then make the confirmed changes.
-6. Output only a brief numbered list so the user can approve, reject, or ask about findings by number. Do not use bullets, paragraphs, summaries, praise, or explanations of things that are already correct.
-7. After the user confirms edits, apply only the confirmed changes, run the documented build, and report the result.
-8. After the confirmed edits are complete and the component is finished, add the component name to `Reviewed component classes` in alphabetical order.
-
-Reviewed component classes: accordion, alertdialog, aspectratio, avatar, badge, banner, breadcrumb, button, caption, card, checkbox, checkboxgroup, chip, sidebar.

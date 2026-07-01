@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import {MoreHorizontal} from '@lucide/vue';
+import {cn} from '../utils';
+
+defineOptions({inheritAttrs: false});
 </script>
 
 <template>
-  <li class="inline-flex items-center text-faint">
+  <li v-bind="$attrs" :class="cn('inline-flex items-center text-faint', $attrs.class)">
     <span aria-hidden="true" class="inline-flex">
       <MoreHorizontal class="size-icon-small"/>
     </span>

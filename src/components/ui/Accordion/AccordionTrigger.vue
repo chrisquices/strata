@@ -1,8 +1,3 @@
-<!-- Module scope: defineProps is hoisted and cannot see <script setup> consts. -->
-<script lang="ts">
-const LEVELS = [1, 2, 3, 4, 5, 6];
-</script>
-
 <script setup lang="ts">
 import {computed} from 'vue';
 import {
@@ -18,19 +13,20 @@ defineOptions({inheritAttrs: false});
 
 const props = defineProps({
   level: {
-    type: [Number, String], default: 3, validator: function (value: string | number) {
-      return LEVELS.includes(Number(value));
-    }
+    type: [Number, String],
+    default: 3,
+    validator: (value: string | number) => [1, 2, 3, 4, 5, 6].includes(Number(value))
   },
 });
 
 const rootContext = injectAccordionRootContext();
+
 const itemContext = injectAccordionItemContext();
+
 const headingTag = computed(function () {
-  return LEVELS.includes(Number(props.level)) ? `h${Number(props.level)}` : 'h3';
+  return [1, 2, 3, 4, 5, 6].includes(Number(props.level)) ? `h${Number(props.level)}` : 'h3';
 });
 
-// APG: the permanently-open trigger (non-collapsible single mode) and any disabled item both report aria-disabled.
 const pinnedOpen = computed(function () {
   return rootContext.isSingle.value && !rootContext.collapsible && itemContext.open.value;
 });
@@ -50,7 +46,7 @@ const triggerAriaDisabled = computed(function () {
       <span class="text-start"><slot/></span>
       <ChevronDown
           aria-hidden="true"
-          class="size-icon-small shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180"/>
+          class="size-icon-small shrink-0 transition-transform duration-100 group-data-[state=open]:rotate-180"/>
     </RekaAccordionTrigger>
   </RekaAccordionHeader>
 </template>

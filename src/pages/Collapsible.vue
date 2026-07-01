@@ -45,10 +45,11 @@ const open = ref(false);
         <div class="max-w-sm">
           <Collapsible v-slot="{ open }">
             <CollapsibleTrigger as-child>
-              <Button variant="secondary" class="group w-full justify-between">
+              <Button variant="secondary" class="group w-full justify-between [&>span:first-child]:w-full">
                 {{ open ? 'Hide' : 'Show' }} details
                 <ChevronDown
-                    class="size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
+                    class="ml-auto size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"
+                />
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -71,10 +72,10 @@ const open = ref(false);
         <div class="max-w-sm">
           <Collapsible default-open>
             <CollapsibleTrigger as-child>
-              <Button variant="secondary" class="group w-full justify-between">
+              <Button variant="secondary" class="group w-full justify-between [&>span:first-child]:w-full">
                 Toggle details
                 <ChevronDown
-                    class="size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
+                    class="ml-auto size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -105,10 +106,10 @@ const open = ref(false);
           </div>
           <Collapsible v-model:open="open">
             <CollapsibleTrigger as-child>
-              <Button variant="secondary" class="group w-full justify-between">
+              <Button variant="secondary" class="group w-full justify-between [&>span:first-child]:w-full">
                 Toggle details
                 <ChevronDown
-                    class="size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
+                    class="ml-auto size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -131,10 +132,10 @@ const open = ref(false);
         <div class="max-w-sm">
           <Collapsible disabled>
             <CollapsibleTrigger as-child>
-              <Button variant="secondary" class="group w-full justify-between">
+              <Button variant="secondary" class="group w-full justify-between [&>span:first-child]:w-full">
                 Toggle details
                 <ChevronDown
-                    class="size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
+                    class="ml-auto size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -157,10 +158,10 @@ const open = ref(false);
         <div class="max-w-sm">
           <Collapsible :unmount-on-hide="false">
             <CollapsibleTrigger as-child>
-              <Button variant="secondary" class="group w-full justify-between">
+              <Button variant="secondary" class="group w-full justify-between [&>span:first-child]:w-full">
                 Toggle details
                 <ChevronDown
-                    class="size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
+                    class="ml-auto size-icon-small transition-transform duration-200 group-data-[state=open]:rotate-180"/>
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>

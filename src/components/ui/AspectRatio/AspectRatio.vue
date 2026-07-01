@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {computed, useAttrs} from 'vue';
 import {cn} from '../utils';
 
 // Uses native CSS aspect-ratio rather than reka's AspectRatio. reka leans on
@@ -12,22 +11,14 @@ const props = defineProps({
   ratio: {
     type: [String, Number],
     default: '16/9',
-    validator: function (value: string | number) {
-      return typeof CSS === 'undefined' || CSS.supports('aspect-ratio', String(value));
-    },
+    validator: (value: string | number) => typeof CSS === 'undefined' || CSS.supports('aspect-ratio', String(value)),
   },
 });
 
-const attrs = useAttrs();
-const forwardedAttrs = computed(function () {
-  const attributes = {...attrs};
-  delete attributes.class;
-  return attributes;
-});
 </script>
 
 <template>
-  <div v-bind="forwardedAttrs" :class="cn('min-h-0 w-full', $attrs.class)" :style="{ aspectRatio: props.ratio }">
+  <div v-bind="$attrs" :class="cn('min-h-0 w-full', $attrs.class)" :style="{ aspectRatio: props.ratio }">
     <slot/>
   </div>
 </template>

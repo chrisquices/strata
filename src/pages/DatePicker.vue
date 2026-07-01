@@ -25,7 +25,7 @@ const bounded = ref('');
 
     <!-- Description -->
     <ComponentHeaderDescription>
-      A segmented date field with a popover calendar. Type into the segments or pick a day. <code class="rounded-small bg-surface px-1 py-0.5 font-mono text-xs">v-model</code> is an ISO date string.
+      A date field with a popover calendar — click to open and pick a day. <code class="rounded-small bg-surface px-1 py-0.5 font-mono text-xs">v-model</code> is an ISO date string.
     </ComponentHeaderDescription>
   </ComponentHeader>
 
@@ -39,6 +39,21 @@ const bounded = ref('');
       </ComponentItemSectionDescription>
       <ComponentItemSectionExample>
         <DatePicker v-model="date" class="w-60" />
+      </ComponentItemSectionExample>
+    </ComponentItemSection>
+
+    <!-- Sizes -->
+    <ComponentItemSection>
+      <ComponentItemSectionTitle>Sizes</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Small, medium (default), and large scale the field, segments, and the calendar trigger.
+      </ComponentItemSectionDescription>
+      <ComponentItemSectionExample>
+        <div class="flex w-60 flex-col gap-3">
+          <DatePicker v-model="date" size="sm" />
+          <DatePicker v-model="date" size="md" />
+          <DatePicker v-model="date" size="lg" />
+        </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
 

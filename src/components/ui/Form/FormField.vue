@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
+import {cn} from '../utils';
 
 defineProps({
   as: {
@@ -13,7 +14,7 @@ defineProps({
 </script>
 
 <template>
-  <component :is="as" class="gap-3 m-0 grid min-w-0 border-0 p-0">
+  <component :is="as" :class="cn('m-0 grid min-w-0 gap-form-small border-0 p-0', $attrs.class)">
     <slot />
   </component>
 </template>

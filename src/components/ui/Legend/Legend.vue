@@ -1,13 +1,13 @@
 <script setup lang="ts">
-defineProps({
+const props = defineProps({
   disabled: { type: Boolean, default: false },
 });
 
-const base = 'm-0 inline-flex items-center gap-2 text-sm font-medium leading-none select-none mb-3';
+const baseClass = 'm-0 mb-form-small inline-flex items-center gap-cluster-small text-sm font-medium leading-none select-none';
 </script>
 
 <template>
-  <legend :data-disabled="disabled || undefined" :class="[base, disabled ? 'text-muted cursor-not-allowed' : 'text-foreground']">
+  <legend :data-disabled="props.disabled || undefined" :class="[baseClass, props.disabled ? 'text-muted cursor-not-allowed' : 'text-foreground']">
     <slot />
   </legend>
 </template>

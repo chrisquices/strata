@@ -2,7 +2,6 @@
 
 <template>
   <span aria-hidden="true" class="text-faint">
-    <!-- decorative: hidden from screen readers -->
-    <slot />
+    <slot/>
   </span>
 </template>

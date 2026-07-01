@@ -1,9 +1,9 @@
 <script setup lang="ts">
 </script>
 
-<!-- pr-12 reserves room for the absolute close button in DialogContent. -->
 <template>
-  <div class="flex flex-col gap-2 px-6 pb-2 pr-12 pt-6">
+  <div
+      class="flex flex-col gap-cluster-small px-overlay pb-cluster-small pr-[calc(var(--spacing-overlay)+var(--spacing-control))] pt-overlay">
     <slot/>
   </div>
 </template>

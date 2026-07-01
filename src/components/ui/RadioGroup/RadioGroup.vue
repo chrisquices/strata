@@ -23,20 +23,20 @@ const props = defineProps({
 const model = defineModel<string | number>();
 
 // Provide a sensible default layout; orientation also drives reka's arrow-key direction.
-const layout = computed(function () {
-  return props.orientation === 'horizontal' ? 'flex flex-row flex-wrap gap-x-6 gap-y-2' : 'flex flex-col gap-4';
+const baseClass = computed(function () {
+  return props.orientation === 'horizontal' ? 'flex flex-row flex-wrap gap-x-form-large gap-y-cluster-small' : 'flex flex-col gap-form';
 });
 </script>
 
 <template>
   <RadioGroupRoot
       v-model="model"
-      :disabled="disabled"
-      :name="name"
-      :required="required"
-      :orientation="orientation"
-      :loop="loop"
-      :class="layout"
+      :disabled="props.disabled"
+      :name="props.name"
+      :required="props.required"
+      :orientation="props.orientation"
+      :loop="props.loop"
+      :class="baseClass"
   >
     <slot/>
   </RadioGroupRoot>

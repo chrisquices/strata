@@ -33,6 +33,12 @@ const countries = [
 const country = ref();
 const preselected = ref('jp');
 const picked = ref(['br', 'jp']);
+const sizeSmall = ref();
+const sizeMedium = ref();
+const sizeLarge = ref();
+const multiSmall = ref(['br']);
+const multiMedium = ref(['br', 'jp']);
+const multiLarge = ref(['br', 'jp', 'us']);
 </script>
 
 <template>
@@ -61,6 +67,7 @@ const picked = ref(['br', 'jp']);
         <Combobox
             v-model="country"
             :options="countries"
+            placeholder="Search countries…"
             aria-label="Country"
             class="w-72"
         />
@@ -94,9 +101,77 @@ const picked = ref(['br', 'jp']);
             v-model="picked"
             :options="countries"
             multiple
+            placeholder="Search countries…"
             aria-label="Countries"
             class="w-72"
         />
+      </ComponentItemSectionExample>
+    </ComponentItemSection>
+
+    <!-- Sizes -->
+    <ComponentItemSection>
+      <ComponentItemSectionTitle>Sizes</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>
+        Small, medium, and large scale the field, options, and chevron off the control token scale — like Input.
+      </ComponentItemSectionDescription>
+      <ComponentItemSectionExample>
+        <div class="flex flex-wrap gap-8">
+          <div class="flex flex-col gap-4">
+            <Combobox
+                v-model="sizeSmall"
+                :options="countries"
+                size="sm"
+                placeholder="Small"
+                aria-label="Country (small)"
+                class="w-72"
+            />
+            <Combobox
+                v-model="sizeMedium"
+                :options="countries"
+                size="md"
+                placeholder="Medium"
+                aria-label="Country (medium)"
+                class="w-72"
+            />
+            <Combobox
+                v-model="sizeLarge"
+                :options="countries"
+                size="lg"
+                placeholder="Large"
+                aria-label="Country (large)"
+                class="w-72"
+            />
+          </div>
+          <div class="flex flex-col gap-4">
+            <Combobox
+                v-model="multiSmall"
+                :options="countries"
+                multiple
+                size="sm"
+                placeholder="Small"
+                aria-label="Countries (small)"
+                class="w-72"
+            />
+            <Combobox
+                v-model="multiMedium"
+                :options="countries"
+                multiple
+                size="md"
+                placeholder="Medium"
+                aria-label="Countries (medium)"
+                class="w-72"
+            />
+            <Combobox
+                v-model="multiLarge"
+                :options="countries"
+                multiple
+                size="lg"
+                placeholder="Large"
+                aria-label="Countries (large)"
+                class="w-72"
+            />
+          </div>
+        </div>
       </ComponentItemSectionExample>
     </ComponentItemSection>
   </ComponentContent>

@@ -7,6 +7,7 @@ import type {PropType} from 'vue';
 import {ref, computed, inject, watch, onBeforeUnmount, useAttrs, useSlots} from 'vue';
 import {Eye, EyeOff, Clipboard, Check} from '@lucide/vue';
 import FieldErrorTooltip from '../Shared/FieldErrorTooltip.vue';
+import {cn} from '../utils';
 
 defineOptions({inheritAttrs: false});
 
@@ -71,6 +72,7 @@ watch(errorText, function (text) {
 }, {immediate: true});
 
 const errorId = `strata-input-error-${++uid}`;
+
 const describedById = computed(function () {
   const ids: string[] = [];
   if (attrs['aria-describedby']) ids.push(String(attrs['aria-describedby']));
@@ -87,14 +89,14 @@ const borderedBase =
     ' rounded-medium border focus-visible:outline-none focus-visible:ring-2 ' +
     'focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 const groupedBase = sharedBase + ' border-0 rounded-none focus-visible:outline-none';
-const base = computed(function () {
+const baseClass = computed(function () {
   return isGrouped.value ? groupedBase : borderedBase;
 });
 
 const sizeClass = {
-  sm: 'h-control-small px-control-small text-xs',
-  md: 'h-control px-control text-sm',
-  lg: 'h-control-large px-control-large text-base'
+  sm: 'h-control-small px-control-x-small text-xs',
+  md: 'h-control px-control-x text-sm',
+  lg: 'h-control-large px-control-x-large text-base'
 };
 const stateClass = computed(function () {
   return isGrouped.value
@@ -151,15 +153,15 @@ onBeforeUnmount(function () {
         :aria-invalid="isInvalid || undefined"
         :aria-describedby="describedById"
         :data-invalid="isInvalid || undefined"
-        :class="['block w-full', base, isGrouped ? ['px-2 h-full', effectiveSize === 'sm' ? 'text-xs' : effectiveSize === 'lg' ? 'text-base' : 'text-sm'] : sizeClass[effectiveSize], stateClass, isPassword ? 'pr-16' : '']"
+        :class="cn('block w-full', baseClass, isGrouped ? ['h-full px-control-x-small', effectiveSize === 'sm' ? 'text-xs' : effectiveSize === 'lg' ? 'text-base' : 'text-sm'] : sizeClass[effectiveSize], stateClass, isPassword ? 'pr-[calc(var(--spacing-control-x)+var(--spacing-control)+var(--spacing-control))]' : '', $attrs.class)"
     />
-    <div v-if="isPassword" class="absolute inset-y-0 right-0 flex items-center gap-0.5 pr-2">
+    <div v-if="isPassword" class="absolute inset-y-0 right-0 flex items-center gap-0.5 pr-control-x-small">
       <button
           type="button"
           :aria-label="revealed ? 'Hide password' : 'Show password'"
           :aria-pressed="revealed"
           :disabled="disabled"
-          class="grid size-7 place-items-center rounded-small text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 disabled:opacity-50"
+          class="grid size-control-small place-items-center rounded-small text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 disabled:opacity-50"
           @click="revealed = !revealed"
       >
         <component :is="RevealIcon" class="size-icon-small"/>
@@ -168,7 +170,7 @@ onBeforeUnmount(function () {
           type="button"
           :aria-label="copied ? 'Copied' : 'Copy password'"
           :disabled="disabled"
-          class="grid size-7 place-items-center rounded-small text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 disabled:opacity-50"
+          class="grid size-control-small place-items-center rounded-small text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 disabled:opacity-50"
           @click="copyValue"
       >
         <component :is="CopyIcon" :class="['size-icon-small', copied ? 'text-success' : '']"/>

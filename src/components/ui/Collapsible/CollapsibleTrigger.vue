@@ -2,12 +2,13 @@
 import {inject} from 'vue';
 import {CollapsibleTrigger} from 'reka-ui';
 
-defineProps({asChild: {type: Boolean, default: false}});
+const props = defineProps({asChild: {type: Boolean, default: false}});
+
 const contentId = inject('collapsibleContentId', undefined);
 </script>
 
 <template>
-  <CollapsibleTrigger :as-child="asChild" :aria-controls="contentId">
+  <CollapsibleTrigger :as-child="props.asChild" :aria-controls="contentId">
     <slot/>
   </CollapsibleTrigger>
 </template>

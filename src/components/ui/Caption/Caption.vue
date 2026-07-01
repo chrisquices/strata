@@ -1,12 +1,9 @@
-<script lang="ts">
-// Module scope: defineProps is hoisted and can't see <script setup> consts.
-const allowedElements = ['span', 'div', 'p', 'dt', 'label', 'legend', 'figcaption', 'caption', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-</script>
-
 <script setup lang="ts">
 import type {PropType} from 'vue';
 import {computed} from 'vue';
 import {cn} from '../utils';
+
+defineOptions({inheritAttrs: false});
 
 const props = defineProps({
   tone: {
@@ -17,15 +14,16 @@ const props = defineProps({
   as: {
     type: String,
     default: 'span',
-    validator: (value: string) => allowedElements.includes(value),
+    validator: (value: string) => ['span', 'div', 'p', 'dt', 'label', 'legend', 'figcaption', 'caption', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(value),
   },
 });
 
 // The validator only warns; this clamp guarantees an unknown `as` can never
 // render an arbitrary element.
-const renderedTag = computed(() => (allowedElements.includes(props.as) ? props.as : 'span'));
+const renderedTag = computed(() => (['span', 'div', 'p', 'dt', 'label', 'legend', 'figcaption', 'caption', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(props.as) ? props.as : 'span'));
 
-const base = 'block text-xs uppercase tracking-widest font-medium';
+const baseClass = 'block text-xs uppercase tracking-widest font-medium';
+
 const toneClass = {
   faint: 'text-faint',
   muted: 'text-muted',
@@ -35,7 +33,7 @@ const toneClass = {
 </script>
 
 <template>
-  <component :is="renderedTag" :class="cn(base, toneClass[tone], $attrs.class)">
+  <component :is="renderedTag" v-bind="$attrs" :class="cn(baseClass, toneClass[props.tone], $attrs.class)">
     <slot/>
   </component>
 </template>

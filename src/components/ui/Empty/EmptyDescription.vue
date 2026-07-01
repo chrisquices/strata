@@ -2,6 +2,6 @@
 
 <template>
   <p class="max-w-xs text-xs text-muted">
-    <slot />
+    <slot/>
   </p>
 </template>

@@ -147,7 +147,7 @@ const site = ref('');
           </FormField>
           <FormField>
             <Label for="group-email">Email</Label>
-            <InputGroup size="sm">
+            <InputGroup>
               <InputGroupAddon>
                 <AtSign class="size-icon-small"/>
               </InputGroupAddon>

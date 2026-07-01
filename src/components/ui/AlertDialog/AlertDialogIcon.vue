@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import {cn} from '../utils';
+
+defineOptions({inheritAttrs: false});
 </script>
 
 <template>
-  <div aria-hidden="true" class="mx-auto mb-cluster-small grid place-items-center text-muted">
+  <div v-bind="$attrs" aria-hidden="true"
+       :class="cn('mx-auto mb-cluster-small grid place-items-center text-muted', $attrs.class)">
     <slot/>
   </div>
 </template>

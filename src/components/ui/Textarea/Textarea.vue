@@ -68,7 +68,7 @@ const describedById = computed(function () {
   return ids.length ? ids.join(' ') : undefined;
 });
 
-const base =
+const baseClass =
     'bg-input text-foreground placeholder:text-faint transition-colors duration-100 ' +
     'disabled:opacity-50 disabled:pointer-events-none read-only:bg-surface read-only:text-muted ' +
     'rounded-medium border focus-visible:outline-none focus-visible:ring-2 ' +
@@ -93,7 +93,7 @@ const stateClass = computed(function () {
         :aria-invalid="isInvalid || undefined"
         :aria-describedby="describedById"
         :data-invalid="isInvalid || undefined"
-        :class="['block w-full resize-none px-2 py-1 text-sm', autoResize ? 'field-sizing-content' : '', base, stateClass]"
+        :class="['block w-full resize-none px-2 py-1 text-sm', autoResize ? 'field-sizing-content' : '', baseClass, stateClass]"
     ></textarea>
   </FieldErrorTooltip>
 </template>

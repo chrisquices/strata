@@ -75,10 +75,10 @@ function roundFor(scope: any, row: CalendarDate[], index: number): string {
   return 'rounded-none';
 }
 
-const navigationButton = 'grid size-7 cursor-pointer place-items-center rounded-medium text-muted transition-colors duration-100 hover:bg-border hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 data-[disabled]:pointer-events-none data-[disabled]:opacity-40';
+const navigationButton = 'grid size-control-small cursor-pointer place-items-center rounded-medium text-muted transition-colors duration-100 hover:bg-border hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 data-[disabled]:pointer-events-none data-[disabled]:opacity-40';
 // Transition on the entered states only — colors fade in, but deselect (returning to base) is instant.
 const cellTransition = 'hover:transition-colors hover:duration-100 data-[selected]:transition-colors data-[selected]:duration-100 data-[highlighted]:transition-colors data-[highlighted]:duration-100';
-const cellBase = `flex h-10 flex-1 cursor-pointer items-center justify-center text-sm text-foreground select-none ${cellTransition} hover:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground/40 data-[today]:font-semibold data-[selected]:bg-foreground data-[selected]:text-background data-[highlighted]:bg-border data-[disabled]:cursor-not-allowed data-[disabled]:text-faint data-[disabled]:opacity-40 data-[disabled]:hover:bg-transparent`;
+const cellBase = `flex h-control-large flex-1 cursor-pointer items-center justify-center text-sm text-foreground select-none ${cellTransition} hover:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground/40 data-[today]:font-semibold data-[selected]:bg-foreground data-[selected]:text-background data-[highlighted]:bg-border data-[disabled]:cursor-not-allowed data-[disabled]:text-faint data-[disabled]:opacity-40 data-[disabled]:hover:bg-transparent`;
 </script>
 
 <template>
@@ -88,10 +88,10 @@ const cellBase = `flex h-10 flex-1 cursor-pointer items-center justify-center te
     v-model:placeholder="placeholder"
     :min-value="min"
     :max-value="max"
-    :disabled="disabled"
-    :readonly="readonly"
-    :locale="locale"
-    class="inline-block w-64 rounded-large border border-border bg-surface p-3"
+    :disabled="props.disabled"
+    :readonly="props.readonly"
+    :locale="props.locale"
+    class="inline-block w-64 rounded-large border border-border bg-surface p-surface-small"
   >
     <MonthRangePickerHeader class="flex items-center justify-between pb-2">
       <MonthRangePickerPrev :class="navigationButton"><ChevronLeft class="size-icon-small" aria-hidden="true" /></MonthRangePickerPrev>

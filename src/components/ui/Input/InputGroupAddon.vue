@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import type {PropType} from 'vue';
 import {inject, computed} from 'vue';
+import {cn} from '../utils';
 
 defineProps({
   side: {
     type: String as PropType<'start' | 'end'>,
     default: 'start',
-    validator: function (value: string) { return ['start', 'end'].includes(value); }
+    validator: function (value: string) {
+      return ['start', 'end'].includes(value);
+    }
   }
 });
 
@@ -22,7 +25,7 @@ const textClass = computed(function () {
 
 <template>
   <span
-      :class="['flex shrink-0 items-center bg-surface px-3 text-muted', textClass, side === 'end' ? 'border-l' : 'border-r', 'border-border']">
+      :class="cn('flex shrink-0 items-center bg-surface px-control-x text-muted', textClass, side === 'end' ? 'border-l' : 'border-r', 'border-border', $attrs.class)">
     <slot/>
   </span>
 </template>

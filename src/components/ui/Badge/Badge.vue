@@ -3,27 +3,23 @@ import type {PropType} from 'vue';
 import {computed} from 'vue';
 import {cn} from '../utils';
 
+defineOptions({inheritAttrs: false});
+
 const props = defineProps({
   variant: {
     type: String as PropType<'primary' | 'secondary' | 'ghost' | 'destructive' | 'success' | 'warning'>,
     default: 'primary',
-    validator: function (value: string) {
-      return ['primary', 'secondary', 'ghost', 'destructive', 'success', 'warning'].includes(value);
-    },
+    validator: (value: string) => ['primary', 'secondary', 'ghost', 'destructive', 'success', 'warning'].includes(value),
   },
   size: {
     type: String as PropType<'sm' | 'md' | 'lg'>,
     default: 'md',
-    validator: function (value: string) {
-      return ['sm', 'md', 'lg'].includes(value);
-    },
+    validator: (value: string) => ['sm', 'md', 'lg'].includes(value),
   },
   radius: {
     type: String as PropType<'sm' | 'md' | 'lg' | 'full'>,
     default: 'md',
-    validator: function (value: string) {
-      return ['sm', 'md', 'lg', 'full'].includes(value);
-    },
+    validator: (value: string) => ['sm', 'md', 'lg', 'full'].includes(value),
   },
   outline: {type: Boolean, default: false},
   dot: {type: Boolean, default: false},
@@ -31,20 +27,19 @@ const props = defineProps({
 
 // A badge is a static label, so it carries none of Button's interactive chrome:
 // no transitions, hover, active, focus ring, or disabled handling.
-const base =
-    'inline-flex justify-center max-w-full items-center overflow-hidden font-medium whitespace-nowrap uppercase tracking-widest tabular-nums';
+const baseClass = 'inline-flex justify-center max-w-full items-center overflow-hidden font-medium whitespace-nowrap uppercase tracking-widest tabular-nums';
 
 const radiusClasses = {sm: 'rounded-small', md: 'rounded-medium', lg: 'rounded-large', full: 'rounded-full'};
 
-const sizeText = {
-  sm: 'h-tag-small px-tag-x text-2xs',
+const sizeTextClasses = {
+  sm: 'h-tag-small px-tag-x-small text-2xs',
   md: 'h-tag px-tag-x text-xs',
-  lg: 'h-tag-large px-tag-x text-sm',
+  lg: 'h-tag-large px-tag-x-large text-sm',
 };
 
 // Filled mirrors Button's resting state — Button's hover-only fills are dropped,
 // since a badge has no hover. Ghost therefore stays transparent, like Button at rest.
-const filled = {
+const filledClasses = {
   primary: 'bg-foreground text-background',
   secondary: 'bg-surface text-foreground border border-border',
   ghost: 'bg-transparent text-foreground',
@@ -53,20 +48,18 @@ const filled = {
   warning: 'bg-warning text-warning-foreground',
 };
 
-const outlined = {
+const outlinedClasses = {
   primary: 'bg-transparent text-foreground border border-foreground',
   secondary: 'bg-transparent text-foreground border border-border',
-
-  // Ghost has no chrome to outline, so its outline form mirrors the filled ghost.
-  ghost: 'bg-transparent text-foreground',
+  ghost: 'bg-transparent text-foreground', // Ghost has no chrome to outline, so its outline form mirrors the filled ghost.
   destructive: 'bg-transparent text-destructive border border-destructive',
   success: 'bg-transparent text-success border border-success',
   warning: 'bg-transparent text-warning border border-warning',
 };
 
-// Dot colors contrast the badge background: dotFilled shows on the solid/tinted
-// fill; dotOutlined uses the variant accent against the transparent outline.
-const dotFilled = {
+// Dot colors contrast the badge background: dotFilledClasses shows on the solid/tinted
+// fill; dotOutlinedClasses uses the variant accent against the transparent outline.
+const dotFilledClasses = {
   primary: 'bg-background',
   secondary: 'bg-foreground',
   ghost: 'bg-foreground',
@@ -75,7 +68,7 @@ const dotFilled = {
   warning: 'bg-warning-foreground',
 };
 
-const dotOutlined = {
+const dotOutlinedClasses = {
   primary: 'bg-foreground',
   secondary: 'bg-foreground',
   ghost: 'bg-foreground',
@@ -84,25 +77,17 @@ const dotOutlined = {
   warning: 'bg-warning',
 };
 
-const variantClass = computed(function () {
-  return props.outline ? outlined[props.variant] : filled[props.variant];
-});
+const variantClass = computed(() => props.outline ? outlinedClasses[props.variant] : filledClasses[props.variant]);
 
-const sizeClass = computed(function () {
-  return sizeText[props.size];
-});
+const sizeClass = computed(() => sizeTextClasses[props.size]);
 
-const radiusClass = computed(function () {
-  return radiusClasses[props.radius];
-});
+const radiusClass = computed(() => radiusClasses[props.radius]);
 
-const dotColor = computed(function () {
-  return props.outline ? dotOutlined[props.variant] : dotFilled[props.variant];
-});
+const dotColor = computed(() => props.outline ? dotOutlinedClasses[props.variant] : dotFilledClasses[props.variant]);
 </script>
 
 <template>
-  <span :class="cn(base, variantClass, sizeClass, radiusClass, $attrs.class)">
+  <span v-bind="$attrs" :class="cn(baseClass, variantClass, sizeClass, radiusClass, $attrs.class)">
     <span class="inline-flex min-w-0 items-center gap-2">
       <span v-if="dot" :class="['size-1.5 shrink-0 rounded-full', dotColor]" aria-hidden="true"></span>
       <span class="min-w-0 truncate"><slot/></span>

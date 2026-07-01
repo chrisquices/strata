@@ -7,6 +7,8 @@ import {computed} from 'vue';
 import {CheckboxGroupRoot} from 'reka-ui';
 import {cn} from '../utils';
 
+defineOptions({inheritAttrs: false});
+
 const props = defineProps({
   disabled: {type: Boolean, default: false},
   name: {type: String, default: undefined},
@@ -16,26 +18,26 @@ const props = defineProps({
     default: 'vertical',
     validator: (value: string) => ['vertical', 'horizontal'].includes(value)
   },
-  // Arrow-key navigation between items with a single tab stop (reka default). Off = each item is tabbable.
-  rovingFocus: {type: Boolean, default: true},
-  // Wrap focus at the group boundaries when navigating with arrows.
-  loop: {type: Boolean, default: false},
+  rovingFocus: {type: Boolean, default: true}, // Arrow-key navigation between items with a single tab stop (reka default). Off = each item is tabbable.
+  loop: {type: Boolean, default: false}, // Wrap focus at the group boundaries when navigating with arrows.
 });
+
 const model = defineModel<(string | number)[]>();
 
-const layout = computed(() => (props.orientation === 'horizontal' ? 'flex flex-row flex-wrap gap-x-6 gap-y-cluster-small' : 'flex flex-col gap-cluster-large'));
+const baseClass = computed(() => (props.orientation === 'horizontal' ? 'flex flex-row flex-wrap gap-x-6 gap-y-cluster-small' : 'flex flex-col gap-cluster-large'));
 </script>
 
 <template>
   <CheckboxGroupRoot
+      v-bind="$attrs"
       v-model="model"
-      :disabled="disabled"
-      :name="name"
-      :required="required"
-      :orientation="orientation"
-      :roving-focus="rovingFocus"
-      :loop="loop"
-      :class="cn(layout, $attrs.class)"
+      :disabled="props.disabled"
+      :name="props.name"
+      :required="props.required"
+      :orientation="props.orientation"
+      :roving-focus="props.rovingFocus"
+      :loop="props.loop"
+      :class="cn(baseClass, $attrs.class)"
   >
     <slot/>
   </CheckboxGroupRoot>

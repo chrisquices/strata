@@ -5,7 +5,7 @@
 import type {PropType} from 'vue';
 import {SplitterResizeHandle} from 'reka-ui';
 
-defineProps({
+const props = defineProps({
   id: {type: String, default: undefined},
   disabled: {type: Boolean, default: false},
   // Tab order; reka defaults to 0. Set -1 to skip the handle in the tab sequence.
@@ -16,17 +16,21 @@ defineProps({
   nonce: {type: String, default: undefined},
 });
 const emit = defineEmits<{ dragging: [isDragging: boolean] }>();
+
+function onDragging(isDragging: boolean) {
+  emit('dragging', isDragging);
+}
 </script>
 
 <template>
   <SplitterResizeHandle
-      :id="id"
-      :disabled="disabled"
-      :tabindex="tabindex"
-      :hit-area-margins="hitAreaMargins"
-      :nonce="nonce"
+      :id="props.id"
+      :disabled="props.disabled"
+      :tabindex="props.tabindex"
+      :hit-area-margins="props.hitAreaMargins"
+      :nonce="props.nonce"
       class="group relative shrink-0 bg-border outline-none transition-colors duration-200 data-[state=drag]:bg-foreground/50 data-[disabled]:cursor-default data-[disabled]:opacity-50 data-[orientation=horizontal]:h-full data-[orientation=horizontal]:w-px data-[orientation=horizontal]:cursor-col-resize data-[orientation=vertical]:h-px data-[orientation=vertical]:w-full data-[orientation=vertical]:cursor-row-resize"
-      @dragging="(isDragging) => emit('dragging', isDragging)"
+      @dragging="onDragging"
   >
     <!-- Grip affordance — brightens (and rings) on hover / keyboard focus / drag -->
     <span

@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import {cn} from '../utils';
 </script>
+
 <template>
-  <form class="grid gap-6 w-full">
+  <form :class="cn('grid w-full gap-form', $attrs.class)">
     <slot />
   </form>
 </template>

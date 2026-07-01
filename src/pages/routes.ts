@@ -44,7 +44,6 @@ import DropZone from './DropZone.vue';
 import Kbd from './Kbd.vue';
 import Label from './Label.vue';
 import Legend from './Legend.vue';
-import Menubar from './Menubar.vue';
 import Pagination from './Pagination.vue';
 import PinInput from './PinInput.vue';
 import Separator from './Separator.vue';
@@ -63,6 +62,7 @@ import Button from './Button.vue';
 import Caption from './Caption.vue';
 import Empty from './Empty.vue';
 import Sidebar from './Sidebar.vue';
+import Video from './Video.vue';
 
 // Independent route per component page — no barrel/parent dispatch.
 export const componentRoutes = [
@@ -113,7 +113,6 @@ export const componentRoutes = [
   { path: '/components/kbd', component: Kbd },
   { path: '/components/label', component: Label },
   { path: '/components/legend', component: Legend },
-  { path: '/components/menubar', component: Menubar },
   { path: '/components/pagination', component: Pagination },
   { path: '/components/pin-input', component: PinInput },
   { path: '/components/separator', component: Separator },
@@ -132,4 +131,5 @@ export const componentRoutes = [
   { path: '/components/caption', component: Caption },
   { path: '/components/empty', component: Empty },
   { path: '/components/sidebar', component: Sidebar },
+  { path: '/components/video', component: Video },
 ];

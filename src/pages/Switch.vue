@@ -13,6 +13,9 @@ import ComponentItemSectionExample from '@app/component/ComponentItemSectionExam
 
 const wifi = ref(true);
 const bluetooth = ref(false);
+const small = ref(true);
+const medium = ref(true);
+const large = ref(true);
 </script>
 
 <template>
@@ -46,6 +49,28 @@ const bluetooth = ref(false);
           <label class="flex items-center gap-3 text-sm text-muted">
             <Switch :disabled="true" />
             Airplane mode (disabled)
+          </label>
+        </div>
+      </ComponentItemSectionExample>
+    </ComponentItemSection>
+
+    <!-- Sizes -->
+    <ComponentItemSection>
+      <ComponentItemSectionTitle>Sizes</ComponentItemSectionTitle>
+      <ComponentItemSectionDescription>The track, thumb, and travel distance scale together across small, medium, and large.</ComponentItemSectionDescription>
+      <ComponentItemSectionExample>
+        <div class="flex items-center gap-6">
+          <label class="flex items-center gap-3 text-sm text-foreground">
+            <Switch size="sm" v-model:checked="small" />
+            Small
+          </label>
+          <label class="flex items-center gap-3 text-sm text-foreground">
+            <Switch size="md" v-model:checked="medium" />
+            Medium
+          </label>
+          <label class="flex items-center gap-3 text-sm text-foreground">
+            <Switch size="lg" v-model:checked="large" />
+            Large
           </label>
         </div>
       </ComponentItemSectionExample>

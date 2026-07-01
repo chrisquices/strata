@@ -25,7 +25,7 @@ provide('paginationMeta', reactive({
 </script>
 
 <template>
-  <PaginationRoot v-model:page="page" :total="count" :items-per-page="perPage" :sibling-count="siblingCount" show-edges class="space-y-2">
+  <PaginationRoot v-model:page="page" :total="props.count" :items-per-page="props.perPage" :sibling-count="props.siblingCount" show-edges class="space-y-stack-small">
     <slot :range="range" />
   </PaginationRoot>
 </template>

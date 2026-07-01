@@ -1,7 +1,11 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import {cn} from '../utils';
+
+defineOptions({inheritAttrs: false});
+</script>
 
 <template>
-  <ol class="flex flex-wrap items-center gap-cluster-small text-sm">
+  <ol v-bind="$attrs" :class="cn('flex flex-wrap items-center gap-cluster-small text-sm', $attrs.class)">
     <slot/>
   </ol>
 </template>

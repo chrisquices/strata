@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {PropType} from 'vue';
 
-defineProps({
+const props = defineProps({
   variant: {
     type: String as PropType<'primary' | 'success' | 'warning' | 'destructive' | 'muted'>,
     default: 'primary',
@@ -13,14 +13,14 @@ defineProps({
   label: {type: String, default: ''},
 });
 
-const dotColor = {
+const dotColorClasses = {
   primary: 'bg-foreground',
   success: 'bg-success',
   warning: 'bg-warning',
   destructive: 'bg-destructive',
   muted: 'bg-muted',
 };
-const pulseColor = {
+const pulseColorClasses = {
   primary: 'bg-foreground/50',
   success: 'bg-success/50',
   warning: 'bg-warning/50',
@@ -31,12 +31,12 @@ const pulseColor = {
 
 <template>
   <span
-      :role="label ? 'img' : 'presentation'"
-      :aria-label="label || undefined"
+      :role="props.label ? 'img' : 'presentation'"
+      :aria-label="props.label || undefined"
       class="relative inline-flex shrink-0 items-center justify-center size-2"
   >
-    <span :class="['absolute inset-0 rounded-full', dotColor[variant]]"></span>
-    <span v-if="pulse" :class="['pulse-ring absolute rounded-full size-3', pulseColor[variant]]"></span>
+    <span :class="['absolute inset-0 rounded-full', dotColorClasses[props.variant]]"></span>
+    <span v-if="props.pulse" :class="['pulse-ring absolute rounded-full size-3', pulseColorClasses[props.variant]]"></span>
   </span>
 </template>
 

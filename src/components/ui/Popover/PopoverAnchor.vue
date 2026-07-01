@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {PopoverAnchor} from 'reka-ui';
 
-defineProps({asChild: {type: Boolean, default: false}});
+const props = defineProps({asChild: {type: Boolean, default: false}});
 </script>
 
 <template>
-  <PopoverAnchor :as-child="asChild">
+  <PopoverAnchor :as-child="props.asChild">
     <slot/>
   </PopoverAnchor>
 </template>

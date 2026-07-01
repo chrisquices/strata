@@ -73,7 +73,7 @@ const toastAxisClass = computed(() => AXIS[props.position]);
 const effectiveSwipe = computed<SwipeDirection>(() => props.swipeDirection ?? SWIPE[props.position]);
 
 const icons = { default: Info, success: CircleCheck, warning: TriangleAlert, destructive: CircleX };
-const accent: Record<ToastVariant, string> = {
+const accentClasses: Record<ToastVariant, string> = {
   default: 'text-foreground',
   success: 'text-success',
   warning: 'text-warning',
@@ -98,7 +98,7 @@ function onOpenChange(id: number, open: boolean) {
       :class="[toastAxisClass, 'pointer-events-auto flex w-full items-start gap-3 overflow-hidden rounded-large border border-border bg-surface p-4 shadow-overlay']"
       @update:open="(o) => onOpenChange(t.id, o)"
     >
-      <component :is="icons[t.variant]" :class="['mt-0.5 size-icon shrink-0', accent[t.variant]]" aria-hidden="true" />
+      <component :is="icons[t.variant]" :class="['mt-0.5 size-icon shrink-0', accentClasses[t.variant]]" aria-hidden="true" />
       <div class="flex min-w-0 flex-1 flex-col gap-0.5">
         <ToastTitle v-if="t.title" class="truncate text-sm font-medium text-foreground">{{ t.title }}</ToastTitle>
         <ToastDescription v-if="t.description" class="text-sm text-muted [overflow-wrap:anywhere]">{{ t.description }}</ToastDescription>

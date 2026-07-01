@@ -1,7 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div class="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
+  <div class="flex shrink-0 items-center justify-between gap-cluster-small border-b border-border px-overlay pb-cluster-small pt-overlay">
     <slot/>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {PropType} from 'vue';
-import {computed, useAttrs, useSlots} from 'vue';
+import {computed, useSlots} from 'vue';
 import {ChevronRight} from '@lucide/vue';
 import {Primitive} from 'reka-ui';
 import Collapsible from '../Collapsible/Collapsible.vue';
@@ -25,13 +25,8 @@ const props = defineProps({
 });
 const open = defineModel<boolean>('open', {default: undefined});
 
-const attrs = useAttrs();
 const slots = useSlots();
-const forwardedAttrs = computed(function () {
-  const attributes = {...attrs};
-  delete attributes.class;
-  return attributes;
-});
+
 const hasSubmenu = computed(function () {
   return !!slots.submenu;
 });
@@ -42,7 +37,7 @@ const isButton = computed(function () {
   return !isLink.value && !hasSubmenu.value;
 });
 
-const base =
+const baseClass =
     'strata-sidebar-menu-item group/sidebar-menu-item relative flex h-control w-full cursor-pointer items-center gap-cluster-small px-container text-left text-sm ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground/30' +
     'group-data-[collapsed]/sidebar:pl-5 group-data-[collapsed]/sidebar:pr-0 group-data-[collapsed]/sidebar:gap-0';
@@ -61,14 +56,14 @@ const disabledClass = computed(function () {
     <Collapsible v-if="hasSubmenu" v-model:open="open" :default-open="defaultOpen">
       <CollapsibleTrigger as-child>
         <Primitive
-            v-bind="forwardedAttrs"
+            v-bind="$attrs"
             as="button"
             :type="type"
             :disabled="disabled || undefined"
             :aria-current="selected ? 'page' : undefined"
             :data-active="selected || undefined"
             :data-disabled="disabled || undefined"
-            :class="cn(base, stateClass, disabledClass, 'group/collapsible', $attrs.class)"
+            :class="cn(baseClass, stateClass, disabledClass, 'group/collapsible', $attrs.class)"
         >
           <slot name="icon"/>
           <span
@@ -94,7 +89,7 @@ const disabledClass = computed(function () {
 
     <Primitive
         v-else
-        v-bind="forwardedAttrs"
+        v-bind="$attrs"
         :as="isLink ? 'a' : 'button'"
         :href="isLink ? href : undefined"
         :type="isButton ? type : undefined"
@@ -103,7 +98,7 @@ const disabledClass = computed(function () {
         :aria-disabled="isLink && disabled ? 'true' : undefined"
         :data-active="selected || undefined"
         :data-disabled="disabled || undefined"
-        :class="cn(base, stateClass, disabledClass, $attrs.class)"
+        :class="cn(baseClass, stateClass, disabledClass, $attrs.class)"
     >
       <slot name="icon"/>
       <span

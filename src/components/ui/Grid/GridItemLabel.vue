@@ -24,10 +24,10 @@ const props = defineProps({
 const element = ref<HTMLElement>();
 const variantClass = computed(function () {
   if (props.variant === 'overlay') {
-    return 'pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/85 via-overlay/35 to-transparent px-3 pb-2 pt-10 text-white';
+    return 'pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/85 via-overlay/35 to-transparent px-surface-small pb-surface-small pt-section text-white';
   }
 
-  return 'relative z-20 border-t border-border px-3 py-2.5 text-foreground';
+  return 'relative z-20 border-t border-border px-surface-small py-surface-small text-foreground';
 });
 const truncateMode = computed(function () {
   return props.truncate === true ? 'middle' : props.truncate || false;

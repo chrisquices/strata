@@ -69,6 +69,7 @@ const sizeClass = {
   md: 'h-control px-3 text-sm',
   lg: 'h-control-large px-3.5 text-base'
 };
+const triggerSizeClass = {sm: 'size-5', md: 'size-6', lg: 'size-7'};
 const stateClass = computed(function () {
   return props.invalid ? 'border-destructive focus-within:ring-destructive/40 focus-visible:ring-destructive/40' : 'border-border hover:border-foreground/40 focus-within:border-foreground focus-within:ring-foreground/30 focus-visible:border-foreground focus-visible:ring-foreground/30';
 });
@@ -127,7 +128,7 @@ const cellTrigger = 'flex h-10 flex-1 cursor-pointer items-center justify-center
             :aria-invalid="invalid || undefined"
             :aria-describedby="describedBy"
             aria-label="Open year picker"
-            class="grid size-6 shrink-0 cursor-pointer place-items-center rounded text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 disabled:cursor-not-allowed disabled:opacity-50"
+            :class="['grid shrink-0 cursor-pointer place-items-center rounded text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 disabled:cursor-not-allowed disabled:opacity-50', triggerSizeClass[size]]"
         >
           <CalendarDays class="size-icon-small" aria-hidden="true"/>
         </button>
